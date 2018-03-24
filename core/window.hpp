@@ -1,10 +1,10 @@
 #ifndef WINDOW_H
 #define WINDOW_H
 
-
+extern "C" {
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
-
+}
 #include <exception>
 #include <string>
 
@@ -25,12 +25,16 @@ class Window {
         void preDrawingEvent();
         void postDrawingEvent();
         
-        inline int keyStatus(int) {
+        inline int keyStatus(int) const {
             return glfwGetKey(_gl_window, GLFW_KEY_ESCAPE );
         }
         
-        inline int shouldClose() {
+        inline int shouldClose() const {
             return glfwWindowShouldClose(_gl_window);
+        }
+        
+        inline GLFWwindow* internal() {
+            return _gl_window;
         }
         
     private:

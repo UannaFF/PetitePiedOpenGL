@@ -13,16 +13,16 @@
 
 using namespace glm;
 
-int main(){
+int main(int argc, char** argv){
 
 	// Initialise GLFW
 	if( !glfwInit() )
 	{
-	    fprintf( stderr, "Failed to initialize GLFW\n" );
+	    std::cerr << "Failed to initialize GLFW\n";
 	    return -1;
 	}
 
-	glfwWindowHint(GLFW_SAMPLES, 4); // 4x antialiasing
+	glfwWindowHint(GLFW_SAMPLES, 16); // 16x antialiasing
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3); // We want OpenGL 3.3
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // To make MacOS happy; should not be needed

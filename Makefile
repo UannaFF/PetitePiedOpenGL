@@ -8,12 +8,12 @@ CPPFLAGS := -std=c++11
 
 
 petit_pied: $(OBJ_FILES)
-	g++ $(LDFLAGS) -o $@ $^ 
+	g++ $(CPPFLAGS) -o $@ $^ $(LDFLAGS)
 	
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 	@mkdir -p $(shell dirname $@)
-	g++ $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -c -o $@ $<
+	g++ $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $< $(LDFLAGS)
 
 clean:
-	rm -rf build
+	rm -rf build petit_pied
     
