@@ -6,7 +6,7 @@
 *.slo
 *.lo
 *.o
-*.obj
+
 
 # Precompiled Headers
 *.gch
@@ -31,3 +31,5 @@
 *.exe
 *.out
 *.app
+
+pettit_pied
