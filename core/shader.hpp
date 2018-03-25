@@ -15,6 +15,8 @@ class Shader {
         static Shader* fromFiles(std::string vertex_path, std::string fragment_path);
     private:
         GLuint _programe_id;
+        
+        
 };
 
 #endif

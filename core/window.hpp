@@ -16,6 +16,8 @@ class Window {
         bool initialise();
         void preDrawingEvent();
         void postDrawingEvent();
+        void hideCursor();
+        void centerCursor();
         
         inline int keyStatus(int) const {
             return glfwGetKey(_gl_window, GLFW_KEY_ESCAPE );

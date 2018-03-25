@@ -3,7 +3,7 @@ SRC_DIR := .
 OBJ_DIR := build
 SRC_FILES := $(shell find $(SRC_DIR) | grep cpp)
 OBJ_FILES := $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(SRC_FILES))
-LDFLAGS := -lGL -lGLEW -lglfw
+LDFLAGS := -lGL -lGLEW -lglfw -lassimp
 CPPFLAGS := -std=c++11 -g
 
 

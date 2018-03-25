@@ -26,6 +26,14 @@ bool Window::initialise(){
     return 0;
 }
 
+void Window::hideCursor(){
+    glfwSetInputMode(_gl_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+}
+
+void Window::centerCursor(){
+    glfwSetCursorPos(_gl_window, width()/2, height()/2);
+}
+
 void Window::preDrawingEvent(){
 }
 

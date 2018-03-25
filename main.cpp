@@ -38,6 +38,8 @@ int main(int argc, char** argv){
         try {
                 Window window(1024, 768, "Petit Pied");
                 window.initialise();
+                window.hideCursor();
+                window.centerCursor();
                 
                 ControlableCamera mainCamera;
                 window.setCamera(mainCamera);
@@ -48,32 +50,34 @@ int main(int argc, char** argv){
                 glEnable(GL_DEPTH_TEST);
                 // Accept fragment if it closer to the camera than the former one
                 glDepthFunc(GL_LESS); 
+                // Cull triangles which normal is not towards the camera
+                glEnable(GL_CULL_FACE);
 
-                VertexArray model;
-                model.bind();
+                VertexArray* model = VertexArray::fromOBJ("suzanne.obj");
+                model->bind();
 
                 // Create and compile our GLSL program from the shaders
-                Shader* shader = Shader::fromFiles( "TransformVertexShader.vertexshader", "TextureFragmentShader.fragmentshader" );
+                Shader* shader = Shader::fromFiles( "StandardShading.vertexshader", "StandardShading.fragmentshader" );
 
-                // Get a handle for our "MVP" uniform
-                GLuint MatrixID = shader->getUniformLocation("MVP");
+                shader->use();
 
                 // Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
                 mainCamera.setProjectionMatrix(glm::perspective(glm::radians(45.0f), 4.0f / 3.0f, 0.1f, 100.0f));
                 // Camera matrix
                 mainCamera.setViewMatrix(glm::lookAt(
                                             glm::vec3(4,3,3), // Camera is at (4,3,3), in World Space
-                                            glm::vec3(1,0,0), // and looks at the origin
+                                            glm::vec3(0,0,0), // and looks at the origin
                                             glm::vec3(0,1,0)  // Head is up (set to 0,-1,0 to look upside-down)
                                        ));
+                                       
+                mainCamera.bindView(shader->getUniformLocation("V"));
                 // Model matrix : an identity matrix (model will be at the origin)
                 glm::mat4 Model      = glm::mat4(1.0f);
-                // Our ModelViewProjection : multiplication of our 3 matrices
-                glm::mat4 MVP;
+                glUniformMatrix4fv(shader->getUniformLocation("M"), 1, GL_FALSE, &Model[0][0]);
 
                 // Load the texture using any two methods
                 //GLuint Texture = loadBMP_custom("uvtemplate.bmp");
-                Texture* texture = Texture::fromDDS("uvtemplate.DDS");
+                Texture* texture = Texture::fromDDS("uvmap.DDS");
                 
                 if (!texture)
                     throw new OpenGLException("Cannot create the texture");
@@ -81,91 +85,15 @@ int main(int argc, char** argv){
                 // Get a handle for our "myTextureSampler" uniform
                 GLuint TextureID  = shader->getUniformLocation("myTextureSampler");
 
-                // Our vertices. Tree consecutive floats give a 3D vertex; Three consecutive vertices give a triangle.
-                // A cube has 6 faces with 2 triangles each, so this makes 6*2=12 triangles, and 12*3 vertices
-                model.setVertex({ 
-                    -1.0f,-1.0f,-1.0f,
-                    -1.0f,-1.0f, 1.0f,
-                    -1.0f, 1.0f, 1.0f,
-                     1.0f, 1.0f,-1.0f,
-                    -1.0f,-1.0f,-1.0f,
-                    -1.0f, 1.0f,-1.0f,
-                     1.0f,-1.0f, 1.0f,
-                    -1.0f,-1.0f,-1.0f,
-                     1.0f,-1.0f,-1.0f,
-                     1.0f, 1.0f,-1.0f,
-                     1.0f,-1.0f,-1.0f,
-                    -1.0f,-1.0f,-1.0f,
-                    -1.0f,-1.0f,-1.0f,
-                    -1.0f, 1.0f, 1.0f,
-                    -1.0f, 1.0f,-1.0f,
-                     1.0f,-1.0f, 1.0f,
-                    -1.0f,-1.0f, 1.0f,
-                    -1.0f,-1.0f,-1.0f,
-                    -1.0f, 1.0f, 1.0f,
-                    -1.0f,-1.0f, 1.0f,
-                     1.0f,-1.0f, 1.0f,
-                     1.0f, 1.0f, 1.0f,
-                     1.0f,-1.0f,-1.0f,
-                     1.0f, 1.0f,-1.0f,
-                     1.0f,-1.0f,-1.0f,
-                     1.0f, 1.0f, 1.0f,
-                     1.0f,-1.0f, 1.0f,
-                     1.0f, 1.0f, 1.0f,
-                     1.0f, 1.0f,-1.0f,
-                    -1.0f, 1.0f,-1.0f,
-                     1.0f, 1.0f, 1.0f,
-                    -1.0f, 1.0f,-1.0f,
-                    -1.0f, 1.0f, 1.0f,
-                     1.0f, 1.0f, 1.0f,
-                    -1.0f, 1.0f, 1.0f,
-                     1.0f,-1.0f, 1.0f
-                });
-
-                // Two UV coordinatesfor each vertex. They were created with Blender.
-                model.setUV({ 
-                    0.000059f, 1.0f-0.000004f, 
-                    0.000103f, 1.0f-0.336048f, 
-                    0.335973f, 1.0f-0.335903f, 
-                    1.000023f, 1.0f-0.000013f, 
-                    0.667979f, 1.0f-0.335851f, 
-                    0.999958f, 1.0f-0.336064f, 
-                    0.667979f, 1.0f-0.335851f, 
-                    0.336024f, 1.0f-0.671877f, 
-                    0.667969f, 1.0f-0.671889f, 
-                    1.000023f, 1.0f-0.000013f, 
-                    0.668104f, 1.0f-0.000013f, 
-                    0.667979f, 1.0f-0.335851f, 
-                    0.000059f, 1.0f-0.000004f, 
-                    0.335973f, 1.0f-0.335903f, 
-                    0.336098f, 1.0f-0.000071f, 
-                    0.667979f, 1.0f-0.335851f, 
-                    0.335973f, 1.0f-0.335903f, 
-                    0.336024f, 1.0f-0.671877f, 
-                    1.000004f, 1.0f-0.671847f, 
-                    0.999958f, 1.0f-0.336064f, 
-                    0.667979f, 1.0f-0.335851f, 
-                    0.668104f, 1.0f-0.000013f, 
-                    0.335973f, 1.0f-0.335903f, 
-                    0.667979f, 1.0f-0.335851f, 
-                    0.335973f, 1.0f-0.335903f, 
-                    0.668104f, 1.0f-0.000013f, 
-                    0.336098f, 1.0f-0.000071f, 
-                    0.000103f, 1.0f-0.336048f, 
-                    0.000004f, 1.0f-0.671870f, 
-                    0.336024f, 1.0f-0.671877f, 
-                    0.000103f, 1.0f-0.336048f, 
-                    0.336024f, 1.0f-0.671877f, 
-                    0.335973f, 1.0f-0.335903f, 
-                    0.667969f, 1.0f-0.671889f, 
-                    1.000004f, 1.0f-0.671847f, 
-                    0.667979f, 1.0f-0.335851f
-                });
+                // Get a handle for our "LightPosition" uniform
+                GLuint LightID = shader->getUniformLocation("LightPosition_worldspace");
+                    
+                std::cout << std::endl;
                 
-                do{
-                    // Draw nothing, see you in tutorial 2 !
+                do{                    
+                    // Update tarball from mouse and keyboard
                     mainCamera.updateFromMouse();
-                    MVP = mainCamera.projectionMatrix() * mainCamera.viewMatrix() * Model; // Remember, matrix multiplication is the other way around
+                    glm::mat4 MVP = mainCamera.projectionMatrix() * mainCamera.viewMatrix() * Model; // Remember, matrix multiplication is the other way around
                     
                     // Clear the screen
                     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -175,12 +103,16 @@ int main(int argc, char** argv){
                     
                     // Send our transformation to the currently bound shader, 
                     // in the "MVP" uniform
-                    glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
+                    glUniformMatrix4fv(shader->getUniformLocation("MVP"), 1, GL_FALSE, &MVP[0][0]);
+                    mainCamera.updateView();
+                    
+                    glm::vec3 lightPos = glm::vec3(4,4,4);
+                    glUniform3f(LightID, lightPos.x, lightPos.y, lightPos.z);
 
                     // Bind and Set our "myTextureSampler" sampler to use Texture
                     texture->set(TextureID);
                     
-                    model.draw();
+                    model->draw();
 
                     // Swap buffers
                     window.swap();
@@ -197,6 +129,7 @@ int main(int argc, char** argv){
                 // Cleanup VBO and shader
                 delete shader;
                 delete texture;
+                delete model;
                 
         } catch (OpenGLException* e){
                 std::cout << "OpenGL exception: " << e->what() << std::endl;

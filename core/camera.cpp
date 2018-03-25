@@ -4,8 +4,22 @@
 using namespace glm;
 
 Camera::Camera(Window* p):
-    _parent(p){
+    _parent(p), _projection_fragment(-1), _view_fragment(-1)
+{
 }
+
+void Camera::setViewMatrix(glm::mat4 v){
+    _viewMatrix = v;
+    if (_view_fragment > -1)
+        glUniformMatrix4fv(_view_fragment, 1, GL_FALSE, &v[0][0]);
+}
+
+void Camera::setProjectionMatrix(glm::mat4 p){
+    _projectionMatrix = p;
+    if (_projection_fragment > -1)
+        glUniformMatrix4fv(_projection_fragment, 1, GL_FALSE, &p[0][0]);
+}
+        
 
 ControlableCamera::ControlableCamera():
     Camera::Camera(),

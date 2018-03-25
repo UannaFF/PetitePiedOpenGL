@@ -23,15 +23,23 @@ class Camera {
         inline Window* parent() const { return _parent; }
 
         inline glm::mat4 viewMatrix() const { return _viewMatrix; }
-        inline void setViewMatrix(glm::mat4 v) { _viewMatrix = v; }
+        void setViewMatrix(glm::mat4 v);
         inline glm::mat4 projectionMatrix() const { return _projectionMatrix; }
-        inline void setProjectionMatrix(glm::mat4 p) { _projectionMatrix = p; }
+        void setProjectionMatrix(glm::mat4 p);
+        
+        inline void bindProjection(GLuint frag){ _projection_fragment = frag; }
+        inline void bindView(GLuint frag){ _view_fragment = frag; }
+        
+        inline void updateView(){ glUniformMatrix4fv(_view_fragment, 1, GL_FALSE, &_viewMatrix[0][0]); }
         
     private:
         Window* _parent;
         
         glm::mat4 _viewMatrix;
         glm::mat4 _projectionMatrix;
+        
+        GLuint _projection_fragment;
+        GLuint _view_fragment;
 };
 
 
