@@ -10,6 +10,8 @@
 #include <glm/glm.hpp>
 
 #include "core/window.hpp"
+#include "core/common.hpp"
+#include "core/camera.hpp"
 
 using namespace glm;
 
@@ -33,9 +35,13 @@ int main(int argc, char** argv){
         try {
                 Window window(1024, 768, "Petit Pied");
                 window.initialise();
+                
+                ControlableCamera mainCamera;
+                window.setCamera(mainCamera);
 
                 do{
                     // Draw nothing, see you in tutorial 2 !
+                    mainCamera.updateFromMouse();
 
                     // Swap buffers
                     window.postDrawingEvent();

@@ -8,15 +8,7 @@ extern "C" {
 #include <exception>
 #include <string>
 
-class OpenGLException: public std::exception {
-    public:
-        OpenGLException(std::string error_msg): _msg(error_msg) {}
-        const char* what() const noexcept {
-            return _msg.c_str();
-        }
-    private:
-        std::string _msg;
-};
+class Camera;
 
 class Window {
     public:
@@ -37,8 +29,27 @@ class Window {
             return _gl_window;
         }
         
+        void setCamera(Camera& c);
+        
+        inline Camera* camera() {
+            return _active_camera;
+        }
+        
+        inline int width() {
+            int width, height;
+            glfwGetWindowSize(_gl_window, &width, &height);
+            return width;
+        }
+        
+        inline int height() {
+            int width, height;
+            glfwGetWindowSize(_gl_window, &width, &height);
+            return height;
+        }
+        
     private:
         GLFWwindow* _gl_window;
+        Camera* _active_camera;
 };
 
 #endif

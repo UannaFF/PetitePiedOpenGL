@@ -1,4 +1,6 @@
 #include "window.hpp"
+#include "common.hpp"
+#include "camera.hpp"
     
 Window::Window(int width, int height, std::string title):
     _gl_window(glfwCreateWindow(width, height, title.c_str(), NULL, NULL)) {
@@ -6,6 +8,11 @@ Window::Window(int width, int height, std::string title):
     if( _gl_window == NULL )
 	    throw new OpenGLException("Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible. Try the 2.1 version of the tutorials.\n");
         
+}
+
+void Window::setCamera(Camera& c) {
+    _active_camera = &c;
+    c.setParent(this);
 }
 
 bool Window::initialise(){
