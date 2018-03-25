@@ -21,6 +21,10 @@ class Window {
             return glfwGetKey(_gl_window, GLFW_KEY_ESCAPE );
         }
         
+        inline void swap() {
+            glfwSwapBuffers(_gl_window);
+        }
+        
         inline int shouldClose() const {
             return glfwWindowShouldClose(_gl_window);
         }
