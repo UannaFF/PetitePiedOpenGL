@@ -56,7 +56,7 @@ Texture::~Texture(){
 
 Texture* Texture::fromBitmap(std::string imagepath){
 
-	DEBUG(Debug::Info, "Reading image %s\n", imagepath);
+	DEBUG(Debug::Info, "Reading image %s\n", imagepath.c_str());
 
 	// Data read from the header of the BMP file
 	unsigned char header[54];
@@ -69,7 +69,7 @@ Texture* Texture::fromBitmap(std::string imagepath){
 	// Open the file
 	std::ifstream BitMapStream(imagepath, ios::in);
 	if(!BitMapStream.is_open()){
-		DEBUG(Debug::Error, "%s could not be opened\n", imagepath);
+		DEBUG(Debug::Error, "%s could not be opened\n", imagepath.c_str());
 		return nullptr;
 	}
 

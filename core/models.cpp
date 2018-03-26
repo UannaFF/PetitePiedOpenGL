@@ -169,19 +169,7 @@ std::vector<VertexArray*> VertexArray::fromOBJ(std::string path){
         models.push_back(v);
     }
     
-    // Loading textures
-    //~ std::vector<Texture*> textures;
-    //~ textures.resever(scene->mNumTextures);
-    //~ for (int t = 0; t < scene->mNumTextures; t++){
-        //~ unsigned char* buffer = new unsigned char[scene->mTextures[t]->mWidth * scene->mTextures[t]->mHeight * 3];
-        //~ for (int i = 0; i < scene->mTextures[t]->mWidth * scene->mTextures[t]->mHeight; i++){
-            //~ buffer[i * 3] = scene->mTextures[t]->pcData[i]->r;
-            //~ buffer[i * 3 + 1] = scene->mTextures[t]->pcData[i]->g;
-            //~ buffer[i * 3 + 2] = scene->mTextures[t]->pcData[i]->b;
-        //~ }
-        
-        //~ textures.push_back(new Texture());
-    //~ }
-	// The "scene" pointer will be deleted automatically by "importer"
-	return models;
+    return models;
 }
+
+
