@@ -1,5 +1,6 @@
 #include "models.hpp"
 #include "common.hpp"
+#include "texture.hpp"
 #include <assimp/Importer.hpp>      // C++ importer interface
 #include <assimp/scene.h>           // Output data structure
 #include <assimp/postprocess.h>     // Post processing flags
@@ -96,60 +97,91 @@ void VertexArray::draw(){
     glDisableVertexAttribArray(1);
 }
 
-VertexArray* VertexArray::fromOBJ(std::string path){
-	std::vector<unsigned short> indices;
-	std::vector<GLfloat> vertices, uvs, normals;
+std::vector<VertexArray*> VertexArray::fromOBJ(std::string path){
 
 	Assimp::Importer importer;
 
-	const aiScene* scene = importer.ReadFile(path, 0/*aiProcess_JoinIdenticalVertices | aiProcess_SortByPType*/);
+	const aiScene* scene = importer.ReadFile(path, aiProcess_CalcTangentSpace       | 
+                                                   aiProcess_Triangulate            |
+                                                   aiProcess_SortByPType);
 	if( !scene) {
 		DEBUG(Level::ERROR, importer.GetErrorString());
-		return nullptr;
+		return std::vector<VertexArray*>();
 	}
-	const aiMesh* mesh = scene->mMeshes[0]; // In this simple example code we always use the 1rst mesh (in OBJ files there is often only one anyway)
+    
+    std::vector<VertexArray*> models;
+    models.reserve(scene->mNumMeshes);
+    
+    for (int m = 0; m < scene->mNumMeshes; m++){    
+        const aiMesh* mesh = scene->mMeshes[m]; // In this simple example code we always use the 1rst mesh (in OBJ files there is often only one anyway)
+        VertexArray* v = new VertexArray;
 
-	// Fill vertices positions
-	vertices.reserve(mesh->mNumVertices);
-	for(unsigned int i=0; i<mesh->mNumVertices; i++){
-		aiVector3D pos = mesh->mVertices[i];
-		vertices.push_back(pos.x);
-		vertices.push_back(pos.y);
-		vertices.push_back(pos.z);
-	}
+        // Fill vertices positions
+        std::vector<GLfloat> vertices;
+        vertices.reserve(mesh->mNumVertices);
+        for(unsigned int i=0; i<mesh->mNumVertices; i++){
+            aiVector3D pos = mesh->mVertices[i];
+            vertices.push_back(pos.x);
+            vertices.push_back(pos.y);
+            vertices.push_back(pos.z);
+        }
+        v->setVertex(vertices);
 
-	// Fill vertices texture coordinates
-	uvs.reserve(mesh->mNumVertices);
-	for(unsigned int i=0; i<mesh->mNumVertices; i++){
-		aiVector3D UVW = mesh->mTextureCoords[0][i]; // Assume only 1 set of UV coords; AssImp supports 8 UV sets.
-		uvs.push_back(UVW.x);
-		uvs.push_back(UVW.y);
-	}
+        // Fill vertices texture coordinates
+        for (int channel = 0; channel < mesh->GetNumUVChannels(); channel++) {
+            std::vector<GLfloat> uvs;
+            uvs.reserve(mesh->mNumVertices);
+            for(unsigned int i=0; i<mesh->mNumVertices; i++){
+                aiVector3D UVW = mesh->mTextureCoords[channel][i]; // Assume only 1 set of UV coords; AssImp supports 8 UV sets.
+                uvs.push_back(UVW.x);
+                uvs.push_back(UVW.y);
+            }
+            //~ v->addUV(uvs);
+            v->setUV(uvs);
+        }
 
-	// Fill vertices normals
-	normals.reserve(mesh->mNumVertices);
-	for(unsigned int i=0; i<mesh->mNumVertices; i++){
-		aiVector3D n = mesh->mNormals[i];
-		normals.push_back(n.x);
-		normals.push_back(n.y);
-		normals.push_back(n.z);
-	}
+        // Fill vertices normals
+        if (mesh->HasNormals()){
+            std::vector<GLfloat> normals;
+            normals.reserve(mesh->mNumVertices);
+            for(unsigned int i=0; i<mesh->mNumVertices; i++){
+                aiVector3D n = mesh->mNormals[i];
+                normals.push_back(n.x);
+                normals.push_back(n.y);
+                normals.push_back(n.z);
+            }
+            v->setNormal(normals);
+        }
 
 
-	// Fill face indices
-	indices.reserve(3*mesh->mNumFaces);
-	for (unsigned int i=0; i<mesh->mNumFaces; i++){
-		// Assume the model has only triangles.
-		indices.push_back(mesh->mFaces[i].mIndices[0]);
-		indices.push_back(mesh->mFaces[i].mIndices[1]);
-		indices.push_back(mesh->mFaces[i].mIndices[2]);
-	}
-	
-    VertexArray* v = new VertexArray;
-    v->setVertex(vertices);
-    v->setUV(uvs);
-    v->setNormal(normals);
-    v->setIndice(indices);
+        // Fill face indices
+        if (mesh->HasFaces()){
+            std::vector<unsigned short> indices;
+            indices.reserve(3*mesh->mNumFaces);
+            for (unsigned int i=0; i<mesh->mNumFaces; i++){
+                // Assume the model has only triangles.
+                indices.push_back(mesh->mFaces[i].mIndices[0]);
+                indices.push_back(mesh->mFaces[i].mIndices[1]);
+                indices.push_back(mesh->mFaces[i].mIndices[2]);
+            }
+            v->setIndice(indices);
+        }
+        models.push_back(v);
+    }
+    
+    // Loading textures
+    //~ std::vector<Texture*> textures;
+    //~ textures.resever(scene->mNumTextures);
+    //~ for (int t = 0; t < scene->mNumTextures; t++){
+        //~ unsigned char* buffer = new unsigned char[scene->mTextures[t]->mWidth * scene->mTextures[t]->mHeight * 3];
+        //~ for (int i = 0; i < scene->mTextures[t]->mWidth * scene->mTextures[t]->mHeight; i++){
+            //~ buffer[i * 3] = scene->mTextures[t]->pcData[i]->r;
+            //~ buffer[i * 3 + 1] = scene->mTextures[t]->pcData[i]->g;
+            //~ buffer[i * 3 + 2] = scene->mTextures[t]->pcData[i]->b;
+        //~ }
+        
+        //~ textures.push_back(new Texture());
+    //~ }
 	// The "scene" pointer will be deleted automatically by "importer"
-	return v;
+	return models;
 }

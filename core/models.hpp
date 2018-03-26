@@ -9,6 +9,8 @@
 #include <vector>
 #include <string>
 
+class Texture;
+
 class VertexArray {
     public:
         VertexArray();
@@ -25,7 +27,7 @@ class VertexArray {
         
         void draw();
         
-        static VertexArray* fromOBJ(std::string path);
+        static std::vector<VertexArray*> fromOBJ(std::string path);
     private:
         GLuint _vertex_array_id;
         GLuint _uvbuffer;
@@ -36,5 +38,13 @@ class VertexArray {
         int _len_points;
         
         GLenum _mode;
+};
+
+class Model {
+    public:
+        Model(VertexArray*, Texture*);
+        
+    private:
+        VertexArray* _vertex_array;
 };
 #endif

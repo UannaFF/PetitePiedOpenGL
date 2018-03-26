@@ -53,9 +53,8 @@ int main(int argc, char** argv){
                 // Cull triangles which normal is not towards the camera
                 glEnable(GL_CULL_FACE);
 
-                VertexArray* model = VertexArray::fromOBJ("suzanne.obj");
-                model->bind();
-
+                std::vector<VertexArray*> model = VertexArray::fromOBJ("Environement.obj");
+                
                 // Create and compile our GLSL program from the shaders
                 Shader* shader = Shader::fromFiles( "StandardShading.vertexshader", "StandardShading.fragmentshader" );
 
@@ -67,9 +66,10 @@ int main(int argc, char** argv){
                 mainCamera.bindView(shader->getUniformLocation("V"));
                 mainCamera.setViewMatrix(glm::lookAt(
                                             glm::vec3(4,3,3), // Camera is at (4,3,3), in World Space
-                                            glm::vec3(0,0,0), // and looks at the origin
+                                            glm::vec3(1,1,1), // and looks at the origin
                                             glm::vec3(0,1,0)  // Head is up (set to 0,-1,0 to look upside-down)
                                        ));
+                //~ mainCamera.setViewMatrix(glm::mat4(1.f));
                                        
                 // Model matrix : an identity matrix (model will be at the origin)
                 glm::mat4 Model      = glm::mat4(1.0f);
@@ -79,8 +79,8 @@ int main(int argc, char** argv){
                 //GLuint Texture = loadBMP_custom("uvtemplate.bmp");
                 Texture* texture = Texture::fromDDS("uvmap.DDS");
                 
-                if (!texture)
-                    throw new OpenGLException("Cannot create the texture");
+                //~ if (!texture)
+                    //~ throw new OpenGLException("Cannot create the texture");
                 
                 // Get a handle for our "myTextureSampler" uniform
                 GLuint TextureID  = shader->getUniformLocation("myTextureSampler");
@@ -90,16 +90,18 @@ int main(int argc, char** argv){
                     
                 std::cout << std::endl;
                 
-                do{                    
-                    // Update tarball from mouse and keyboard
-                    mainCamera.updateFromMouse();
-                    glm::mat4 MVP = mainCamera.projectionMatrix() * mainCamera.viewMatrix() * Model; // Remember, matrix multiplication is the other way around
-                    
+                do{ 
                     // Clear the screen
                     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
                     // Use our shader
                     shader->use();
+                                       
+                    // Update tarball from mouse and keyboard
+                    mainCamera.updateFromMouse();
+                    glm::mat4 MVP = mainCamera.projectionMatrix() * mainCamera.viewMatrix() * Model; // Remember, matrix multiplication is the other way around
+                    //~ std::cout << "V: " << std::endl << mainCamera.viewMatrix() << std::endl;
+                    
                     
                     // Send our transformation to the currently bound shader, 
                     // in the "MVP" uniform
@@ -110,9 +112,12 @@ int main(int argc, char** argv){
                     glUniform3f(LightID, lightPos.x, lightPos.y, lightPos.z);
 
                     // Bind and Set our "myTextureSampler" sampler to use Texture
-                    texture->set(TextureID);
+                    //~ texture->set(TextureID);
                     
-                    model->draw();
+                    for (auto&m: model){
+                        m->bind();
+                        m->draw();
+                    }
 
                     // Swap buffers
                     window.swap();
@@ -129,7 +134,6 @@ int main(int argc, char** argv){
                 // Cleanup VBO and shader
                 delete shader;
                 delete texture;
-                delete model;
                 
         } catch (OpenGLException* e){
                 std::cout << "OpenGL exception: " << e->what() << std::endl;
