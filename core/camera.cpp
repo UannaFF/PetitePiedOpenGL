@@ -34,7 +34,7 @@ void ControlableCamera::updateFromMouse(){
 	static double lastTime = glfwGetTime();
 
 	// Compute time difference between current and last frame
-	double currentTime = glfwGetTime();
+        double currentTime = glfwGetTime();
 	float deltaTime = float(currentTime - lastTime);
 
 	// Get mouse position
@@ -45,8 +45,8 @@ void ControlableCamera::updateFromMouse(){
 	glfwSetCursorPos(parent()->internal(), parent()->width()/2, parent()->height()/2);
 
 	// Compute new orientation
-	_horizontalAngle += _mouseSpeed * float(1024/2 - xpos );
-	_verticalAngle   += _mouseSpeed * float( 768/2 - ypos );
+	_horizontalAngle += _mouseSpeed * float(parent()->width()/2 - xpos );
+	_verticalAngle   += _mouseSpeed * float( parent()->height()/2 - ypos );
 
 	// Direction : Spherical coordinates to Cartesian coordinates conversion
 	glm::vec3 direction(
