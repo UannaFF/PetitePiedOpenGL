@@ -40,6 +40,7 @@ class Window {
         inline Camera* camera() {
             return _active_camera;
         }
+        inline float ratio() { return width() / height(); }
         
         inline int width() {
             int width, height;

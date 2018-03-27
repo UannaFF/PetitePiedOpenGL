@@ -95,4 +95,5 @@ void ControlableCamera::updateFromMouse(){
 
 	// For the next frame, the "last time" will be "now"
 	lastTime = currentTime;
+        update();
 }

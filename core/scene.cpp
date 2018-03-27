@@ -206,7 +206,6 @@ Node::Node(std::string name, std::vector<VertexArray*> vertexarray, glm::mat4 tr
 }
 
 void Node::draw(GLuint model_vert, glm::mat4 localTransform){
-    //TODO: apply transfomration
     glUniformMatrix4fv(model_vert, 1, GL_FALSE, &(localTransform * _transformation)[0][0]);
     //~ DEBUG(Debug::Info, "Drawing node '%s': %d meshes\n", _name.c_str(), _meshs.size());
     for (VertexArray* mesh: _meshs){
