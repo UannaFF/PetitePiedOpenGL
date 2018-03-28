@@ -10,6 +10,8 @@
 #include <string>
 
 class Texture;
+class Shader;
+class Material;
 
 class VertexArray {
     public:
@@ -25,7 +27,9 @@ class VertexArray {
         
         inline void bind() const { return glBindVertexArray(_vertex_array_id); }
         
-        void draw();
+        void draw(Shader* usedShader);
+        
+        inline void setMaterial(Material* m) { _material = m; }
         
         static std::vector<VertexArray*> fromOBJ(std::string path);
     private:
@@ -35,16 +39,10 @@ class VertexArray {
         GLuint _normal;
         GLuint _indice;
         
+        Material* _material;
+        
         int _len_points;
         
         GLenum _mode;
-};
-
-class Model {
-    public:
-        Model(VertexArray*, Texture*);
-        
-    private:
-        VertexArray* _vertex_array;
 };
 #endif

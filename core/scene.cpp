@@ -3,6 +3,9 @@
 #include "texture.hpp"
 
 #include "common.hpp"
+#include "shader.hpp"
+#include "light.hpp"
+#include "material.hpp"
 
 #include <map>
 #include <iostream>
@@ -22,9 +25,7 @@ Scene* Scene::fromOBJ(std::string path){
 
 	Assimp::Importer importer;
 
-	const aiScene* scene = importer.ReadFile(path, 0/*aiProcess_CalcTangentSpace       | 
-                                                   aiProcess_Triangulate            |
-                                                   aiProcess_SortByPType*/);
+	const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
 	if( !scene) {
 		DEBUG(Level::ERROR, "[Assimp] Errror while reading: %s\n", importer.GetErrorString());
 		return nullptr;
@@ -32,67 +33,54 @@ Scene* Scene::fromOBJ(std::string path){
     
     Scene* s = new Scene;
     
-    //~ for (int t = 0; t < scene->mNumTextures; t++){
-        //~ unsigned char* buffer = new unsigned char[scene->mTextures[t]->mWidth * scene->mTextures[t]->mHeight * 3];
-        //~ for (int i = 0; i < scene->mTextures[t]->mWidth * scene->mTextures[t]->mHeight; i++){
-            //~ buffer[i * 3] = scene->mTextures[t]->pcData->r;
-            //~ buffer[i * 3 + 1] = scene->mTextures[t]->pcData->g;
-            //~ buffer[i * 3 + 2] = scene->mTextures[t]->pcData->b;
-        //~ }
-        
-        //~ s->addTexture(new Texture(buffer, scene->mTextures[t]->mWidth, scene->mTextures[t]->mHeight));
-    //~ }   
+    std::string directory = path.substr(0, path.find_last_of('/'));
     
-    // http://www.lighthouse3d.com/cg-topics/code-samples/importing-3d-models-with-assimp/
-    std::map<std::string, GLuint> textureIdMap;
     DEBUG(Debug::Info, "Materials: %d\n",scene->mNumMaterials); 
-    for (unsigned int m=0; m<scene->mNumMaterials; ++m){
-        int texIndex = 0;
-        aiString path;  // filename
-        aiColor3D color (0.f,0.f,0.f);
-        scene->mMaterials[m]->Get(AI_MATKEY_GLOBAL_BACKGROUND_IMAGE, path);
-
-        //~ DEBUG(Debug::Info, "-: %f %f %f\n", color.r, color.b, color.g); 
-        DEBUG(Debug::Info, "-: %s\n", path.data); 
-
- 
-        aiReturn texFound = scene->mMaterials[m]->GetTexture(aiTextureType_DIFFUSE, texIndex, &path);
-        while (texFound == AI_SUCCESS) {
-            //fill map with textures, OpenGL image ids set to 0
-            textureIdMap[path.data] = 0; 
-            DEBUG(Debug::Info, "- %s\n", path.data);
-            // more textures?
-            texIndex++;
-            texFound = scene->mMaterials[m]->GetTexture(aiTextureType_DIFFUSE, texIndex, &path);
-        }
-    }
     
-    int numTextures = textureIdMap.size(); 
- 
-    /* create and fill array with GL texture ids */
-    GLuint* textureIds = new GLuint[numTextures];
-    glGenTextures(numTextures, textureIds); /* Texture name generation */
- 
-    /* get iterator */
-    std::map<std::string, GLuint>::iterator itr = textureIdMap.begin();
-    int i=0;
-    for (; itr != textureIdMap.end(); ++i, ++itr)
-    {
-        //save IL image ID
-        std::string filename = (*itr).first;  // get filename
-        (*itr).second = textureIds[i];    // save texture id for filename in map
- 
-        /* Create and load textures to OpenGL */
-        printf("Mamene: %s\n", filename.c_str());
-        //~ glBindTexture(GL_TEXTURE_2D, textureIds[i]); 
-        //~ glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); 
-        //~ glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        //~ glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, ilGetInteger(IL_IMAGE_WIDTH),
-            //~ ilGetInteger(IL_IMAGE_HEIGHT), 0, GL_RGBA, GL_UNSIGNED_BYTE,
-            //~ ilGetData()); 
-  
-    }
-    // end
+    // Loading materials
+    std::vector<Material*> materials;
+    materials.reserve(scene->mNumMaterials);
+    
+    for (int m = 0; m < scene->mNumMaterials; m++){ 
+        const aiMaterial* material = scene->mMaterials[m];
+        
+        glm::vec3 ambient, diffuse, specular;
+        float shininess;
+        std::vector<Texture*> textures;
+        
+        aiColor3D color;
+        
+        material->Get(AI_MATKEY_COLOR_AMBIENT, color);
+        ambient = aiColor3DtoglmVec3(color);
+        material->Get(AI_MATKEY_COLOR_DIFFUSE, color);
+        diffuse = aiColor3DtoglmVec3(color);
+        material->Get(AI_MATKEY_COLOR_SPECULAR, color);
+        specular = aiColor3DtoglmVec3(color);
+        
+        std::vector<Texture*> diffuseMaps = Material::loadMaterialTextures(material, aiTextureType_DIFFUSE, Texture::Diffuse, directory);
+        textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
+        // 2. specular maps
+        std::vector<Texture*> specularMaps = Material::loadMaterialTextures(material, aiTextureType_SPECULAR, Texture::Specular, directory);
+        textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
+        // 3. normal maps
+        std::vector<Texture*> normalMaps = Material::loadMaterialTextures(material, aiTextureType_AMBIENT, Texture::Normal, directory);
+        textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
+        // 4. height maps
+        std::vector<Texture*> heightMaps = Material::loadMaterialTextures(material, aiTextureType_HEIGHT, Texture::Height, directory);
+        textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
+        
+        material->Get(AI_MATKEY_SHININESS, shininess);        
+        
+        aiShadingMode shadingType;
+        material->Get(AI_MATKEY_SHADING_MODEL, shadingType);
+        DEBUG(Debug::Info, "material has %d textures\n",textures.size()); 
+               
+        Material* mat = new Material(ambient, diffuse, specular, shininess);
+        mat->setShadingMode(shadingType);
+        mat->setTextures(textures);
+        
+        materials.push_back(mat);
+    }  
     
     DEBUG(Debug::Info, "Meshes: %d\n", scene->mNumMeshes);
     for (int m = 0; m < scene->mNumMeshes; m++){    
@@ -149,17 +137,11 @@ Scene* Scene::fromOBJ(std::string path){
             }
             v->setIndice(indices);
         }
+        
+        if(mesh->mMaterialIndex >= 0)
+            v->setMaterial(materials[mesh->mMaterialIndex]);
         s->addMesh(v);
     }
-    
-    // Loading materials
-    //~ std::vector<Material*> materials;
-    //~ textures.reserve(scene->mNumMaterials);
-    
-    //~ for (int m = 0; m < scene->mNumMaterials; m++){
-        
-        //~ textures.push_back(new Material());
-    //~ }    
     
     // Loading nodes
     DEBUG(Debug::Info, "Root node has %d children\n", scene->mRootNode->mNumChildren);
@@ -174,8 +156,8 @@ Scene* Scene::fromOBJ(std::string path){
 	// The "scene" pointer will be deleted automatically by "importer"
 	return s;
 }
-void Scene::render(GLuint model_vert){
-    _main_node->draw(model_vert);
+void Scene::render(){
+    _main_node->draw();
 }
 
 void Scene::_parseNode(Node* current, aiNode ** children, unsigned int nb_child){
@@ -203,18 +185,6 @@ Node::Node(std::string name, std::vector<VertexArray*> vertexarray, glm::mat4 tr
     _parent(parent),
     _scene(scene)
 {
-}
-
-void Node::draw(GLuint model_vert, glm::mat4 localTransform){
-    glUniformMatrix4fv(model_vert, 1, GL_FALSE, &(localTransform * _transformation)[0][0]);
-    //~ DEBUG(Debug::Info, "Drawing node '%s': %d meshes\n", _name.c_str(), _meshs.size());
-    for (VertexArray* mesh: _meshs){
-        mesh->bind();
-        mesh->draw();
-    }
-        
-    for (Node* child: _children)
-        child->draw(model_vert, localTransform * _transformation);
 }
 
 void Node::dump(int level){
@@ -246,4 +216,30 @@ glm::mat4 aiMatrix4x4toglmMat4(aiMatrix4x4t<float>& ai_mat){
  	mat[3].w = ai_mat.d4;
     
     return mat;
+}
+
+
+glm::vec3 aiColor3DtoglmVec3(aiColor3D& ai_col){
+    
+    glm::vec3 col;
+    
+    col.x = ai_col.r;
+ 	col.y = ai_col.g;
+ 	col.z = ai_col.b;
+    
+    return col;
+}
+
+void Node::draw(glm::mat4 localTransform){
+    glm::mat4 t = applyTransformation(scene()->defaultShader()->getUniformLocation("model"), localTransform);
+    
+    scene()->defaultShader()->use();
+    
+    for (VertexArray* mesh: _meshs){
+        mesh->bind();
+        mesh->draw(scene()->defaultShader());
+    }
+        
+    for (Node* child: _children)
+        child->draw(localTransform * _transformation);
 }

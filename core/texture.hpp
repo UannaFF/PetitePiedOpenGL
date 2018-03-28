@@ -3,6 +3,7 @@
 #define TEXTURE_H
 
 #include <string>
+#include <map>
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -13,6 +14,8 @@
 
 class Texture {
     public:
+        enum Type {Diffuse, Specular, Normal, Height};
+    
         /**!
          * \short Create a texture out of a bitmap buffer
          * \param buffer The bitmap buffer
@@ -24,25 +27,25 @@ class Texture {
          * \short Create an empty texture
          */
         Texture();
+        /**!
+         * \short Create an empty texture of type \ref Type
+         */
+        Texture(Type);
         ~Texture();
         
-        /**!
-         * \param buffer The byte buffer of the MipMap
-         * \param width The MipMap width
-         * \param height The MipMap height
-         * 
-         * \return the size in byte written
-         */
-        unsigned int addMipMap(unsigned char* buffer, unsigned int width, unsigned int height, unsigned int level, unsigned int format);
-        void set(GLuint framgment_id);
-        
         inline GLuint id() const { return _texture_id; }
+        inline Type type() const { return _type; }
+        inline void type(Type t) { _type = t; }
         
-        static Texture* fromBitmap(std::string);
-        static Texture* fromDDS(std::string);
+        //~ static Texture* fromBitmap(std::string);
+        //~ static Texture* fromDDS(std::string);
+        static Texture* fromFile(std::string filename, std::string directory = "", bool gamma = false);
         
+        static std::map<std::string, Texture*> LOADED;
     private:
         GLuint _texture_id;
+        Type _type;
+        std::string _path;
 };
 
 #endif
