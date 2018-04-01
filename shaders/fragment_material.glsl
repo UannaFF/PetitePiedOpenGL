@@ -2,6 +2,7 @@
 
 out vec4 FragColor;
 in vec2 TexCoords;
+uniform sampler2D texture_diffuse1;
 
 struct Material {
     vec3 ambient;
@@ -24,6 +25,7 @@ uniform vec3 viewPos;
 uniform Material material;
 uniform Light light;
 
+
 void main()
 {
     // ambient
@@ -43,6 +45,7 @@ void main()
         
     vec3 result = ambient + diffuse + specular;
     FragColor = vec4(result, 1.0);
+    //~ FragColor = texture(texture_diffuse1, TexCoords);
 
 } 
 

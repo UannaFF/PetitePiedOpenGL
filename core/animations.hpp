@@ -10,120 +10,37 @@
 #include "texture.hpp"
 
 class Joint;
-class Animator;
 class KeyFrame;
 class Animation;
 class Quaternion;
-class Animator;
+class NodeAnimator;
+class Node;
 
-/**
- * 
- * This class represents an entity in the world that can be animated. It
- * contains the model's VAO which contains the mesh data, the texture, and the
- * root joint of the joint hierarchy, or "skeleton". It also holds an int which
- * represents the number of joints that the model's skeleton contains, and has
- * its own {@link Animator} instance which can be used to apply animations to
- * this entity.
- * 
- * @author Karl
- *
- */
-class AnimatedModel {
+class Channel {
+    
     private:
-        VertexArray* _model;
-        Texture* _texture;
-        Joint* _rootJoint;
-        int _jointCount;
-        Animator* _animator;
-        
+        Node* _node;
+        std::map<float, Key*> _keys;
+};
+
+class Key {
     public:
-        /**
-         * Creates a new entity capable of animation. The inverse bind transform for
-         * all joints is calculated in this constructor. The bind transform is
-         * simply the original (no pose applied) transform of a joint in relation to
-         * the model's origin (model-space). The inverse bind transform is simply
-         * that but inverted.
-         * 
-         * @param model
-         *            - the VAO containing the mesh data for this entity. This
-         *            includes vertex positions, normals, texture coords, IDs of
-         *            joints that affect each vertex, and their corresponding
-         *            weights.
-         * @param texture
-         *            - the diffuse texture for the entity.
-         * @param rootJoint
-         *            - the root joint of the joint hierarchy which makes up the
-         *            "skeleton" of the entity.
-         * @param jointCount
-         *            - the number of joints in the joint hierarchy (skeleton) for
-         *            this entity.
-         * 
-         */
-        AnimatedModel(VertexArray* model, Texture* texture, Joint* rootJoint, int jointCount);
+        template<typename T>
+        virtual T value() const = 0;
+};
 
-        /**
-         * @return The VAO containing all the mesh data for this entity.
-         */
-        inline VertexArray* model() const { return _model; }
+class PositionKey : public Key {
+    public:
+        inline glm::vec3 value() const { return _value; }
+    private:
+        glm::vec3 _value;
+};
 
-        /**
-         * @return The diffuse texture for this entity.
-         */
-        inline Texture* texture() const { return _texture; }
-
-        /**
-         * @return The root joint of the joint hierarchy. This joint has no parent,
-         *         and every other joint in the skeleton is a descendant of this
-         *         joint.
-         */
-        inline Joint* rootJoint() const { return _rootJoint; }
-
-        /**
-         * Deletes the OpenGL objects associated with this entity, namely the model
-         * (VAO) and texture.
-         */
-        ~AnimatedModel();
-
-        /**
-         * Instructs this entity to carry out a given animation. To do this it
-         * basically sets the chosen animation as the current animation in the
-         * {@link Animator} object.
-         * 
-         * @param animation
-         *            - the animation to be carried out.
-         */
-        void doAnimation(Animation* animation);
-
-        /**
-         * Updates the animator for this entity, basically updating the animated
-         * pose of the entity. Must be called every frame.
-         */
-        void update();
-
-        /**
-         * Gets an array of the all important model-space transforms of all the
-         * joints (with the current animation pose applied) in the entity. The
-         * joints are ordered in the array based on their joint index. The position
-         * of each joint's transform in the array is equal to the joint's index.
-         * 
-         * @return The array of model-space transforms of the joints in the current
-         *         animation pose.
-         */
-        std::vector<glm::mat4> getJointTransforms();
-
-        /**
-         * This adds the current model-space transform of a joint (and all of its
-         * descendants) into an array of transforms. The joint's transform is added
-         * into the array at the position equal to the joint's index.
-         * 
-         * @param headJoint
-         *            - the current joint being added to the array. This method also
-         *            adds the transforms of all the descendents of this joint too.
-         * @param jointMatrices
-         *            - the array of joint transforms that is being filled.
-         */
-        void addJointsToArray(Joint* headJoint, std::vector<glm::mat4>& jointMatrices);
-
+class RotationKey : public Key {
+    public:
+        inline Quaternion value() const { return _value; }
+    private:
+        Quaternion _value;
 };
 
 /**
@@ -141,7 +58,7 @@ class AnimatedModel {
  * transform changes the position/rotation of the joint in the animated entity.
  * 
  * The two other matrices are transforms that are required to calculate the
- * "animatedTransform" in the {@link Animator} class. It also has the local bind
+ * "animatedTransform" in the {@link NodeAnimator} class. It also has the local bind
  * transform which is the original (no pose/animation applied) transform of the
  * joint relative to the parent joint (in bone-space).
  * 
@@ -178,6 +95,8 @@ class Joint {
         inline std::vector<Joint*> children() const { return _children; }
         inline std::string name() const { return _name; }
         inline int index() const { return _index; }
+        int size() const;
+        
 
         /**
          * Adds a child joint to this joint. Used during the creation of the joint
@@ -277,10 +196,10 @@ class Animation {
 
 };
 
-class Animator {
+class NodeAnimator {
 
 	private:
-        AnimatedModel* _entity;
+        Node* _entity;
         Animation* _currentAnimation;
         float _animationTime;
 
@@ -289,7 +208,7 @@ class Animator {
          * @param entity
          *            - the entity which will by animated by this animator.
          */
-        Animator(AnimatedModel* entity);
+        NodeAnimator(Node* entity);
 
         /**
          * Indicates that the entity should carry out the given animation. Resets
@@ -384,7 +303,7 @@ class Animator {
          * @return The previous and next keyframes, in an array which therefore will
          *         always have a length of 2.
          */
-        std::vector<KeyFrame*> getPreviousAndNextFrames();
+        std::pair<KeyFrame*, KeyFrame*> getPreviousAndNextFrames();
 
         /**
          * Calculates how far between the previous and next keyframe the current
@@ -529,8 +448,8 @@ class JointTransform {
 
 	// remember, this position and rotation are relative to the parent bone!
 	private:
-        glm::vec3 _position;
-        Quaternion _rotation;
+        glm::vec3* _position;
+        Quaternion* _rotation;
 
     public:
         /**
@@ -545,10 +464,14 @@ class JointTransform {
          *            - the rotation of the joint relative to the parent joint
          *            (bone-space) at a certain keyframe.
          */
-        JointTransform(glm::vec3 position, Quaternion rotation);
+        JointTransform(glm::vec3* position = nullptr, Quaternion* rotation = nullptr);
+        ~JointTransform();
         
-        inline Quaternion rotation() const { return _rotation; }
-        inline glm::vec3 position() const { return _position; }
+        inline Quaternion rotation() const { return *_rotation; }
+        inline glm::vec3 position() const { return *_position; }
+        
+        inline void rotation(Quaternion* r) { _rotation = r; }
+        inline void position(glm::vec3* p) { _position = p; }
         /**
          * In this method the bone-space transform matrix is constructed by
          * translating an identity matrix using the position variable and then
@@ -625,29 +548,29 @@ class KeyFrame {
         std::map<std::string, JointTransform*> _pose;
 
     public:
-	/**
-	 * @param timeStamp
-	 *            - the time (in seconds) that this keyframe occurs during the
-	 *            animation.
-	 * @param jointKeyFrames
-	 *            - the local-space transforms for all the joints at this
-	 *            keyframe, indexed by the name of the joint that they should be
-	 *            applied to.
-	 */
-	KeyFrame(float timeStamp, std::map<std::string, JointTransform*> jointKeyFrames);
+        /**
+         * @param timeStamp
+         *            - the time (in seconds) that this keyframe occurs during the
+         *            animation.
+         * @param jointKeyFrames
+         *            - the local-space transforms for all the joints at this
+         *            keyframe, indexed by the name of the joint that they should be
+         *            applied to.
+         */
+        KeyFrame(float timeStamp, std::map<std::string, JointTransform*> jointKeyFrames);
 
-	/**
-	 * @return The time in seconds of the keyframe in the animation.
-	 */
-	inline float timeStamp() const { return _timeStamp; }
+        /**
+         * @return The time in seconds of the keyframe in the animation.
+         */
+        inline float timeStamp() const { return _timeStamp; }
 
-	/**
-	 * @return The desired bone-space transforms of all the joints at this
-	 *         keyframe, of the animation, indexed by the name of the joint that
-	 *         they correspond to. This basically represents the "pose" at this
-	 *         keyframe.
-	 */
-	inline std::map<std::string, JointTransform*> jointKeyFrames() const { return _pose; }
+        /**
+         * @return The desired bone-space transforms of all the joints at this
+         *         keyframe, of the animation, indexed by the name of the joint that
+         *         they correspond to. This basically represents the "pose" at this
+         *         keyframe.
+         */
+        inline std::map<std::string, JointTransform*> jointKeyFrames() const { return _pose; }
 
 };
 

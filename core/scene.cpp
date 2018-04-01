@@ -6,6 +6,7 @@
 #include "shader.hpp"
 #include "light.hpp"
 #include "material.hpp"
+#include "animations.hpp"
 
 #include <map>
 #include <iostream>
@@ -37,55 +38,57 @@ Scene* Scene::fromOBJ(std::string path){
     
     DEBUG(Debug::Info, "Materials: %d\n",scene->mNumMaterials); 
     
-    // Loading materials
-    std::vector<Material*> materials;
-    materials.reserve(scene->mNumMaterials);
-    
-    for (int m = 0; m < scene->mNumMaterials; m++){ 
-        const aiMaterial* material = scene->mMaterials[m];
+    if (scene->HasMaterials()){
+        // Loading materials
+        std::vector<Material*> materials;
+        materials.reserve(scene->mNumMaterials);
         
-        glm::vec3 ambient, diffuse, specular;
-        float shininess;
-        std::vector<Texture*> textures;
-        
-        aiColor3D color;
-        
-        material->Get(AI_MATKEY_COLOR_AMBIENT, color);
-        ambient = aiColor3DtoglmVec3(color);
-        material->Get(AI_MATKEY_COLOR_DIFFUSE, color);
-        diffuse = aiColor3DtoglmVec3(color);
-        material->Get(AI_MATKEY_COLOR_SPECULAR, color);
-        specular = aiColor3DtoglmVec3(color);
-        
-        std::vector<Texture*> diffuseMaps = Material::loadMaterialTextures(material, aiTextureType_DIFFUSE, Texture::Diffuse, directory);
-        textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
-        // 2. specular maps
-        std::vector<Texture*> specularMaps = Material::loadMaterialTextures(material, aiTextureType_SPECULAR, Texture::Specular, directory);
-        textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
-        // 3. normal maps
-        std::vector<Texture*> normalMaps = Material::loadMaterialTextures(material, aiTextureType_AMBIENT, Texture::Normal, directory);
-        textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
-        // 4. height maps
-        std::vector<Texture*> heightMaps = Material::loadMaterialTextures(material, aiTextureType_HEIGHT, Texture::Height, directory);
-        textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
-        
-        material->Get(AI_MATKEY_SHININESS, shininess);        
-        
-        aiShadingMode shadingType;
-        material->Get(AI_MATKEY_SHADING_MODEL, shadingType);
-        DEBUG(Debug::Info, "material has %d textures\n",textures.size()); 
-               
-        Material* mat = new Material(ambient, diffuse, specular, shininess);
-        mat->setShadingMode(shadingType);
-        mat->setTextures(textures);
-        
-        materials.push_back(mat);
-    }  
+        for (int m = 0; m < scene->mNumMaterials; m++){ 
+            const aiMaterial* material = scene->mMaterials[m];
+            
+            glm::vec3 ambient, diffuse, specular;
+            float shininess;
+            std::vector<Texture*> textures;
+            
+            aiColor3D color;
+            
+            material->Get(AI_MATKEY_COLOR_AMBIENT, color);
+            ambient = aiColor3DtoglmVec3(color);
+            material->Get(AI_MATKEY_COLOR_DIFFUSE, color);
+            diffuse = aiColor3DtoglmVec3(color);
+            material->Get(AI_MATKEY_COLOR_SPECULAR, color);
+            specular = aiColor3DtoglmVec3(color);
+            
+            std::vector<Texture*> diffuseMaps = Material::loadMaterialTextures(material, aiTextureType_DIFFUSE, Texture::Diffuse, directory);
+            textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
+            // 2. specular maps
+            std::vector<Texture*> specularMaps = Material::loadMaterialTextures(material, aiTextureType_SPECULAR, Texture::Specular, directory);
+            textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
+            // 3. normal maps
+            std::vector<Texture*> normalMaps = Material::loadMaterialTextures(material, aiTextureType_AMBIENT, Texture::Normal, directory);
+            textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
+            // 4. height maps
+            std::vector<Texture*> heightMaps = Material::loadMaterialTextures(material, aiTextureType_HEIGHT, Texture::Height, directory);
+            textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
+            
+            material->Get(AI_MATKEY_SHININESS, shininess);        
+            
+            aiShadingMode shadingType;
+            material->Get(AI_MATKEY_SHADING_MODEL, shadingType);
+            DEBUG(Debug::Info, "material has %d textures\n",textures.size()); 
+                   
+            Material* mat = new Material(ambient, diffuse, specular, shininess);
+            mat->setShadingMode(shadingType);
+            mat->setTextures(textures);
+            
+            materials.push_back(mat);
+        }  
+    }
     
     DEBUG(Debug::Info, "Meshes: %d\n", scene->mNumMeshes);
     for (int m = 0; m < scene->mNumMeshes; m++){    
         const aiMesh* mesh = scene->mMeshes[m];
-        VertexArray* v = new VertexArray;
+        Mesh* v = new Mesh;
 
         // Fill vertices positions
         std::vector<GLfloat> vertices;
@@ -137,6 +140,19 @@ Scene* Scene::fromOBJ(std::string path){
             }
             v->setIndice(indices);
         }
+       
+        // Fill face indices 
+        if (mesh->HasBones()){            
+            
+            std::map<std::string, VertexWeight> bones;
+            bones.reserve(mesh->mNumBones);
+            
+            for (unsigned int i=0; i<mesh->mNumBones; i++){
+                aiBone* b = mesh->mBones[i];
+                bones.insert(std::pair<std::string, VertexBoneData>(b->mName.data, {b->mNumWeights, b->, b->}));
+            }
+            v->setBones(bones);
+        }
         
         if(mesh->mMaterialIndex >= 0)
             v->setMaterial(materials[mesh->mMaterialIndex]);
@@ -145,7 +161,7 @@ Scene* Scene::fromOBJ(std::string path){
     
     // Loading nodes
     DEBUG(Debug::Info, "Root node has %d children\n", scene->mRootNode->mNumChildren);
-    std::vector<VertexArray*> _va;
+    std::vector<Mesh*> _va;
     
     for (int v = 0; v < scene->mRootNode->mNumMeshes; v++)
         _va.push_back(s->getMesh(scene->mRootNode->mMeshes[v]));
@@ -154,33 +170,86 @@ Scene* Scene::fromOBJ(std::string path){
     s->_parseNode(_root_node, scene->mRootNode->mChildren, scene->mRootNode->mNumChildren);
     s->setRootNode(_root_node);
 	// The "scene" pointer will be deleted automatically by "importer"
+    
+    // Parsing animations
+    if (scene->HasAnimations()){
+        // Loading materials
+        
+        /*
+         * **AssImp     -> Our          <- ThinMatrix's implem**
+         * 
+         * aiAnimation  -> Animation    <- Animation
+         * aiNodeAnim   -> KeyFrame         <- KeyFrame
+         * N/D          -> AnimatedMesh <- AnimatedModel
+         * 
+         */
+        std::vector<Animation*> animations;
+        animations.reserve(scene->mNumAnimations);
+        
+        for (int a = 0; a < scene->mNumAnimations; a++){ 
+            aiAnimation* animation = scene->mAnimations[a];
+            Animation* a = new Animation(animation->mDuration, animation->mTicksPerSecond);
+            
+            std::map<double, KeyFrame*> keyframes;
+            for (int k = 0; k < animation->mNumChannels; k++){ 
+                aiNodeAnim* channel = animation->mChannels[k];
+                
+                if (!relatedNode)
+                    throw new SceneException(std::string(channel->mNodeName.data) + " not found in the nodes hierachy");
+                NodeAnimator* c = new NodeAnimator(relatedNode);
+                                       
+                for (int j = 0; j < channel->mNumPositionKeys; j++)                    
+                    c->addFrame(channel->mPositionKeys[j].mTime, aiVector3DtoglmVec3(channel->mPositionKeys[j].mValue));
+
+                for (int j = 0; j < channel->mNumRotationKeys; j++)               
+                    c->addFrame(channel->mRotationKeys[j].mTime, Quaternion::fromAi(channel->mRotationKeys[j].mValue));  
+                
+                // Not used yet
+                //~ for (int j = 0; j < keyframe->mNumScalingKeys; j++)
+                    //~ c->addFrame(channel->mScalingKeys[j].mTime, 
+                                //~ ScalingFrame(aiVector3DtoglmVec3(channel->mScalingKeys[j].mValue)));               
+                a->addChannel(c);
+            }
+            animations.insert(std::pair<std::string, Animation*>(animation->mName, a));            
+        }
+        s->setAnimations(animations);
+    }
+    
 	return s;
 }
 void Scene::render(){
     _main_node->draw();
 }
 
+void Scene::addMesh(Mesh* m){
+    _models.push_back(m);
+}
+
+Node* Scene::findNode(std::string n) const {
+    _main_node->find(n);
+}
+
 void Scene::_parseNode(Node* current, aiNode ** children, unsigned int nb_child){
     for (unsigned int c = 0; c < nb_child; c++){
         aiNode* curr_child = children[c];
-        std::vector<VertexArray*> _va;
+        Mesh* m;
         
-        //~ DEBUG(Debug::Info, "Node '%s' has %d meshes\n", curr_child->mName.data, curr_child->mNumMeshes);
+        DEBUG(Debug::Info, "Node '%s' has %d meshes\n", curr_child->mName.data, curr_child->mNumMeshes);
         for (int v = 0; v < curr_child->mNumMeshes; v++){
             //~ DEBUG(Debug::Info, "Node '%s' contains %d\n", curr_child->mName.data, curr_child->mMeshes[v]);
-            _va.push_back(getMesh(curr_child->mMeshes[v]));
+            m = getMesh(curr_child->mMeshes[v]);
         }
             
-        Node* n = new Node(curr_child->mName.data, _va, aiMatrix4x4toglmMat4(curr_child->mTransformation), this, current);
+        Node* n = new Node(curr_child->mName.data, m, aiMatrix4x4toglmMat4(curr_child->mTransformation), this, current);
         _parseNode(n, curr_child->mChildren, curr_child->mNumChildren);   
-        current->addChild(n);     
+        current->addChild(curr_child->mName.data, n);     
     }
 }
 
 
-Node::Node(std::string name, std::vector<VertexArray*> vertexarray, glm::mat4 transformation, Scene* scene, Node* parent):
+Node::Node(std::string name, Mesh* m, glm::mat4 transformation, Scene* scene, Node* parent):
     _name(name),
-    _meshs(vertexarray),
+    _mesh(m),
     _transformation(transformation),
     _parent(parent),
     _scene(scene)
@@ -188,11 +257,21 @@ Node::Node(std::string name, std::vector<VertexArray*> vertexarray, glm::mat4 tr
 }
 
 void Node::dump(int level){
-    std::cout << std::setw(level * 4) << _name << " (" << _meshs.size() << " meshes)" << std::endl;
+    std::cout << std::setw(level * 4) << _name << std::endl;
     for (Node* child: _children){
         std::cout << std::setw(level * 4) << "|--";
         child->dump(level + 1);
     }
+}
+
+void Node::find(std::string n){
+    if (_name == n)
+        return this;
+        
+    auto it = _children.find(n);
+    if (it == _children.end()) return nullptr;
+    
+    return it->second;
 }
 
 glm::mat4 aiMatrix4x4toglmMat4(aiMatrix4x4t<float>& ai_mat){
@@ -235,9 +314,9 @@ void Node::draw(glm::mat4 localTransform){
     
     scene()->defaultShader()->use();
     
-    for (VertexArray* mesh: _meshs){
-        mesh->bind();
-        mesh->draw(scene()->defaultShader());
+    if (_mesh){
+        _mesh->bind();
+        _mesh->draw(scene()->defaultShader());
     }
         
     for (Node* child: _children)

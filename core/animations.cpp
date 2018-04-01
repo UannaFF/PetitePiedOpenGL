@@ -1,43 +1,10 @@
 #include "animations.hpp"
+
 #include <math.h>
 #include "glm/gtc/matrix_transform.hpp"
 
-AnimatedModel::AnimatedModel(VertexArray* model, Texture* texture, Joint* rootJoint, int jointCount):
-    _model(model),
-    _texture(texture),
-    _rootJoint(rootJoint),
-    _jointCount(jointCount),
-    _animator(new Animator(this))
-{
-    _rootJoint->calcInverseBindTransform(glm::mat4());
-}
-AnimatedModel::~AnimatedModel() {
-    delete _model;
-    delete _texture;
-}
-
-void AnimatedModel::doAnimation(Animation* animation){
-    _animator->doAnimation(animation);
-}
-
-void AnimatedModel::update(){
-    _animator->update();
-}
-
-std::vector<glm::mat4> AnimatedModel::getJointTransforms() {
-    std::vector<glm::mat4> jointMatrices;
-    jointMatrices.reserve(_jointCount);
-    addJointsToArray(_rootJoint, jointMatrices);
-    return jointMatrices;
-}
-
-void AnimatedModel::addJointsToArray(Joint* headJoint, std::vector<glm::mat4>& jointMatrices) {
-    jointMatrices[headJoint->index()] = headJoint->getAnimatedTransform();
-    for (Joint* childJoint : headJoint->children()) {
-        addJointsToArray(childJoint, jointMatrices);
-    }
-}
-
+#include "models.hpp"
+#include "scene.hpp"
 
 
 Joint::Joint(int index, std::string name, glm::mat4 bindLocalTransform):
@@ -59,6 +26,12 @@ void Joint::calcInverseBindTransform(glm::mat4 parentBindTransform) {
         child->calcInverseBindTransform(bindTransform);
     }
 }
+int Joint::size() const {
+    int res = 1;
+    for (Joint* j: _children)
+        res += j->size();
+    return res;
+}
 
 Animation::Animation(float lengthInSeconds, std::vector<KeyFrame*> frames):
     _keyFrames(frames),
@@ -66,37 +39,37 @@ Animation::Animation(float lengthInSeconds, std::vector<KeyFrame*> frames):
 {
 }
 
-Animator::Animator(AnimatedModel* entity):
+NodeAnimator::NodeAnimator(Node* entity):
     _entity(entity)
 {
 }
 
-void Animator::doAnimation(Animation* animation) {
+void NodeAnimator::doAnimation(Animation* animation) {
     _animationTime = 0;
     _currentAnimation = animation;
 }
 
-void Animator::update() {
+void NodeAnimator::update() {
     if (_currentAnimation == nullptr)
         return;
     increaseAnimationTime();
     std::map<std::string, glm::mat4> currentPose = calculateCurrentAnimationPose();
-    applyPoseToJoints(currentPose, _entity->rootJoint(), glm::mat4(0));
+    applyPoseToJoints(currentPose, _entity->mesh()->rootBone(), glm::mat4(0));
 }
 
-void Animator::increaseAnimationTime() {
+void NodeAnimator::increaseAnimationTime() {
     _animationTime += glfwGetTime();
     if (_animationTime > _currentAnimation->length())
         _animationTime = std::fmod(_animationTime, _currentAnimation->length());
 }
 
-std::map<std::string, glm::mat4> Animator::calculateCurrentAnimationPose() {
-    std::vector<KeyFrame*> frames = getPreviousAndNextFrames();
-    float progression = calculateProgression(frames[0], frames[1]);
-    return interpolatePoses(frames[0], frames[1], progression);
+std::map<std::string, glm::mat4> NodeAnimator::calculateCurrentAnimationPose() {
+    std::pair<KeyFrame*, KeyFrame*> frames = getPreviousAndNextFrames();
+    float progression = calculateProgression(frames.first, frames.second);
+    return interpolatePoses(frames.first, frames.second, progression);
 }
 
-void Animator::applyPoseToJoints(std::map<std::string, glm::mat4> currentPose, Joint* joint, glm::mat4 parentTransform) {
+void NodeAnimator::applyPoseToJoints(std::map<std::string, glm::mat4> currentPose, Joint* joint, glm::mat4 parentTransform) {
     glm::mat4 currentLocalTransform = currentPose.find(joint->name())->second;
     glm::mat4 currentTransform = parentTransform * currentLocalTransform;
     for (Joint* childJoint : joint->children())
@@ -105,29 +78,26 @@ void Animator::applyPoseToJoints(std::map<std::string, glm::mat4> currentPose, J
     joint->setAnimationTransform(currentTransform);
 }
 
-std::vector<KeyFrame*> Animator::getPreviousAndNextFrames() {
-    std::vector<KeyFrame*> allFrames = _currentAnimation->keyFrames(), result;
+std::pair<KeyFrame*, KeyFrame*> NodeAnimator::getPreviousAndNextFrames() {
+    std::vector<KeyFrame*> allFrames = _currentAnimation->keyFrames();
     KeyFrame* previousFrame = allFrames[0];
     KeyFrame* nextFrame = allFrames[0];
     for (int i = 1; i < allFrames.size(); i++) {
         nextFrame = allFrames[i];
-        if (nextFrame->timeStamp() > _animationTime) {
+        if (nextFrame->timeStamp() > _animationTime)
             break;
-        }
         previousFrame = allFrames[i];
     }
-    result.push_back(previousFrame);
-    result.push_back(nextFrame);
-    return result;
+    return std::pair<KeyFrame*, KeyFrame*>(previousFrame, nextFrame);
 }
 
-float Animator::calculateProgression(KeyFrame* previousFrame, KeyFrame* nextFrame) {
+float NodeAnimator::calculateProgression(KeyFrame* previousFrame, KeyFrame* nextFrame) {
     float totalTime = nextFrame->timeStamp() - previousFrame->timeStamp();
     float currentTime = _animationTime - previousFrame->timeStamp();
     return currentTime / totalTime;
 }
 
-std::map<std::string, glm::mat4> Animator::interpolatePoses(KeyFrame* previousFrame, KeyFrame* nextFrame, float progression) {
+std::map<std::string, glm::mat4> NodeAnimator::interpolatePoses(KeyFrame* previousFrame, KeyFrame* nextFrame, float progression) {
     std::map<std::string, glm::mat4> currentPose;
     for (auto& joinPair : previousFrame->jointKeyFrames()) {
         JointTransform* previousTransform = previousFrame->jointKeyFrames().find(joinPair.first)->second;
@@ -138,20 +108,32 @@ std::map<std::string, glm::mat4> Animator::interpolatePoses(KeyFrame* previousFr
     return currentPose;
 }
 
-JointTransform::JointTransform(glm::vec3 position, Quaternion rotation):
+JointTransform::JointTransform(glm::vec3* position, Quaternion* rotation):
     _position(position),
-    _rotation(rotation)
-{
+    _rotation(rotation){
+}
+
+JointTransform::~JointTransform(){
+    delete _position;
+    delete _rotation;
 }
 
 glm::mat4 JointTransform::getLocalTransform() const {
-    return glm::translate(glm::mat4(0), _position) * _rotation.toRotationMatrix();
+    glm::mat4 res;
+    if (_position){
+        if (_rotation)
+             return glm::translate(glm::mat4(0), *_position) * _rotation->toRotationMatrix();
+        return glm::translate(glm::mat4(0), *_position);
+    }
+    else
+        return _rotation->toRotationMatrix();
 }
 
 JointTransform* JointTransform::interpolate(JointTransform& frameA, JointTransform& frameB, float progression) {
-    glm::vec3 pos = interpolate(frameA.position(), frameB.position(), progression);
-    Quaternion rot = Quaternion::interpolate(frameA.rotation(), frameB.rotation(), progression);
-    return new JointTransform(pos, rot);
+    JointTransform* j = new JointTransform();
+    j->position(new glm::vec3(interpolate(frameA.position(), frameB.position(), progression)));
+    j->rotation(new Quaternion(Quaternion::interpolate(frameA.rotation(), frameB.rotation(), progression)));
+    return j;
 }
 
 glm::vec3 JointTransform::interpolate(glm::vec3 start, glm::vec3 end, float progression) {

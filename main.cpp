@@ -62,7 +62,7 @@ int main(int argc, char** argv){
             // Cull triangles which normal is not towards the camera
             //~ glEnable(GL_CULL_FACE);
 
-            //~ std::vector<VertexArray*> models = VertexArray::fromOBJ("Environement.obj");
+            //~ std::vector<Mesh*> models = Mesh::fromOBJ("Environement.obj");
             Scene* scene = Scene::fromOBJ(scene_file);
             scene->displayNodeTree();
             
