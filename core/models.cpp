@@ -20,25 +20,32 @@
 
 int Bone::LAST_ID = 0;
 
-void Bone::dumpToBuffer(int* vertex_buff, float* weight_buff){
+void Bone::dumpToBuffer(std::vector<int>& vertex_buff, std::vector<float>& weight_buff){
     DEBUG(Debug::Info, "Bone has %d record to dump\n", _weights.size());
+    std::cout << _offset;
+
     
     int i = 0;
     
-    for (std::pair<uint, std::vector<float>> p: _weights){
-        DEBUG(Debug::Info, " - BoneID: %d VID: %d, weight: %f\n", _boneid, p.first, p.second[0]);
-        //~ assert(p.second.size() == 4);
-        vertex_buff[p.first] = _boneid;
-        weight_buff[p.first] = p.second[0];
-        //~ memcpy(weight_buff + i, &(p.second[0]), p.second.size() * sizeof(float));
-        //~ memset(weight_buff + (i++) + p.second.size() * sizeof(float), 0, (4 - p.second.size()) * sizeof(float));
-        //~ i++;
+    for (std::pair<uint, float> p: _weights){
+        //~ DEBUG(Debug::Info, " - BoneID: %d VID: %d, weight: %f\n", _boneid, p.first, p.second);
+        
+        int offset = 0;
+        for (; weight_buff[p.first * 4 + offset] != 0.0; offset++){}
+        
+        if (offset >= 4)
+            continue;
+            
+        assert(offset < 4);
+        
+        vertex_buff[p.first * 4 + offset] = _boneid;
+        weight_buff[p.first * 4 + offset] = p.second;
     }
 }
 void Bone::setTransformation(const glm::mat4& mat) {
     //~ DEBUG(Debug::Info, "-- Update bone at %d\n", _frag);
-    //~ glUniformMatrix4fv(_frag, 1, GL_FALSE, &(mat * _offset)[0][0]);
-    glUniformMatrix4fv(_frag, 1, GL_FALSE, &(mat)[0][0]);
+    glUniformMatrix4fv(_frag, 1, GL_TRUE, &(mat * _offset)[0][0]);
+    //~ glUniformMatrix4fv(_frag, 1, GL_FALSE, &(mat)[0][0]);
     //~ std::cout << (mat * _offset);
 }
 
@@ -124,12 +131,12 @@ void Mesh::draw(Shader* usedShader){
     // 4th attribute buffer : Bones
     glEnableVertexAttribArray(GL_LAYOUT_BONES);
     glBindBuffer(GL_ARRAY_BUFFER, _bones_id);
-    glVertexAttribPointer(GL_LAYOUT_BONES, 1, GL_INT, GL_FALSE, 0, nullptr);
+    glVertexAttribPointer(GL_LAYOUT_BONES, 4, GL_INT, GL_FALSE, 0, nullptr);
 
     // 5th attribute buffer : Weight
     glEnableVertexAttribArray(GL_LAYOUT_WEIGHT);
     glBindBuffer(GL_ARRAY_BUFFER, _weight);
-    glVertexAttribPointer(GL_LAYOUT_WEIGHT, 1, GL_FLOAT, GL_FALSE, 0, nullptr);
+    glVertexAttribPointer(GL_LAYOUT_WEIGHT, 4, GL_FLOAT, GL_FALSE, 0, nullptr);
 
     // Index buffer
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _indice);
@@ -146,18 +153,14 @@ void Mesh::draw(Shader* usedShader){
 
 void Mesh::setBones(std::vector<Bone*> bones, Shader* s)
 {   
-    //~ int num_of_bone_data = 0;
-    
-    GLint* bones_buffer = new GLint[_len_points];
-    GLfloat* weight_buffer = new GLfloat[_len_points];
+    std::vector<GLint> bones_buffer(_len_points * 4, 0);
+    std::vector<GLfloat> weight_buffer(_len_points * 4, 0.0);
     
     s->use();
-    for (Bone* b: bones){
-        //~ num_of_bone_data += b->size();
-        
-        // Dumping raw data to be passed to GLSL
+    for (Bone* b: bones){        
         b->id(Bone::LAST_ID);
         b->dumpToBuffer(bones_buffer, weight_buffer);
+        
         // Binding to the GLSL bones
         b->frag_id(s->getUniformLocation("gBones[" + std::to_string(Bone::LAST_ID++) +"]"));
         b->setTransformation(glm::mat4(1.f));
@@ -165,11 +168,8 @@ void Mesh::setBones(std::vector<Bone*> bones, Shader* s)
     
     // Uploading to GPU
    	glBindBuffer(GL_ARRAY_BUFFER, _bones_id);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(GLint) * _len_points, bones_buffer, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(GLint) * bones_buffer.size(), &bones_buffer[0], GL_STATIC_DRAW);
    	glBindBuffer(GL_ARRAY_BUFFER, _weight);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * _len_points, weight_buffer, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * weight_buffer.size(), &weight_buffer[0], GL_STATIC_DRAW);
 
-    // Cleaning
-    delete [] bones_buffer;
-    delete [] weight_buffer;
 }

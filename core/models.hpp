@@ -26,14 +26,12 @@ class Bone {
     public:
         Bone(glm::mat4 offset): _offset(offset), _weights(), _frag(0) {}
         
-        void dumpToBuffer(int* vertex_buff, float* weight_buff);
+        void dumpToBuffer(std::vector<int>& vertex_buff, std::vector<float>& weight_buff);
         
         inline int size() const { return _weights.size(); }
         
         inline void addWeight(uint vertext_id, float weight) {
-            if (_weights.find(vertext_id) == _weights.end())
-                _weights.insert(std::make_pair(vertext_id, std::vector<float>()));
-            _weights[vertext_id].push_back(weight);
+            _weights.insert(std::make_pair(vertext_id, weight));
         }
         
         inline void frag_id(GLint f) { _frag = f; }
@@ -49,7 +47,7 @@ class Bone {
         GLint _frag;
         uint _boneid;
         glm::mat4 _offset;
-        std::map<uint, std::vector<float>> _weights;
+        std::map<uint, float> _weights;
         
 };
 
@@ -73,9 +71,6 @@ class Mesh {
         
         inline void setMaterial(Material* m) { _material = m; }
         
-        inline void setBase(uint v, uint i) { _base.first = v; _base.second = i; }
-        inline std::pair<uint, uint> base() const { return _base; }
-        
 
     private:
         GLuint _vertex_array_id;
@@ -88,8 +83,6 @@ class Mesh {
         GLuint _weight;
         
         Material* _material;
-        
-        std::pair<uint, uint> _base; // First vertex and indice of this mesh in the global list
         
         int _len_points;
         

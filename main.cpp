@@ -106,7 +106,7 @@ int main(int argc, char** argv){
             window.hideCursor();
             window.centerCursor();
             
-            //~ scene->playAnimation(0);
+            scene->playAnimation(0);
             
             do{ 
                 // Clear the screen

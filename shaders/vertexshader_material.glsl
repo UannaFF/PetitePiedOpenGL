@@ -3,10 +3,10 @@
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec2 aTexCoords;
 layout (location = 2) in vec3 aNormal;
-//~ layout (location = 3) in ivec4 BoneIDs;
-//~ layout (location = 4) in vec4 Weights;
-layout (location = 3) in int BoneIDs;
-layout (location = 4) in float Weights;
+layout (location = 3) in ivec4 BoneIDs;
+layout (location = 4) in vec4 Weights;
+//~ layout (location = 3) in int BoneIDs;
+//~ layout (location = 4) in float Weights;
 
 in vec3 LightDirection_cameraspace;
 
@@ -23,21 +23,21 @@ uniform mat4 gBones[MAX_BONES];
 
 void main()
 {
-    //~ mat4 BoneTransform = gBones[BoneIDs[0]] * Weights[0];
-    mat4 BoneTransform = gBones[BoneIDs] * Weights;
-    //~ BoneTransform += gBones[BoneIDs[1]] * Weights[1];
-    //~ BoneTransform += gBones[BoneIDs[2]] * Weights[2];
-    //~ BoneTransform += gBones[BoneIDs[3]] * Weights[3];
+    mat4 BoneTransform = gBones[BoneIDs[0]] * Weights[0];
+    BoneTransform += gBones[BoneIDs[1]] * Weights[1];
+    BoneTransform += gBones[BoneIDs[2]] * Weights[2];
+    BoneTransform += gBones[BoneIDs[3]] * Weights[3];
     
     FragPos = vec3(model * vec4(aPos, 1.0));
     Normal = (BoneTransform * vec4(aNormal, 0.0)).xyz;  
     //~ Normal = mat3(transpose(inverse(model))) * aNormal;  
     
-    //~ vec4 PosL      = BoneTransform * vec4(aPos, 1.0);
-    //~ mat4 mvp = projection * view * model;
-    //~ gl_Position = mvp * PosL;
+    vec4 PosL      = BoneTransform * vec4(aPos, 1.0);
+    //~ vec4 PosL      = vec4(aPos, 1.0);
+    mat4 mvp = projection * view * model;
+    gl_Position = mvp * PosL;
     //~ gl_Position = mvp * vec4(aPos, 1.0);
-    gl_Position = projection * view * model * (BoneTransform * vec4(aPos,1));
+    //~ gl_Position = mvp * (BoneTransform * vec4(aPos,1));
     //~ gl_Position = projection * view * model * vec4(aPos,1);
     
     

@@ -183,58 +183,56 @@ Scene* Scene::import(std::string path, Shader* shader){
     
     // Parsing animations
     DEBUG(Debug::Info, "Animation: %d\n", scene->mNumAnimations);
-    //~ if (scene->HasAnimations()){
-        std::vector<Animation*> animations;
-        
-        for (int a = 0; a < scene->mNumAnimations; a++){ 
-            aiAnimation* animation = scene->mAnimations[a];
-            Animation* anim = new Animation(animation->mName.data, animation->mDuration, animation->mTicksPerSecond);
-            DEBUG(Debug::Info, "-- Animation '%s' has %d channels\n", animation->mName.data, animation->mNumChannels);
-            
-            //~ std::map<double, KeyFrame*> keyframes;
-            for (int k = 0; k < animation->mNumChannels; k++){ 
-                aiNodeAnim* channel = animation->mChannels[k];
-                
-                DEBUG(Debug::Info, "Bone for the node '%s'...\n", channel->mNodeName.data);
-                    
-                Node* relatedNode = s->findNode(channel->mNodeName.data);
-                if (!relatedNode)
-                    throw new SceneException(std::string(channel->mNodeName.data) + " not found in the nodes hierachy");
-                    
-                    
-                std::vector<Bone*> relatedBones;
-                
-                std::multimap<std::string, Bone*>::iterator it;
-                while ((it = bones_to_bind.find(channel->mNodeName.data)) != bones_to_bind.end()){
-                    relatedBones.push_back(it->second);
-                    bones_to_bind.erase (it);
-                }
-                
-                                  
-                if (relatedBones.empty())
-                    throw new SceneException(std::string(channel->mNodeName.data) + " has no bones");
-                else
-                    DEBUG(Debug::Info, "%s has %d bones\n", channel->mNodeName.data, relatedBones.size());
-                    
-                    
-                Channel* c = new Channel(relatedNode, relatedBones);
-                                       
-                for (int j = 0; j < channel->mNumPositionKeys; j++)                    
-                    c->addKey(channel->mPositionKeys[j].mTime, new PositionKey(aiVector3DtoglmVec3(channel->mPositionKeys[j].mValue)));
 
-                for (int j = 0; j < channel->mNumRotationKeys; j++)               
-                    c->addKey(channel->mRotationKeys[j].mTime, new RotationKey(Quaternion::fromAi(channel->mRotationKeys[j].mValue)));  
+    std::vector<Animation*> animations;
+    
+    for (int a = 0; a < scene->mNumAnimations; a++){ 
+        aiAnimation* animation = scene->mAnimations[a];
+        Animation* anim = new Animation(animation->mName.data, animation->mDuration, animation->mTicksPerSecond);
+        DEBUG(Debug::Info, "-- Animation '%s' has %d channels\n", animation->mName.data, animation->mNumChannels);
+        
+        for (int k = 0; k < animation->mNumChannels; k++){ 
+            aiNodeAnim* channel = animation->mChannels[k];
+            
+            DEBUG(Debug::Info, "Bone for the node '%s'...\n", channel->mNodeName.data);
                 
-                // Not used yet
-                //~ for (int j = 0; j < keyframe->mNumScalingKeys; j++)
-                    //~ c->addFrame(channel->mScalingKeys[j].mTime, 
-                                //~ ScalingFrame(aiVector3DtoglmVec3(channel->mScalingKeys[j].mValue)));               
-                anim->addChannel(c);
+            Node* relatedNode = s->findNode(channel->mNodeName.data);
+            if (!relatedNode)
+                throw new SceneException(std::string(channel->mNodeName.data) + " not found in the nodes hierachy");
+                
+                
+            std::vector<Bone*> relatedBones;
+            
+            std::multimap<std::string, Bone*>::iterator it;
+            while ((it = bones_to_bind.find(channel->mNodeName.data)) != bones_to_bind.end()){
+                relatedBones.push_back(it->second);
+                bones_to_bind.erase (it);
             }
-            animations.push_back(anim);            
+            
+                              
+            if (relatedBones.empty())
+                throw new SceneException(std::string(channel->mNodeName.data) + " has no bones");
+            else
+                DEBUG(Debug::Info, "%s has %d bones\n", channel->mNodeName.data, relatedBones.size());
+                
+                
+            Channel* c = new Channel(relatedNode, relatedBones);
+                                   
+            for (int j = 0; j < channel->mNumPositionKeys; j++)                    
+                c->addKey(channel->mPositionKeys[j].mTime, new PositionKey(aiVector3DtoglmVec3(channel->mPositionKeys[j].mValue)));
+
+            for (int j = 0; j < channel->mNumRotationKeys; j++)               
+                c->addKey(channel->mRotationKeys[j].mTime, new RotationKey(Quaternion::fromAi(channel->mRotationKeys[j].mValue)));  
+            
+            // Not used yet
+            //~ for (int j = 0; j < keyframe->mNumScalingKeys; j++)
+                //~ c->addFrame(channel->mScalingKeys[j].mTime, 
+                            //~ ScalingFrame(aiVector3DtoglmVec3(channel->mScalingKeys[j].mValue)));               
+            anim->addChannel(c);
         }
-        s->setAnimations(animations);
-    //~ }
+        animations.push_back(anim);            
+    }
+    s->setAnimations(animations);
     
     DEBUG(Debug::Info, "\nScene loaded\n");
     
@@ -301,7 +299,6 @@ void Node::dump(int level){
 }
 
 Node* Node::find(std::string n){
-    DEBUG(Debug::Info, "Looking for %s at %s...\n", n.c_str(), _name.c_str());
     if (!_name.compare(n))
         return this;
         
