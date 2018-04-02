@@ -8,6 +8,7 @@
 #include <glm/glm.hpp>
 #include <vector>
 #include <string>
+#include <map>
 
 class Texture;
 class Shader;
@@ -21,6 +22,38 @@ typedef struct VertexWeight {
 } vertex_weight_t;
 
 
+class Bone {
+    public:
+        Bone(glm::mat4 offset): _offset(offset), _weights(), _frag(0) {}
+        
+        void dumpToBuffer(int* vertex_buff, float* weight_buff);
+        
+        inline int size() const { return _weights.size(); }
+        
+        inline void addWeight(uint vertext_id, float weight) {
+            if (_weights.find(vertext_id) == _weights.end())
+                _weights.insert(std::make_pair(vertext_id, std::vector<float>()));
+            _weights[vertext_id].push_back(weight);
+        }
+        
+        inline void frag_id(GLint f) { _frag = f; }
+        inline GLint frag_id() { return _frag; }
+        
+        void setTransformation(const glm::mat4& mat);
+        
+        inline void id(uint i) { _boneid = i; }
+        inline uint id() const { return _boneid; }
+        
+        static int LAST_ID;
+    private:
+        GLint _frag;
+        uint _boneid;
+        glm::mat4 _offset;
+        std::map<uint, std::vector<float>> _weights;
+        
+};
+
+
 class Mesh {
     public:
         Mesh();
@@ -29,6 +62,7 @@ class Mesh {
         void setUV(std::vector<GLfloat> uv);
         void setNormal(std::vector<GLfloat> normal);
         void setIndice(std::vector<unsigned short> normal);
+        void setBones(std::vector<Bone*> b, Shader* s);
         
         inline void setMode(GLenum m){_mode = m; }
         inline GLenum mode() const { return _mode; }
@@ -39,32 +73,28 @@ class Mesh {
         
         inline void setMaterial(Material* m) { _material = m; }
         
-        static std::vector<Mesh*> fromOBJ(std::string path);
+        inline void setBase(uint v, uint i) { _base.first = v; _base.second = i; }
+        inline std::pair<uint, uint> base() const { return _base; }
         
-        std::vector<glm::mat4> getJointTransforms();
-        
-        inline void setAnimator(NodeAnimator* a) { _animator = a; }
-        void setRootBone(Joint* j);
 
-        void addJointsToArray(Joint* headJoint, std::vector<glm::mat4>& jointMatrices);
-        
-        inline Joint* rootBone() const { return _rootBone; }
     private:
         GLuint _vertex_array_id;
-        GLuint _uvbuffer;
+        
         GLuint _vertexbuffer;
+        GLuint _uvbuffer;
         GLuint _normal;
         GLuint _indice;
         GLuint _bones_id;
+        GLuint _weight;
         
         Material* _material;
+        
+        std::pair<uint, uint> _base; // First vertex and indice of this mesh in the global list
         
         int _len_points;
         
         GLenum _mode;
         
-        Joint* _rootBone;
-        int _bonesCount;
-        NodeAnimator* _animator;
+        //~ std::vector<Bone*> _bones;
 };
 #endif

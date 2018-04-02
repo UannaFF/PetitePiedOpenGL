@@ -7,24 +7,58 @@
 #include <assimp/scene.h>           // Output data structure
 #include <assimp/postprocess.h>     // Post processing flags
 
+#define GL_LAYOUT_VERTEXARRAY 0
+#define GL_LAYOUT_UV 1
+#define GL_LAYOUT_NORMAL 2
+//~ #define GL_LAYOUT_INDICE 0
+#define GL_LAYOUT_BONES 3
+#define GL_LAYOUT_WEIGHT 4
+
+#include <iostream>
+#include <assert.h>
+#include <string.h>
+
+int Bone::LAST_ID = 0;
+
+void Bone::dumpToBuffer(int* vertex_buff, float* weight_buff){
+    DEBUG(Debug::Info, "Bone has %d record to dump\n", _weights.size());
+    
+    int i = 0;
+    
+    for (std::pair<uint, std::vector<float>> p: _weights){
+        DEBUG(Debug::Info, " - BoneID: %d VID: %d, weight: %f\n", _boneid, p.first, p.second[0]);
+        //~ assert(p.second.size() == 4);
+        vertex_buff[p.first] = _boneid;
+        weight_buff[p.first] = p.second[0];
+        //~ memcpy(weight_buff + i, &(p.second[0]), p.second.size() * sizeof(float));
+        //~ memset(weight_buff + (i++) + p.second.size() * sizeof(float), 0, (4 - p.second.size()) * sizeof(float));
+        //~ i++;
+    }
+}
+void Bone::setTransformation(const glm::mat4& mat) {
+    //~ DEBUG(Debug::Info, "-- Update bone at %d\n", _frag);
+    //~ glUniformMatrix4fv(_frag, 1, GL_FALSE, &(mat * _offset)[0][0]);
+    glUniformMatrix4fv(_frag, 1, GL_FALSE, &(mat)[0][0]);
+    //~ std::cout << (mat * _offset);
+}
+
 Mesh::Mesh():
     _len_points(0),
-    _mode(GL_TRIANGLES),
-    _rootJoint(nullptr),
-    _jointCount(0),
-    _animator(nullptr)
+    _mode(GL_TRIANGLES)
 {    
-    glGenMeshs(1, &_vertex_array_id);
+    glGenVertexArrays(1, &_vertex_array_id);
                 
     glGenBuffers(1, &_vertexbuffer);
     glGenBuffers(1, &_uvbuffer);
     glGenBuffers(1, &_normal);
     glGenBuffers(1, &_indice);
     glGenBuffers(1, &_bones_id);
+    glGenBuffers(1, &_weight);
 }
 
 void Mesh::setVertex(std::vector<GLfloat> vertex)
 {            
+    DEBUG(Debug::Info, "Mesh has %d vertices\n", vertex.size());
     glBindBuffer(GL_ARRAY_BUFFER, _vertexbuffer);
     glBufferData(GL_ARRAY_BUFFER, vertex.size() * sizeof(GLfloat), &vertex[0], GL_STATIC_DRAW);
     _len_points = vertex.size();
@@ -38,6 +72,7 @@ void Mesh::setUV(std::vector<GLfloat> uv)
 
 void Mesh::setNormal(std::vector<GLfloat> normal)
 {    
+    DEBUG(Debug::Info, "Mesh has %d normal\n", normal.size());
     glBindBuffer(GL_ARRAY_BUFFER, _normal);
     glBufferData(GL_ARRAY_BUFFER, normal.size() * sizeof(GLfloat), &normal[0], GL_STATIC_DRAW);
 }
@@ -55,30 +90,20 @@ Mesh::~Mesh()
     glDeleteBuffers(1, &_normal);
     glDeleteBuffers(1, &_indice);
     glDeleteBuffers(1, &_bones_id);
+    glDeleteBuffers(1, &_weight);
     glDeleteVertexArrays(1, &_vertex_array_id);
 }
 
 void Mesh::draw(Shader* usedShader){
-
-    if (_rootJoint){
-        if (_animator)
-            _animator->update();
-        
-        m_mesh.BoneTransform(RunningTime, Transforms);
-
-        for (uint i = 0 ; i < Transforms.size() ; i++) {
-            m_pEffect->SetBoneTransform(i, Transforms[i]);
-        } 
-    }
     
     if (_material)
         _material->apply(usedShader);
     
     // 1rst attribute buffer : vertices
-    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(GL_LAYOUT_VERTEXARRAY);
     glBindBuffer(GL_ARRAY_BUFFER, _vertexbuffer);
     glVertexAttribPointer(
-        0,                  // attribute. No particular reason for 0, but must match the layout in the shader.
+        GL_LAYOUT_VERTEXARRAY,                  // attribute. No particular reason for 0, but must match the layout in the shader.
         3,                  // size
         GL_FLOAT,           // type
         GL_FALSE,           // normalized?
@@ -87,28 +112,24 @@ void Mesh::draw(Shader* usedShader){
     );
 
     // 2nd attribute buffer : UVs
-    glEnableVertexAttribArray(1);
+    glEnableVertexAttribArray(GL_LAYOUT_UV);
     glBindBuffer(GL_ARRAY_BUFFER, _uvbuffer);
-    glVertexAttribPointer(
-        1,                                // attribute. No particular reason for 1, but must match the layout in the shader.
-        2,                                // size : U+V => 2
-        GL_FLOAT,                         // type
-        GL_FALSE,                         // normalized?
-        0,                                // stride
-        (void*)0                          // array buffer offset
-    );
+    glVertexAttribPointer(GL_LAYOUT_UV, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
     
     // 3rd attribute buffer : Normals
-    glEnableVertexAttribArray(2);
+    glEnableVertexAttribArray(GL_LAYOUT_NORMAL);
     glBindBuffer(GL_ARRAY_BUFFER, _normal);
-    glVertexAttribPointer(
-        2,                                // attribute
-        3,                                // size
-        GL_FLOAT,                         // type
-        GL_FALSE,                         // normalized?
-        0,                                // stride
-        (void*)0                          // array buffer offset
-    );
+    glVertexAttribPointer(GL_LAYOUT_NORMAL, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+    // 4th attribute buffer : Bones
+    glEnableVertexAttribArray(GL_LAYOUT_BONES);
+    glBindBuffer(GL_ARRAY_BUFFER, _bones_id);
+    glVertexAttribPointer(GL_LAYOUT_BONES, 1, GL_INT, GL_FALSE, 0, nullptr);
+
+    // 5th attribute buffer : Weight
+    glEnableVertexAttribArray(GL_LAYOUT_WEIGHT);
+    glBindBuffer(GL_ARRAY_BUFFER, _weight);
+    glVertexAttribPointer(GL_LAYOUT_WEIGHT, 1, GL_FLOAT, GL_FALSE, 0, nullptr);
 
     // Index buffer
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _indice);
@@ -118,69 +139,37 @@ void Mesh::draw(Shader* usedShader){
 
     glDisableVertexAttribArray(0);
     glDisableVertexAttribArray(1);
+    glDisableVertexAttribArray(2);
+    glDisableVertexAttribArray(3);
+    glDisableVertexAttribArray(4);
 }
 
-void Mesh::setBones(std::vector<GLfloat> bones)
-{                
-   	glBindBuffer(GL_ARRAY_BUFFER, _bones_id);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(VertexBoneData) * bones.size(), &bones[0], GL_STATIC_DRAW);
-    glEnableVertexAttribArray(3);
-    glVertexAttribIPointer(3, 4, GL_INT, sizeof(VertexBoneData), (const GLvoid*)0);
-    glEnableVertexAttribArray(4);    
-    glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(VertexBoneData), (const GLvoid*)16);
-}
-
-std::vector<glm::mat4> Mesh::getJointTransforms() {
-    std::vector<glm::mat4> jointMatrices;
-    jointMatrices.reserve(_jointCount);
-    addJointsToArray(_rootJoint, jointMatrices);
-    return jointMatrices;
-}
-
-void Mesh::addJointsToArray(Joint* headJoint, std::vector<glm::mat4>& jointMatrices) {
-    jointMatrices[headJoint->index()] = headJoint->getAnimatedTransform();
-    for (Joint* childJoint : headJoint->children()) {
-        addJointsToArray(childJoint, jointMatrices);
-    }
-}
-
-glm::mat4 Mesh::boneTransform(std::vector<glm::mat4>& transforms)
-{
-    glm::mat4 identity(1.f);
+void Mesh::setBones(std::vector<Bone*> bones, Shader* s)
+{   
+    //~ int num_of_bone_data = 0;
     
-    float current_time = (float)((double)GetCurrentTimeMillis() - mAnimation->startTime()) / 1000.0f;
-    float AnimationTime = fmod(mAnimation->ticksTime(), mAnimation->duration());
-
-    ReadNodeHeirarchy(AnimationTime, m_pScene->mRootNode, Identity);
-
-    transforms.resize(m_NumBones);
-
-    for (uint i = 0 ; i < m_NumBones ; i++) {
-        transforms[i] = m_BoneInfo[i].FinalTransformation;
+    GLint* bones_buffer = new GLint[_len_points];
+    GLfloat* weight_buffer = new GLfloat[_len_points];
+    
+    s->use();
+    for (Bone* b: bones){
+        //~ num_of_bone_data += b->size();
+        
+        // Dumping raw data to be passed to GLSL
+        b->id(Bone::LAST_ID);
+        b->dumpToBuffer(bones_buffer, weight_buffer);
+        // Binding to the GLSL bones
+        b->frag_id(s->getUniformLocation("gBones[" + std::to_string(Bone::LAST_ID++) +"]"));
+        b->setTransformation(glm::mat4(1.f));
     }
-} 
+    
+    // Uploading to GPU
+   	glBindBuffer(GL_ARRAY_BUFFER, _bones_id);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(GLint) * _len_points, bones_buffer, GL_STATIC_DRAW);
+   	glBindBuffer(GL_ARRAY_BUFFER, _weight);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * _len_points, weight_buffer, GL_STATIC_DRAW);
 
-void Mesh::calcInterpolatedRotation(Quaternion& Out, float animationTime, const aiNodeAnim* pNodeAnim)
-{
-    // we need at least two values to interpolate...
-    if (pNodeAnim->mNumRotationKeys == 1) {
-        Out = pNodeAnim->mRotationKeys[0].mValue;
-        return;
-    }
-
-    uint RotationIndex = FindRotation(AnimationTime, pNodeAnim);
-    uint NextRotationIndex = (RotationIndex + 1);
-    assert(NextRotationIndex < pNodeAnim->mNumRotationKeys);
-    float DeltaTime = pNodeAnim->mRotationKeys[NextRotationIndex].mTime - pNodeAnim->mRotationKeys[RotationIndex].mTime;
-    float Factor = (AnimationTime - (float)pNodeAnim->mRotationKeys[RotationIndex].mTime) / DeltaTime;
-    assert(Factor >= 0.0f && Factor <= 1.0f);
-    const aiQuaternion& StartRotationQ = pNodeAnim->mRotationKeys[RotationIndex].mValue;
-    const aiQuaternion& EndRotationQ = pNodeAnim->mRotationKeys[NextRotationIndex].mValue;
-    aiQuaternion::Interpolate(Out, StartRotationQ, EndRotationQ, Factor);
-    Out = Out.Normalize();
-} 
-
-void Mesh::setRootBone(Joint* j){
-    _rootBone = j;
-    _bonesCount = j->size();
+    // Cleaning
+    delete [] bones_buffer;
+    delete [] weight_buffer;
 }

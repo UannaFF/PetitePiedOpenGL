@@ -10,6 +10,7 @@
 
 #include <vector>
 #include <map>
+#include <set>
 #include <string>
 
 class Mesh;
@@ -20,6 +21,7 @@ class Light;
 
 class Node;
 class Shader;
+class Animation;
 
 class SceneException: public std::exception {
     public:
@@ -42,29 +44,37 @@ class Scene {
         inline void addTexture(Texture* t){ _textures.push_back(t); }
         inline void setCamera(Camera* c){ _camera = c; }
         inline void setRootNode(Node* n){ _main_node = n; }
+        inline void setAnimations(std::vector<Animation*> a){ _animations = a; }
         
-        inline Node* rootNode(Node* n){ return _main_node; }
+        inline Node* rootNode(){ return _main_node; }
         Node* findNode(std::string n) const;
         
         inline void setShader(Shader* s, ShaderType t = MaterialShader) {
             _shaders.insert(std::pair<ShaderType, Shader*>(t, s));
         }
-        inline Shader* defaultShader(ShaderType t = MaterialShader) {
+        inline Shader* defaultShader(ShaderType t = MaterialShader) const {
             auto it = _shaders.find(t);
             if (it == _shaders.end()) return nullptr;
             return it->second;
         }
         
+        void process(float timestamp);
         void render();
         void displayNodeTree();
         
-        static Scene* fromOBJ(std::string path);
+        static Scene* import(std::string path, Shader* s);
+        
+        void playAnimation( int anim);
         
         
     private:
         std::vector<Mesh*> _models;
         std::vector<Texture*> _textures;
         std::map<ShaderType, Shader*> _shaders;
+        std::vector<Animation*> _animations;
+        
+        std::set<Animation*> _current_animation;
+        
         Node* _main_node;
         Camera* _camera;
         
@@ -74,7 +84,7 @@ class Scene {
 
 class Node {
     public:
-        Node(std::string name, Mesh* m, glm::mat4 transformation, Scene* scene, Node* parent = nullptr);
+        Node(std::string name, std::vector<Mesh*> m, glm::mat4 transformation, Scene* scene, Node* parent = nullptr);
         
         inline glm::mat4 applyTransformation(GLuint model_vert, glm::mat4 localTransform = glm::mat4(1.f)){
             glm::mat4 t = localTransform * _transformation;
@@ -89,10 +99,13 @@ class Node {
         
         inline void addChild(std::string i, Node* n) { _children.insert(std::pair<std::string, Node*>(i, n)); }
         
+        inline std::string name() const { return _name; }
+        inline glm::mat4 transformation() { return _transformation; }
         inline Scene* scene() const     { return _scene; }
-        inline Mesh* mesh() const { return _mesh; }
+        inline std::vector<Mesh*> meshs() const { return _meshs; }
+        inline std::map<std::string, Node*> children() const { return _children; }
     private:
-        Mesh* _mesh;
+        std::vector<Mesh*> _meshs;
         std::map<std::string, Node*> _children;
         
         std::string _name;

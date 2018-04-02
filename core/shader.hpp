@@ -10,6 +10,7 @@ class Shader {
         Shader(std::string vertex, std::string fragment);
         ~Shader();
         
+        inline GLuint getUniformLocation(std::string id) { return getUniformLocation(id.c_str()); }
         inline GLuint getUniformLocation(const char* id) { return glGetUniformLocation(_programe_id, id); }
         inline void use() { return glUseProgram(_programe_id); }
         
