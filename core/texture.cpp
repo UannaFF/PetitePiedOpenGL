@@ -301,7 +301,9 @@ unsigned char* Texture::getDataFromFile(std::string path, GLenum*format, int *wi
 	printf("String for file: %s\n", path.c_str());
     unsigned char* data = stbi_load(path.c_str(), width, height, &nrComponents, 0);
     
-    if (data){       
+    if (data){
+    
+        
         switch (nrComponents){
         case 1:
             *format = GL_RED;
@@ -352,26 +354,26 @@ Texture* Texture::getCubemapTexture(std::string directory, bool gamma) {
 	data = nullptr;
 
 
-	data = Texture::getDataFromFile(final_path+FRONT_TEX , &format, &width, &height);
+	data = Texture::getDataFromFile(final_path+LEFT_TEX , &format, &width, &height);
 	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0,GL_RGB, width, height, 0, format, GL_UNSIGNED_BYTE, data);
 	width = 0;
 	height = 0;
 	data = nullptr;
 
-	data = Texture::getDataFromFile( final_path+BACK_TEX, &format,&width, &height);
+	data = Texture::getDataFromFile( final_path+RIGHT_TEX, &format,&width, &height);
 	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0,GL_RGB, width, height, 0, format, GL_UNSIGNED_BYTE, data);
 	width = 0;
 	height = 0;
 	data = nullptr;
 
-	data = Texture::getDataFromFile( final_path+LEFT_TEX, &format,&width, &height);
+	data = Texture::getDataFromFile( final_path+BACK_TEX, &format,&width, &height);
 	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0,GL_RGB, width, height, 0, format, GL_UNSIGNED_BYTE, data);
 	width = 0;
 	height = 0;
 	data = nullptr;
 
 
-	data = Texture::getDataFromFile(final_path+RIGHT_TEX, &format,&width, &height);
+	data = Texture::getDataFromFile(final_path+FRONT_TEX, &format,&width, &height);
 	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0,GL_RGB, width, height, 0, format, GL_UNSIGNED_BYTE, data);
 	width = 0;
 	height = 0;

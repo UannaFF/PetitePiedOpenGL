@@ -236,6 +236,10 @@ void Skybox::setEverything() {
        10.0f, -10.0f,  10.0f
     };
 
+    for(int i = 0; i < points.size(); i++) {
+        points[i] *= 2;
+    }
+
     std::vector<unsigned short> indices = {
         0, 1, 2,
         3, 4, 5,

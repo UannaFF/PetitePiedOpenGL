@@ -12,12 +12,12 @@
 #define FOURCC_DXT3 0x33545844 // Equivalent to "DXT3" in ASCII
 #define FOURCC_DXT5 0x35545844 // Equivalent to "DXT5" in ASCII
 
-#define TOP_TEX "top.bmp"
-#define BOTTOM_TEX "bottom.bmp"
-#define LEFT_TEX "left.bmp"
-#define RIGHT_TEX "right.bmp"
-#define FRONT_TEX "front.bmp"
-#define BACK_TEX "back.bmp"
+#define TOP_TEX "top.jpg"
+#define BOTTOM_TEX "bottom.jpg"
+#define LEFT_TEX "left.jpg"
+#define RIGHT_TEX "right.jpg"
+#define FRONT_TEX "front.jpg"
+#define BACK_TEX "back.jpg"
 
 
 class Texture {
