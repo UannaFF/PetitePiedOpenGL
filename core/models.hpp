@@ -16,6 +16,13 @@ class Material;
 class Joint;
 class NodeAnimator;
 
+#define GL_LAYOUT_VERTEXARRAY 0
+#define GL_LAYOUT_UV 1
+#define GL_LAYOUT_NORMAL 2
+//~ #define GL_LAYOUT_INDICE 0
+#define GL_LAYOUT_BONES 3
+#define GL_LAYOUT_WEIGHT 4
+
 typedef struct VertexWeight {
     uint vertex_id;
     float weight;
@@ -89,5 +96,15 @@ class Mesh {
         GLenum _mode;
         
         //~ std::vector<Bone*> _bones;
+};
+
+class Skybox : public Mesh {
+    public:
+        Skybox();
+        void setEverything();
+        ~Skybox();
+
+        //Define a big cube
+    
 };
 #endif

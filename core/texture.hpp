@@ -12,6 +12,14 @@
 #define FOURCC_DXT3 0x33545844 // Equivalent to "DXT3" in ASCII
 #define FOURCC_DXT5 0x35545844 // Equivalent to "DXT5" in ASCII
 
+#define TOP_TEX "top.bmp"
+#define BOTTOM_TEX "bottom.bmp"
+#define LEFT_TEX "left.bmp"
+#define RIGHT_TEX "right.bmp"
+#define FRONT_TEX "front.bmp"
+#define BACK_TEX "back.bmp"
+
+
 class Texture {
     public:
         enum Type {Diffuse, Specular, Normal, Height};
@@ -23,6 +31,8 @@ class Texture {
          * \param height The bitmap height
          */
         Texture(unsigned char* buffer, int width, int height);
+        Texture(bool sky);
+
         /**!
          * \short Create an empty texture
          */
@@ -39,11 +49,20 @@ class Texture {
         
         //~ static Texture* fromBitmap(std::string);
         //~ static Texture* fromDDS(std::string);
+        void apply(GLuint framgment_id);
+        static Texture* getCubemapTexture(std::string directory, bool gamma);
         static Texture* fromFile(std::string filename, std::string directory = "", bool gamma = false);
-        
+        //void apply(GLuint framgment_id);
+        static unsigned char* getDataFromFile(std::string path, GLenum*format, int *width, int *height);
+
+
         static std::map<std::string, Texture*> LOADED;
-    private:
+
+        bool _isSkybox;
         GLuint _texture_id;
+    private:
+        
+        
         Type _type;
         std::string _path;
 };

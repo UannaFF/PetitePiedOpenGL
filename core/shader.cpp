@@ -14,12 +14,20 @@ Shader::Shader(string VertexShaderCode, string FragmentShaderCode){
     GLint Result = GL_FALSE;
 	int InfoLogLength;
 
-
+GLenum err;
 	// Compile Vertex Shader
 	DEBUG(Debug::Info, "Compiling shader\n");
 	char const * VertexSourcePointer = VertexShaderCode.c_str();
+	//printf("Vertex source path: %s\n", VertexSourcePointer);
 	glShaderSource(VertexShaderID, 1, &VertexSourcePointer , NULL);
+	while ((err = glGetError()) != GL_NO_ERROR) {
+        std::cerr << "before vertex init OpenGL error: " << err << std::endl;
+    }
 	glCompileShader(VertexShaderID);
+
+	/*while ((err = glGetError()) != GL_NO_ERROR) {
+        std::cerr << "RIGHT after vertex init OpenGL error: " << err << std::endl;
+    }*/
 
 	// Check Vertex Shader
 	glGetShaderiv(VertexShaderID, GL_COMPILE_STATUS, &Result);
@@ -30,6 +38,9 @@ Shader::Shader(string VertexShaderCode, string FragmentShaderCode){
 		DEBUG(Debug::Warning, "%s\n", &VertexShaderErrorMessage[0]);
 	}
 
+	while ((err = glGetError()) != GL_NO_ERROR) {
+        std::cerr << "after vertex init OpenGL error: " << err << std::endl;
+    }
 
 
 	// Compile Fragment Shader
@@ -47,7 +58,9 @@ Shader::Shader(string VertexShaderCode, string FragmentShaderCode){
 		DEBUG(Debug::Warning, "%s\n", &FragmentShaderErrorMessage[0]);
 	}
 
-
+	while ((err = glGetError()) != GL_NO_ERROR) {
+        std::cerr << "after fragment compileOpenGL error: " << err << std::endl;
+    }
 
 	// Link the program
 	DEBUG(Debug::Info, "Linking program\n");
@@ -71,6 +84,9 @@ Shader::Shader(string VertexShaderCode, string FragmentShaderCode){
 	
 	glDeleteShader(VertexShaderID);
 	glDeleteShader(FragmentShaderID);
+	while ((err = glGetError()) != GL_NO_ERROR) {
+        std::cerr << "after everytgubg OpenGL error: " << err << std::endl;
+    }
 
 }
 

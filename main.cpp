@@ -70,6 +70,8 @@ int main(int argc, char** argv){
             //~ Shader* shader = Shader::fromFiles( "shaders/StandardShading.vertexshader", "shaders/StandardShading.fragmentshader" );
             //~ scene->setShader(shader);
 
+            scene->setSkybox("skybox_sky", "shaders/Skyboxshadingvertex.glsl","shaders/Skyboxshadingfragment.glsl" );
+
             scene->defaultShader()->use();
             
             mainCamera.bindView(scene->defaultShader()->getUniformLocation("view"));
@@ -81,8 +83,21 @@ int main(int argc, char** argv){
             mainCamera.setViewMatrix(glm::lookAt(
                                         glm::vec3(20,15,0), // Camera in World Space
                                         glm::vec3(1,1,1), // and looks at the origin
-                                        glm::vec3(0,1,0)  // Head is up (set to 0,-1,0 to look upside-down)
+                                        glm::vec3(0,-1,0)  // Head is up (set to 0,-1,0 to look upside-down)
                                    ));
+
+
+            
+            scene->skyboxShader()->use();
+            glm::mat4 projection = mainCamera.projectionMatrix();
+            glm::mat4 view = mainCamera.viewMatrix();
+            glUniformMatrix4fv(scene->skyboxShader()->getUniformLocation("projection"), 
+                1, GL_FALSE, &projection[0][0]);
+            glUniformMatrix4fv(scene->skyboxShader()->getUniformLocation("view"), 
+                1, GL_FALSE, &view[0][0]);
+
+
+            //scene->defaultShader()->use();
 
             // Load the texture using any two methods
             //~ Texture* texture = Texture::fromBitmap("uvtemplate.bmp");
@@ -116,6 +131,7 @@ int main(int argc, char** argv){
                 scene->defaultShader()->setVec3("light.position", lightPos);
                 //~ scene->defaultShader()->getUniformLocation("viewPos", camera.Position);
 
+
                 // light properties
                 glm::vec3 lightColor;
                 lightColor.x = sin(glfwGetTime() * 2.0f);
@@ -134,6 +150,13 @@ int main(int argc, char** argv){
 
                 // Bind and Set our "myTextureSampler" sampler to use Texture
                 //~ texture->set(TextureID);
+                scene->skyboxShader()->use();
+                glm::mat4 projection = mainCamera.projectionMatrix();
+            glm::mat4 view = mainCamera.viewMatrix();
+                glUniformMatrix4fv(scene->skyboxShader()->getUniformLocation("projection"), 
+                    1, GL_FALSE, &projection[0][0]);
+                glUniformMatrix4fv(scene->skyboxShader()->getUniformLocation("view"), 
+                    1, GL_FALSE, &view[0][0]);
                 
                 scene->render();
 

@@ -19,8 +19,29 @@ Texture::Texture():
 
 	// "Bind" the newly created texture : all future texture functions will modify this texture
 	glBindTexture(GL_TEXTURE_2D, _texture_id);
-	glPixelStorei(GL_UNPACK_ALIGNMENT,1);	
+	glPixelStorei(GL_UNPACK_ALIGNMENT,1);
 }
+
+Texture::Texture(bool sky):
+    _type(Diffuse)
+{
+	if(!sky) {
+	glGenTextures(1, &_texture_id);
+
+		// "Bind" the newly created texture : all future texture functions will modify this texture
+		glBindTexture(GL_TEXTURE_2D, _texture_id);
+		
+	} else {
+		_isSkybox = true;
+		printf("init texture cubemap\n");
+		glActiveTexture(GL_TEXTURE0);
+	    glGenTextures(1, &(_texture_id));
+	    glBindTexture(GL_TEXTURE_CUBE_MAP, _texture_id);
+	}
+
+	//glPixelStorei(GL_UNPACK_ALIGNMENT,1);
+}
+
 
 
 Texture::Texture(Type t):
@@ -59,6 +80,18 @@ Texture::Texture(unsigned char* data, int width, int height):
 
 Texture::~Texture(){
     glDeleteTextures(1, &_texture_id);
+}
+
+void Texture::apply(GLuint framgment_id) {
+	glActiveTexture(GL_TEXTURE0); //snot so sure about this texturenumber
+
+    //if(_isSkybox) 
+    	glBindTexture(GL_TEXTURE_CUBE_MAP, _texture_id);
+    //else glBindTexture(GL_TEXTURE_2D, _texture_id);
+
+    // Set our framgment_id sampler to use Texture Unit 0
+    glUniform1i(framgment_id, 0);
+
 }
 
 //~ Texture* Texture::fromBitmap(std::string imagepath){
@@ -262,6 +295,102 @@ Texture::~Texture(){
     //~ // and finally bind the texture
     //~ glBindTexture(GL_TEXTURE_2D, textures[i].id);
 //~ }
+
+unsigned char* Texture::getDataFromFile(std::string path, GLenum*format, int *width, int *height) {
+	int nrComponents;
+	printf("String for file: %s\n", path.c_str());
+    unsigned char* data = stbi_load(path.c_str(), width, height, &nrComponents, 0);
+    
+    if (data){       
+        switch (nrComponents){
+        case 1:
+            *format = GL_RED;
+            break;
+        case 3:
+            *format = GL_RGB;
+            break;
+        case 4:
+            *format = GL_RGBA;
+            break;
+        default:
+        	*format = GL_RGB;
+        }
+    } else {
+    	printf("Problem reading data\n");
+    }
+
+    return data;
+
+}
+
+
+
+Texture* Texture::getCubemapTexture(std::string directory, bool gamma) {
+
+	Texture* t = new Texture(true);
+
+	int width, height;
+	GLenum format;
+	unsigned char*data;
+
+
+	std::string final_path = "./res/"+directory+"/";
+	glBindTexture(GL_TEXTURE_CUBE_MAP, t->_texture_id);
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+	//load sides
+	data = Texture::getDataFromFile(final_path+TOP_TEX,  &format,&width, &height);
+	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0,GL_RGB, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+	width = 0;
+	height = 0;
+	data = nullptr;
+
+    data = Texture::getDataFromFile(final_path+BOTTOM_TEX,  &format,&width, &height);
+	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0,GL_RGB, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+	width = 0;
+	height = 0;
+	data = nullptr;
+
+
+	data = Texture::getDataFromFile(final_path+FRONT_TEX , &format, &width, &height);
+	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0,GL_RGB, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+	width = 0;
+	height = 0;
+	data = nullptr;
+
+	data = Texture::getDataFromFile( final_path+BACK_TEX, &format,&width, &height);
+	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0,GL_RGB, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+	width = 0;
+	height = 0;
+	data = nullptr;
+
+	data = Texture::getDataFromFile( final_path+LEFT_TEX, &format,&width, &height);
+	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0,GL_RGB, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+	width = 0;
+	height = 0;
+	data = nullptr;
+
+
+	data = Texture::getDataFromFile(final_path+RIGHT_TEX, &format,&width, &height);
+	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0,GL_RGB, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+	width = 0;
+	height = 0;
+
+	// OpenGL has now copied the data. Free our own version
+	
+
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+	
+	
+	glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+
+	return t;
+};
 
 Texture* Texture::fromFile(std::string filename, std::string directory, bool gamma)
 {

@@ -1,5 +1,5 @@
 #include "scene.hpp"
-#include "models.hpp"
+//#include "models.hpp"
 #include "texture.hpp"
 
 #include "common.hpp"
@@ -20,7 +20,10 @@ Scene::Scene():
     _shaders(),
     _animations(),
     _current_animation()
+   // _hasSkybox(false)
 {
+    //_hasSkybox = false;
+    //_skybox_shader = 0;
 }
 
 void Scene::displayNodeTree(){ _main_node->dump(); }
@@ -148,7 +151,7 @@ Scene* Scene::import(std::string path, Shader* shader){
             v->setIndice(indices);
         }
        
-        // Fill bones 
+        // Fill bones n
         if (mesh->HasBones()){      
             std::vector<Bone*> bones; 
             DEBUG(Debug::Info, "mesh has %d bone\n", mesh->mNumBones);      
@@ -240,9 +243,21 @@ Scene* Scene::import(std::string path, Shader* shader){
 }
 void Scene::render(){
     process(glfwGetTime());
-    
-    defaultShader()->setMat4("model", glm::mat4(1.f));
-    
+   // printf("Llego al render\n");
+    glm::mat4 mat = glm::mat4(1.f); //this changes the state somewhow
+
+    //Draw skybox
+    if(_hasSkybox) {
+        _skybox_shader->use();
+        _skybox->bind();
+        _skybox_texture->apply(_skybox_shader->getUniformLocation("cube_texture"));
+        
+        _skybox_shader->setMat4("model", mat);
+        _skybox->draw(_skybox_shader);
+    }
+
+    defaultShader()->use();
+    defaultShader()->setMat4("model", mat);
     _main_node->draw();
 }
 
@@ -257,6 +272,18 @@ void Scene::playAnimation( int anim){
 
 void Scene::addMesh(Mesh* m){
     _models.push_back(m);
+}
+
+void Scene::setSkybox(std::string folder, std::string vertex_name, std::string fragment_name) {
+    _hasSkybox = true;
+    _skybox_shader = Shader::fromFiles(vertex_name, fragment_name);
+
+    _skybox_shader->use();
+    _skybox = new Skybox();
+
+    _skybox->setEverything();
+
+    _skybox_texture = Texture::getCubemapTexture(folder, false);
 }
 
 Node* Scene::findNode(std::string n) const {

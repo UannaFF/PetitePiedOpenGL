@@ -12,6 +12,7 @@
 #include <map>
 #include <set>
 #include <string>
+#include "models.hpp"
 
 class Mesh;
 class Texture;
@@ -45,6 +46,8 @@ class Scene {
         inline void setCamera(Camera* c){ _camera = c; }
         inline void setRootNode(Node* n){ _main_node = n; }
         inline void setAnimations(std::vector<Animation*> a){ _animations = a; }
+
+        void setSkybox(std::string path, std::string vertex_name, std::string fragment_name);
         
         inline Node* rootNode(){ return _main_node; }
         Node* findNode(std::string n) const;
@@ -58,6 +61,9 @@ class Scene {
             return it->second;
         }
         
+        inline Shader* skyboxShader() const{
+            return _skybox_shader;
+        }
         void process(float timestamp);
         void render();
         void displayNodeTree();
@@ -74,9 +80,16 @@ class Scene {
         std::vector<Animation*> _animations;
         
         std::set<Animation*> _current_animation;
-        
+
+        Skybox *_skybox;
+        Texture *_skybox_texture;
+        bool _hasSkybox;
+        Shader *_skybox_shader;
+
         Node* _main_node;
         Camera* _camera;
+
+
         
         void _parseNode(Node* current, aiNode ** children, unsigned int nb_child);
         

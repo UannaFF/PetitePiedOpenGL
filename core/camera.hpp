@@ -35,6 +35,7 @@ class Camera {
             glUniformMatrix4fv(_view_fragment, 1, GL_FALSE, &_viewMatrix[0][0]);
         }
         
+        
     private:
         Window* _parent;
         

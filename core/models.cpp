@@ -7,12 +7,7 @@
 #include <assimp/scene.h>           // Output data structure
 #include <assimp/postprocess.h>     // Post processing flags
 
-#define GL_LAYOUT_VERTEXARRAY 0
-#define GL_LAYOUT_UV 1
-#define GL_LAYOUT_NORMAL 2
-//~ #define GL_LAYOUT_INDICE 0
-#define GL_LAYOUT_BONES 3
-#define GL_LAYOUT_WEIGHT 4
+
 
 #include <iostream>
 #include <assert.h>
@@ -61,24 +56,30 @@ Mesh::Mesh():
     glGenBuffers(1, &_indice);
     glGenBuffers(1, &_bones_id);
     glGenBuffers(1, &_weight);
+
+    _material = nullptr;
 }
 
 void Mesh::setVertex(std::vector<GLfloat> vertex)
 {            
+    glBindVertexArray(_vertex_array_id);
     DEBUG(Debug::Info, "Mesh has %d vertices\n", vertex.size());
     glBindBuffer(GL_ARRAY_BUFFER, _vertexbuffer);
     glBufferData(GL_ARRAY_BUFFER, vertex.size() * sizeof(GLfloat), &vertex[0], GL_STATIC_DRAW);
     _len_points = vertex.size();
+
 }
 
 void Mesh::setUV(std::vector<GLfloat> uv)
 {    
+    glBindVertexArray(_vertex_array_id);
     glBindBuffer(GL_ARRAY_BUFFER, _uvbuffer);
     glBufferData(GL_ARRAY_BUFFER, uv.size() * sizeof(GLfloat), &uv[0], GL_STATIC_DRAW);
 }
 
 void Mesh::setNormal(std::vector<GLfloat> normal)
 {    
+    glBindVertexArray(_vertex_array_id);
     DEBUG(Debug::Info, "Mesh has %d normal\n", normal.size());
     glBindBuffer(GL_ARRAY_BUFFER, _normal);
     glBufferData(GL_ARRAY_BUFFER, normal.size() * sizeof(GLfloat), &normal[0], GL_STATIC_DRAW);
@@ -86,6 +87,7 @@ void Mesh::setNormal(std::vector<GLfloat> normal)
 
 void Mesh::setIndice(std::vector<unsigned short> indices)
 {    
+    glBindVertexArray(_vertex_array_id);
     glBindBuffer(GL_ARRAY_BUFFER, _indice);
     glBufferData(GL_ARRAY_BUFFER, indices.size() * sizeof(GLfloat), &indices[0], GL_STATIC_DRAW);
 }
@@ -102,7 +104,6 @@ Mesh::~Mesh()
 }
 
 void Mesh::draw(Shader* usedShader){
-    
     if (_material)
         _material->apply(usedShader);
     
@@ -119,27 +120,36 @@ void Mesh::draw(Shader* usedShader){
     );
 
     // 2nd attribute buffer : UVs
-    glEnableVertexAttribArray(GL_LAYOUT_UV);
-    glBindBuffer(GL_ARRAY_BUFFER, _uvbuffer);
-    glVertexAttribPointer(GL_LAYOUT_UV, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+    if(_uvbuffer) {
+        glEnableVertexAttribArray(GL_LAYOUT_UV);
+        glBindBuffer(GL_ARRAY_BUFFER, _uvbuffer);
+        glVertexAttribPointer(GL_LAYOUT_UV, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+    }
     
     // 3rd attribute buffer : Normals
-    glEnableVertexAttribArray(GL_LAYOUT_NORMAL);
-    glBindBuffer(GL_ARRAY_BUFFER, _normal);
-    glVertexAttribPointer(GL_LAYOUT_NORMAL, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+    if(_normal) {
+        glEnableVertexAttribArray(GL_LAYOUT_NORMAL);
+        glBindBuffer(GL_ARRAY_BUFFER, _normal);
+        glVertexAttribPointer(GL_LAYOUT_NORMAL, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+    }
 
     // 4th attribute buffer : Bones
-    glEnableVertexAttribArray(GL_LAYOUT_BONES);
-    glBindBuffer(GL_ARRAY_BUFFER, _bones_id);
-    glVertexAttribPointer(GL_LAYOUT_BONES, 4, GL_INT, GL_FALSE, 0, nullptr);
+    if(_bones_id) {
+        glEnableVertexAttribArray(GL_LAYOUT_BONES);
+        glBindBuffer(GL_ARRAY_BUFFER, _bones_id);
+        glVertexAttribPointer(GL_LAYOUT_BONES, 4, GL_INT, GL_FALSE, 0, nullptr);
+    }
 
     // 5th attribute buffer : Weight
-    glEnableVertexAttribArray(GL_LAYOUT_WEIGHT);
-    glBindBuffer(GL_ARRAY_BUFFER, _weight);
-    glVertexAttribPointer(GL_LAYOUT_WEIGHT, 4, GL_FLOAT, GL_FALSE, 0, nullptr);
+    if(_weight) {
+        glEnableVertexAttribArray(GL_LAYOUT_WEIGHT);
+        glBindBuffer(GL_ARRAY_BUFFER, _weight);
+        glVertexAttribPointer(GL_LAYOUT_WEIGHT, 4, GL_FLOAT, GL_FALSE, 0, nullptr);
+    }
 
     // Index buffer
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _indice);
+    if(_indice)
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _indice);
     
     // Draw !
     glDrawArrays(_mode, 0, _len_points);
@@ -171,5 +181,130 @@ void Mesh::setBones(std::vector<Bone*> bones, Shader* s)
 	glBufferData(GL_ARRAY_BUFFER, sizeof(GLint) * bones_buffer.size(), &bones_buffer[0], GL_STATIC_DRAW);
    	glBindBuffer(GL_ARRAY_BUFFER, _weight);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * weight_buffer.size(), &weight_buffer[0], GL_STATIC_DRAW);
+
+}
+
+Skybox::Skybox() {
+
+
+
+}
+
+void Skybox::setEverything() {
+        //Define a big cube
+    std::vector<GLfloat> points = {
+      -10.0f,  10.0f, -10.0f, //back cube assume top left back corner
+      -10.0f, -10.0f, -10.0f,
+       10.0f, -10.0f, -10.0f,
+       10.0f, -10.0f, -10.0f,
+       10.0f,  10.0f, -10.0f,
+      -10.0f,  10.0f, -10.0f,
+      
+      -10.0f, -10.0f,  10.0f, //left square front, left, bottom corner
+      -10.0f, -10.0f, -10.0f,
+      -10.0f,  10.0f, -10.0f,
+      -10.0f,  10.0f, -10.0f,
+      -10.0f,  10.0f,  10.0f,
+      -10.0f, -10.0f,  10.0f,
+      
+       10.0f, -10.0f, -10.0f, //right square
+       10.0f, -10.0f,  10.0f,
+       10.0f,  10.0f,  10.0f,
+       10.0f,  10.0f,  10.0f,
+       10.0f,  10.0f, -10.0f,
+       10.0f, -10.0f, -10.0f,
+       
+      -10.0f, -10.0f,  10.0f, //front square
+      -10.0f,  10.0f,  10.0f,
+       10.0f,  10.0f,  10.0f,
+       10.0f,  10.0f,  10.0f,
+       10.0f, -10.0f,  10.0f,
+      -10.0f, -10.0f,  10.0f,
+      
+      -10.0f,  10.0f, -10.0f, //top square
+       10.0f,  10.0f, -10.0f,
+       10.0f,  10.0f,  10.0f,
+       10.0f,  10.0f,  10.0f,
+      -10.0f,  10.0f,  10.0f,
+      -10.0f,  10.0f, -10.0f,
+      
+      -10.0f, -10.0f, -10.0f, //bottom square
+      -10.0f, -10.0f,  10.0f,
+       10.0f, -10.0f, -10.0f,
+       10.0f, -10.0f, -10.0f,
+      -10.0f, -10.0f,  10.0f,
+       10.0f, -10.0f,  10.0f
+    };
+
+    std::vector<unsigned short> indices = {
+        0, 1, 2,
+        3, 4, 5,
+        6, 7, 8,
+        9, 10, 11,
+        12, 13, 14,
+        15, 16, 17,
+        18, 19, 20,
+        21, 22, 23,
+        24, 25, 26,
+        27, 28, 29,
+        30, 31, 32,
+        33, 34, 35,
+    };
+
+    std::vector<GLfloat> uv = {
+        0, 1, //-1,
+        0, 0, //-1,
+        1, 0, //-1,
+        1, 0, //-1,
+        1, 1, //-1,
+        0, 1, //-1,
+
+        0, 1, //1,
+        0, 0, //-1,
+        1, 0, //-1,
+        1, 0, //-1,
+        1, 1, //1,
+        0, 1, //1,
+
+        0, 1, //-1,
+        0, 0, //1,
+        1, 0, //1,
+        1, 0, //1,
+        1, 1, //-1,
+        0, 1, //-1,
+
+        0, 1, //1,
+        0, 0, //1,
+        1, 0, //1,
+        1, 0, //1,
+        1, 1, //1,
+        0, 1, //1,
+
+        0, 1, //-1,
+        0, 0, //-1,
+        1, 0, //1,
+        1, 0,// 1,
+        1, 1, //1,
+        0, 1, //-1,
+
+        0, 1, //-1,
+        0, 0, //1,
+        1, 0, //-1,
+        1, 0, //-1,
+        1, 1, //1,
+        0, 1, //1,
+
+    };
+
+    std::vector<GLfloat> normals = {
+        
+    };
+
+    setVertex(points);
+    setIndice(indices);
+    setUV(uv);
+}
+
+Skybox::~Skybox() {
 
 }
