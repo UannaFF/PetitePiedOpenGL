@@ -17,6 +17,7 @@ class Light {
     Mesh *_mesh;
 	glm::vec3 _pos;
 	glm::vec3 _color;
+    int type;
     public:
         Light();
 
@@ -32,14 +33,8 @@ class Light {
             s->setVec3("light.diffuse", diffuseColor);
             s->setVec3("light.specular", specular.x, specular.y, specular.z);
         }
-        void draw(glm::mat4 localTransform){
-
-            _shader->use();
-            _mesh->bind();
-        //_skybox->texture()->apply(_skybox->shader()->getUniformLocation("cube_texture"));
-            _shader->setMat4("model", localTransform);
-            _mesh->draw(_shader);
-        }
+        void draw(glm::mat4 localTransform);
+        Shader* shader() {return _shader;}
 };
 
 #endif

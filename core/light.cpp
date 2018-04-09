@@ -12,8 +12,10 @@
 
 #include "common.hpp"
 #include "material.hpp"
+#include <glm/gtc/matrix_transform.hpp>
 
 using namespace std;
+using namespace glm;
 
 glm::vec3 aiColor3DtoglmVec3(aiColor3D& ai_col){
     
@@ -183,4 +185,12 @@ Light::Light():
             _mesh->setMaterial(materials[mesh->mMaterialIndex]);
         //s->addMesh(v);
     }
+}
+
+void Light::draw(mat4 localTransform){
+	glm::mat4 mat = glm::translate(glm::mat4(1.f), _pos);
+    _shader->use();
+    _mesh->bind();
+    _shader->setMat4("model", mat);
+    _mesh->draw(_shader);
 }

@@ -77,6 +77,7 @@ class Scene {
         void playAnimation( int anim);
 
         void addLight(Light* l) {
+            defaultShader()->use();
             _lights.reserve(1);
             glm::vec3 diffuseColor = l->getColor()   * glm::vec3(0.5f); // decrease the influence
             glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f); // low influence

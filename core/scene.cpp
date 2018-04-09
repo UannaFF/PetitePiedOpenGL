@@ -246,6 +246,12 @@ void Scene::render(){
    // printf("Llego al render\n");
     glm::mat4 mat = glm::mat4(1.f); //this changes the state somewhow
 
+    //glm::mat4 mat2 = glm::mat4(10.f);
+    //defaultShader()->setMat4("model", mat2);
+    for(Light* light : _lights) {
+        light->draw(mat);
+    }
+
     //Draw skybox
     if(_hasSkybox) {
         _skybox->shader()->use();
@@ -256,9 +262,7 @@ void Scene::render(){
         _skybox->draw(_skybox->shader());
     }
 
-    for(Light* light : _lights) {
-        light->draw(mat);
-    }
+    
 
     defaultShader()->use();
     defaultShader()->setMat4("model", mat);

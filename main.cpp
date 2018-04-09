@@ -120,7 +120,7 @@ int main(int argc, char** argv){
             //glm::vec3 lightPos = glm::vec3(4,4,4);
 
             Light *light = new Light();
-            light->setPos(glm::vec3(4,4,4));
+            light->setPos(glm::vec3(-4,4,4));
 
             
             
@@ -152,7 +152,7 @@ int main(int argc, char** argv){
                 scene->defaultShader()->setVec3("light.diffuse", diffuseColor);
                 scene->defaultShader()->setVec3("light.specular", 1.0f, 1.0f, 1.0f);*/
                 
-                scene->addLight(light);
+        
                 // Update P and V from mouse and keyboard
                 mainCamera.updateFromMouse();
                 
@@ -162,11 +162,20 @@ int main(int argc, char** argv){
                 //~ texture->set(TextureID);
                 scene->skyboxShader()->use();
                 glm::mat4 projection = mainCamera.projectionMatrix();
-            glm::mat4 view = mainCamera.viewMatrix();
+                glm::mat4 view = mainCamera.viewMatrix();
+
                 glUniformMatrix4fv(scene->skyboxShader()->getUniformLocation("projection"), 
                     1, GL_FALSE, &projection[0][0]);
                 glUniformMatrix4fv(scene->skyboxShader()->getUniformLocation("view"), 
                     1, GL_FALSE, &view[0][0]);
+
+                light->shader()->use();
+                glUniformMatrix4fv(light->shader()->getUniformLocation("projection"), 
+                    1, GL_FALSE, &projection[0][0]);
+                glUniformMatrix4fv(light->shader()->getUniformLocation("view"), 
+                    1, GL_FALSE, &view[0][0]);
+
+                scene->addLight(light);
                 
                 scene->render();
 

@@ -85,9 +85,9 @@ Texture::~Texture(){
 void Texture::apply(GLuint framgment_id) {
 	glActiveTexture(GL_TEXTURE0); //snot so sure about this texturenumber
 
-    //if(_isSkybox) 
+    if(_isSkybox) 
     	glBindTexture(GL_TEXTURE_CUBE_MAP, _texture_id);
-    //else glBindTexture(GL_TEXTURE_2D, _texture_id);
+    else glBindTexture(GL_TEXTURE_2D, _texture_id);
 
     // Set our framgment_id sampler to use Texture Unit 0
     glUniform1i(framgment_id, 0);
