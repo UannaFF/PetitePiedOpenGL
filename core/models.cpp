@@ -184,15 +184,11 @@ void Mesh::setBones(std::vector<Bone*> bones, Shader* s)
 
 }
 
-Skybox::Skybox() {
+Skybox::Skybox()
 
+{
 
-
-}
-
-void Skybox::setEverything() {
-        //Define a big cube
-    std::vector<GLfloat> points = {
+        _points = {
       -10.0f,  10.0f, -10.0f, //back cube assume top left back corner
       -10.0f, -10.0f, -10.0f,
        10.0f, -10.0f, -10.0f,
@@ -234,28 +230,8 @@ void Skybox::setEverything() {
        10.0f, -10.0f, -10.0f,
       -10.0f, -10.0f,  10.0f,
        10.0f, -10.0f,  10.0f
-    };
-
-    for(int i = 0; i < points.size(); i++) {
-        points[i] *= 2;
-    }
-
-    std::vector<unsigned short> indices = {
-        0, 1, 2,
-        3, 4, 5,
-        6, 7, 8,
-        9, 10, 11,
-        12, 13, 14,
-        15, 16, 17,
-        18, 19, 20,
-        21, 22, 23,
-        24, 25, 26,
-        27, 28, 29,
-        30, 31, 32,
-        33, 34, 35,
-    };
-
-    std::vector<GLfloat> uv = {
+    }; 
+    _uv = {
         0, 1, //-1,
         0, 0, //-1,
         1, 0, //-1,
@@ -300,13 +276,76 @@ void Skybox::setEverything() {
 
     };
 
-    std::vector<GLfloat> normals = {
-        
+    _normals = {
+        0.0, 0.0, 1.0,
+        0.0, 0.0, 1.0,
+        0.0, 0.0, 1.0,
+        0.0, 0.0, 1.0,
+        0.0, 0.0, 1.0,
+        0.0, 0.0, 1.0,
+
+        1.0, 0.0, 0.0,
+        1.0, 0.0, 0.0,
+        1.0, 0.0, 0.0,
+        1.0, 0.0, 0.0,
+        1.0, 0.0, 0.0,
+        1.0, 0.0, 0.0,
+
+        -1.0, 0.0, 0.0,
+        -1.0, 0.0, 0.0,
+        -1.0, 0.0, 0.0,
+        -1.0, 0.0, 0.0,
+        -1.0, 0.0, 0.0,
+        -1.0, 0.0, 0.0,
+
+        0.0, 0.0, -1.0,
+        0.0, 0.0, -1.0,
+        0.0, 0.0, -1.0,
+        0.0, 0.0, -1.0,
+        0.0, 0.0, -1.0,
+        0.0, 0.0, -1.0,
+
+        0.0, -1.0, 0.0,
+        0.0, -1.0, 0.0,
+        0.0, -1.0, 0.0,
+        0.0, -1.0, 0.0,
+        0.0, -1.0, 0.0,
+        0.0, -1.0, 0.0,
+
+        0.0, 1.0, 0.0,
+        0.0, 1.0, 0.0,
+        0.0, 1.0, 0.0,
+        0.0, 1.0, 0.0,
+        0.0, 1.0, 0.0,
+        0.0, 1.0, 0.0,
+    };
+    _indices = {
+        0, 1, 2,
+        3, 4, 5,
+        6, 7, 8,
+        9, 10, 11,
+        12, 13, 14,
+        15, 16, 17,
+        18, 19, 20,
+        21, 22, 23,
+        24, 25, 26,
+        27, 28, 29,
+        30, 31, 32,
+        33, 34, 35,
     };
 
-    setVertex(points);
-    setIndice(indices);
-    setUV(uv);
+    
+
+    
+
+}
+
+void Skybox::setEverything() {
+        //Define a big cube
+    setVertex(_points);
+    setIndice(_indices);
+    setUV(_uv);
+    setNormal(_normals);
 }
 
 Skybox::~Skybox() {

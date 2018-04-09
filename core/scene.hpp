@@ -5,6 +5,8 @@
 #include <assimp/scene.h>           // Output data structure
 #include <assimp/postprocess.h>     // Post processing flags
 
+#include "glm/gtc/matrix_transform.hpp"
+
 #include <glm/glm.hpp>
 #include <GL/glew.h>
 
@@ -13,6 +15,7 @@
 #include <set>
 #include <string>
 #include "models.hpp"
+#include "light.hpp"
 
 class Mesh;
 class Texture;
@@ -23,6 +26,7 @@ class Light;
 class Node;
 class Shader;
 class Animation;
+
 
 class SceneException: public std::exception {
     public:
@@ -62,7 +66,7 @@ class Scene {
         }
         
         inline Shader* skyboxShader() const{
-            return _skybox_shader;
+            return _skybox->shader();
         }
         void process(float timestamp);
         void render();
@@ -71,6 +75,14 @@ class Scene {
         static Scene* import(std::string path, Shader* s);
         
         void playAnimation( int anim);
+
+        void addLight(Light* l) {
+            _lights.reserve(1);
+            glm::vec3 diffuseColor = l->getColor()   * glm::vec3(0.5f); // decrease the influence
+            glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f); // low influence
+            l->bindAffectedObject(defaultShader(), ambientColor, diffuseColor, glm::vec3(1.0f, 1.0f,1.0f));
+            _lights.push_back(l);
+        }
         
         
     private:
@@ -81,10 +93,11 @@ class Scene {
         
         std::set<Animation*> _current_animation;
 
+        std::vector<Light*> _lights;
+
         Skybox *_skybox;
-        Texture *_skybox_texture;
         bool _hasSkybox;
-        Shader *_skybox_shader;
+        
 
         Node* _main_node;
         Camera* _camera;

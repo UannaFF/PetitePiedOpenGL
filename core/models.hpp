@@ -99,9 +99,22 @@ class Mesh {
 };
 
 class Skybox : public Mesh {
+
+    private:
+       Shader *_skybox_shader;
+       Texture *_skybox_texture;
     public:
+        std::vector<GLfloat> _points;
+        std::vector<unsigned short> _indices;
+        std::vector<GLfloat> _uv;
+        std::vector<GLfloat> _normals;
+
         Skybox();
         void setEverything();
+        void setShader(Shader*shader){_skybox_shader = shader;}
+        void setTexture(Texture*texture) {_skybox_texture = texture;}
+        Shader* shader(){return _skybox_shader;}
+        Texture* texture() {return _skybox_texture;}
         ~Skybox();
 
         //Define a big cube

@@ -5,6 +5,7 @@
 #include <GL/glew.h>
 #include <glm/glm.hpp>
 
+
 class Shader {
     public:
         Shader(std::string vertex, std::string fragment);
@@ -27,7 +28,7 @@ class Shader {
         
         static Shader* fromFiles(std::string vertex_path, std::string fragment_path);
         GLuint _programe_id;
-    private:
+    //private:
         
         
         

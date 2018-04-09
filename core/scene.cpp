@@ -4,7 +4,6 @@
 
 #include "common.hpp"
 #include "shader.hpp"
-#include "light.hpp"
 #include "material.hpp"
 #include "animations.hpp"
 
@@ -19,7 +18,8 @@ Scene::Scene():
     _camera(nullptr),
     _shaders(),
     _animations(),
-    _current_animation()
+    _current_animation(),
+    _lights()
    // _hasSkybox(false)
 {
     //_hasSkybox = false;
@@ -248,12 +248,16 @@ void Scene::render(){
 
     //Draw skybox
     if(_hasSkybox) {
-        _skybox_shader->use();
+        _skybox->shader()->use();
         _skybox->bind();
-        _skybox_texture->apply(_skybox_shader->getUniformLocation("cube_texture"));
+        _skybox->texture()->apply(_skybox->shader()->getUniformLocation("cube_texture"));
         
-        _skybox_shader->setMat4("model", mat);
-        _skybox->draw(_skybox_shader);
+        _skybox->shader()->setMat4("model", mat);
+        _skybox->draw(_skybox->shader());
+    }
+
+    for(Light* light : _lights) {
+        light->draw(mat);
     }
 
     defaultShader()->use();
@@ -276,14 +280,17 @@ void Scene::addMesh(Mesh* m){
 
 void Scene::setSkybox(std::string folder, std::string vertex_name, std::string fragment_name) {
     _hasSkybox = true;
-    _skybox_shader = Shader::fromFiles(vertex_name, fragment_name);
+    //_skybox_shader = Shader::fromFiles(vertex_name, fragment_name);
 
-    _skybox_shader->use();
+   // _skybox_shader->use();
     _skybox = new Skybox();
+    _skybox->setShader(Shader::fromFiles(vertex_name, fragment_name));
+    _skybox->shader()->use();
 
     _skybox->setEverything();
 
-    _skybox_texture = Texture::getCubemapTexture(folder, false);
+    _skybox->setTexture(Texture::getCubemapTexture(folder, false));
+    //_skybox_texture = Texture::getCubemapTexture(folder, false);
 }
 
 Node* Scene::findNode(std::string n) const {
@@ -337,51 +344,6 @@ Node* Node::find(std::string n){
     return nullptr;
 }
 
-glm::mat4 aiMatrix4x4toglmMat4(aiMatrix4x4t<float>& ai_mat){
-    glm::mat4 mat;
-    
-    mat[0].x = ai_mat.a1;
-    mat[0].y = ai_mat.a2;
-    mat[0].z = ai_mat.a3;
-    mat[0].w = ai_mat.a4;
-    mat[1].x = ai_mat.b1;
-    mat[1].y = ai_mat.b2;
-    mat[1].z = ai_mat.b3;
-    mat[1].w = ai_mat.b4;
-    mat[2].x = ai_mat.c1;
-    mat[2].y = ai_mat.c2;
-    mat[2].z = ai_mat.c3;
-    mat[2].w = ai_mat.c4;
-    mat[3].x = ai_mat.d1;
-    mat[3].y = ai_mat.d2;
-    mat[3].z = ai_mat.d3;
-    mat[3].w = ai_mat.d4;
-    
-    return mat;
-}
-
-
-glm::vec3 aiColor3DtoglmVec3(aiColor3D& ai_col){
-    
-    glm::vec3 col;
-    
-    col.x = ai_col.r;
-    col.y = ai_col.g;
-    col.z = ai_col.b;
-    
-    return col;
-}
-
-glm::vec3 aiVector3DtoglmVec3(aiVector3D& ai_col){
-    
-    glm::vec3 col;
-    
-    col.x = ai_col.x;
-    col.y = ai_col.y;
-    col.z = ai_col.z;
-    
-    return col;
-}
 
 void Node::draw(glm::mat4 localTransform){
     //~ glm::mat4 t = applyTransformation(scene()->defaultShader()->getUniformLocation("model"), localTransform);

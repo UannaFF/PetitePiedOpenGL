@@ -16,6 +16,7 @@
 #include "core/texture.hpp"
 #include "core/models.hpp"
 #include "core/scene.hpp"
+#include "core/light.hpp"
 
 using namespace glm;
 
@@ -70,7 +71,7 @@ int main(int argc, char** argv){
             //~ Shader* shader = Shader::fromFiles( "shaders/StandardShading.vertexshader", "shaders/StandardShading.fragmentshader" );
             //~ scene->setShader(shader);
 
-            scene->setSkybox("mountain-skyboxes/Maskonaive", "shaders/Skyboxshadingvertex.glsl","shaders/Skyboxshadingfragment.glsl" );
+            scene->setSkybox("mountain-skyboxes/Nalovardo", "shaders/Skyboxshadingvertex.glsl","shaders/Skyboxshadingfragment.glsl" );
 
             scene->defaultShader()->use();
             
@@ -115,7 +116,11 @@ int main(int argc, char** argv){
                 
             //~ std::cout << std::endl;
                 
-            glm::vec3 lightPos = glm::vec3(4,4,4);
+            //glm::vec3 lightPos = glm::vec3(4,4,4);
+
+            Light *light = new Light();
+            light->setPos(glm::vec3(4,4,4));
+
             
             
             window.hideCursor();
@@ -128,21 +133,25 @@ int main(int argc, char** argv){
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
                         
-                scene->defaultShader()->setVec3("light.position", lightPos);
+               // scene->defaultShader()->setVec3("light.position", light->getPos());
                 //~ scene->defaultShader()->getUniformLocation("viewPos", camera.Position);
 
 
                 // light properties
-                glm::vec3 lightColor;
+                //light->setColor(vec3(sin(glfwGetTime() * 2.0f), sin(glfwGetTime() * 0.7f), sin(glfwGetTime() * 1.3f)));
+                light->setColor(vec3(0.0, 1.0, 0.0));
+
+                /*glm::vec3 lightColor;
                 lightColor.x = sin(glfwGetTime() * 2.0f);
                 lightColor.y = sin(glfwGetTime() * 0.7f);
-                lightColor.z = sin(glfwGetTime() * 1.3f);
-                glm::vec3 diffuseColor = lightColor   * glm::vec3(0.5f); // decrease the influence
-                glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f); // low influence
-                scene->defaultShader()->setVec3("light.ambient", ambientColor);
+                lightColor.z = sin(glfwGetTime() * 1.3f);*/
+
+
+                /*scene->defaultShader()->setVec3("light.ambient", ambientColor);
                 scene->defaultShader()->setVec3("light.diffuse", diffuseColor);
-                scene->defaultShader()->setVec3("light.specular", 1.0f, 1.0f, 1.0f);
-    
+                scene->defaultShader()->setVec3("light.specular", 1.0f, 1.0f, 1.0f);*/
+                
+                scene->addLight(light);
                 // Update P and V from mouse and keyboard
                 mainCamera.updateFromMouse();
                 
