@@ -50,6 +50,7 @@ int main(int argc, char** argv){
             window.initialise();
             
             ControlableCamera mainCamera;
+            //~ Camera mainCamera;
             window.setCamera(mainCamera);
             
             glClearColor(0.0f, 0.0f, 0.4f, 0.0f);

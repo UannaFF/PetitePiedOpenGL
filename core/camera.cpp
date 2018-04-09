@@ -4,7 +4,8 @@
 using namespace glm;
 
 Camera::Camera(Window* p):
-    _parent(p), _projection_fragment(-1), _view_fragment(-1)
+    _parent(p), _projection_fragment(-1), _view_fragment(-1), 
+    _viewMatrix(1.f), _projectionMatrix(1.f)
 {
 }
 
@@ -23,7 +24,8 @@ void Camera::setProjectionMatrix(glm::mat4 p){
 
 ControlableCamera::ControlableCamera():
     Camera::Camera(),
-    _position( 0, 0, 5 ), _horizontalAngle(3.14f), _verticalAngle(0.0f), _initialFoV(45.0f), _speed(3.0f), _mouseSpeed(0.005f){
+    _position(1.f), _horizontalAngle(3.14f), _verticalAngle(0.0f), _initialFoV(45.0f),
+    _speed(3.0f), _mouseSpeed(0.005f){
 }
 
 void ControlableCamera::updateFromMouse(){
@@ -46,7 +48,7 @@ void ControlableCamera::updateFromMouse(){
 
 	// Compute new orientation
 	_horizontalAngle += _mouseSpeed * float(parent()->width()/2 - xpos );
-	_verticalAngle   += _mouseSpeed * float( parent()->height()/2 - ypos );
+	_verticalAngle   += _mouseSpeed * float(parent()->height()/2 - ypos );
 
 	// Direction : Spherical coordinates to Cartesian coordinates conversion
 	glm::vec3 direction(
