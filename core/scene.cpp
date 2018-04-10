@@ -95,6 +95,7 @@ Scene* Scene::import(std::string path, Shader* shader){
         }  
     }
     
+    uint vertex_offset = 0;
     DEBUG(Debug::Info, "Meshes: %d\n", scene->mNumMeshes);
     for (int m = 0; m < scene->mNumMeshes; m++){    
         const aiMesh* mesh = scene->mMeshes[m];
@@ -158,7 +159,7 @@ Scene* Scene::import(std::string path, Shader* shader){
             for (unsigned int i=0; i<mesh->mNumBones; i++){
                 Bone* b = new Bone(aiMatrix4x4toglmMat4(mesh->mBones[i]->mOffsetMatrix));
                 for (int w = 0; w < mesh->mBones[i]->mNumWeights; w++)
-                    b->addWeight(mesh->mBones[i]->mWeights[w].mVertexId, mesh->mBones[i]->mWeights[w].mWeight);
+                    b->addWeight(mesh->mBones[i]->mWeights[w].mVertexId - vertex_offset, mesh->mBones[i]->mWeights[w].mWeight);
                 
                 bones_to_bind.insert(std::make_pair(mesh->mBones[i]->mName.data, b));
                 
@@ -170,6 +171,7 @@ Scene* Scene::import(std::string path, Shader* shader){
         if(mesh->mMaterialIndex >= 0)
             v->setMaterial(materials[mesh->mMaterialIndex]);
         s->addMesh(v);
+        vertex_offset += mesh->mNumVertices;
     }
     
     // Loading nodes

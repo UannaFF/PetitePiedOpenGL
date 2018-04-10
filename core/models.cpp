@@ -18,7 +18,7 @@ void Bone::dumpToBuffer(std::vector<int>& vertex_buff, std::vector<float>& weigh
     DEBUG(Debug::Info, "Bone has %d record to dump\n", _weights.size());
     std::cout << _offset;
 
-    normalize();
+    //~ normalize();
     
     int i = 0;
     
@@ -28,10 +28,10 @@ void Bone::dumpToBuffer(std::vector<int>& vertex_buff, std::vector<float>& weigh
         int offset = 0;
         for (; weight_buff[p.first * 4 + offset] != 0.0; offset++){}
         
-        if (offset >= 4)
+        if (offset >= 4){
+            DEBUG(Debug::Info, " - Skiping extra bone VID: %d, weight: %f\n", p.first, p.second);
             continue;
-            
-        assert(offset < 4);
+        }
         
         vertex_buff[p.first * 4 + offset] = _boneid;
         weight_buff[p.first * 4 + offset] = p.second;
@@ -66,7 +66,7 @@ Mesh::Mesh():
     glGenBuffers(1, &_vertexbuffer);
     glGenBuffers(1, &_uvbuffer);
     glGenBuffers(1, &_normal);
-    glGenBuffers(1, &_indice);
+    //~ glGenBuffers(1, &_indice);
     glGenBuffers(1, &_bones_id);
     glGenBuffers(1, &_weight);
 
@@ -100,9 +100,9 @@ void Mesh::setNormal(std::vector<GLfloat> normal)
 
 void Mesh::setIndice(std::vector<unsigned short> indices)
 {    
-    glBindVertexArray(_vertex_array_id);
-    glBindBuffer(GL_ARRAY_BUFFER, _indice);
-    glBufferData(GL_ARRAY_BUFFER, indices.size() * sizeof(GLfloat), &indices[0], GL_STATIC_DRAW);
+    //~ glBindVertexArray(_vertex_array_id);
+    //~ glBindBuffer(GL_ARRAY_BUFFER, _indice);
+    //~ glBufferData(GL_ARRAY_BUFFER, indices.size() * sizeof(GLfloat), &indices[0], GL_STATIC_DRAW);
 }
 
 Mesh::~Mesh()
@@ -110,7 +110,7 @@ Mesh::~Mesh()
     glDeleteBuffers(1, &_vertexbuffer);
     glDeleteBuffers(1, &_uvbuffer);
     glDeleteBuffers(1, &_normal);
-    glDeleteBuffers(1, &_indice);
+    //~ glDeleteBuffers(1, &_indice);
     glDeleteBuffers(1, &_bones_id);
     glDeleteBuffers(1, &_weight);
     glDeleteVertexArrays(1, &_vertex_array_id);
@@ -161,8 +161,8 @@ void Mesh::draw(Shader* usedShader){
     }
 
     // Index buffer
-    if(_indice)
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _indice);
+    //~ if(_indice)
+        //~ glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _indice);
     
     // Draw !
     glDrawArrays(_mode, 0, _len_points);
@@ -188,18 +188,22 @@ void Mesh::setBones(std::vector<Bone*> bones, Shader* s)
         // Binding to the GLSL bones
         DEBUG(Debug::Info, "gBones[%d]\n", bone_id);
         b->frag_id(s->getUniformLocation("gBones[" + std::to_string(bone_id) +"]"));
+        //~ b->frag_id(s->getUniformLocation("model"));
         bone_id++;
         b->setTransformation(glm::mat4(1.f));
     }        
-    for (int v = 0; v < _len_points; v ++){
-        float total_weight = 0; 
-        for (int w = 0; w < 4; w++)
-            total_weight += weight_buffer[v * 4 + w];
-        //~ if (total_weight != 1.f)
-            printf("w of %d:%f\n", v, total_weight);
-    }
+    //~ for (int v = 0; v < _len_points; v ++){
+        //~ float total_weight = 0; 
+        //~ printf("At %d\n", v);
+        //~ for (int w = 0; w < 4; w++){
+            //~ total_weight += weight_buffer[v * 4 + w];
+            //~ printf("\- %d:%f\n", bones_buffer[v * 4 + w], weight_buffer[v * 4 + w]);
+        //~ }
+        //~ printf("\tTotal: %f\n", total_weight);
+    //~ }
     
     // Uploading to GPU
+    glBindVertexArray(_vertex_array_id);
    	glBindBuffer(GL_ARRAY_BUFFER, _bones_id);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(GLint) * bones_buffer.size(), &bones_buffer[0], GL_STATIC_DRAW);
    	glBindBuffer(GL_ARRAY_BUFFER, _weight);
