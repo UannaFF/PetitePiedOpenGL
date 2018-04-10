@@ -242,9 +242,10 @@ Scene* Scene::import(std::string path, Shader* shader){
     return s;
 }
 void Scene::render(){
-    process(glfwGetTime());
    // printf("Llego al render\n");
     glm::mat4 mat = glm::mat4(1.f); //this changes the state somewhow
+
+    // Ligth goes here
 
     //Draw skybox
     if(_hasSkybox) {
@@ -256,8 +257,17 @@ void Scene::render(){
         _skybox->draw(_skybox_shader);
     }
 
-    defaultShader()->use();
+    defaultShader()->use();    
     defaultShader()->setMat4("model", mat);
+    
+    glm::mat4 bone(0.592056, -0.750088, -0.15035, -0.0665687,
+      0.576882, 0.622695, -0.452484, -0.0276781,
+      0.435611, 0.271241, 0.803574, -0.640044,
+      5.05164e-38, -0.0995924, 3.02157e-39, 1);
+    defaultShader()->setMat4("gBones[1]", bone);
+    
+    process(glfwGetTime());
+    
     _main_node->draw();
 }
 
@@ -386,7 +396,7 @@ glm::vec3 aiVector3DtoglmVec3(aiVector3D& ai_col){
 void Node::draw(glm::mat4 localTransform){
     //~ glm::mat4 t = applyTransformation(scene()->defaultShader()->getUniformLocation("model"), localTransform);
     
-    scene()->defaultShader()->use();
+    //~ scene()->defaultShader()->use();
     
     for (Mesh* _mesh: _meshs){
         _mesh->bind();

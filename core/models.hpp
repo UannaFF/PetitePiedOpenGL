@@ -56,6 +56,8 @@ class Bone {
         glm::mat4 _offset;
         std::map<uint, float> _weights;
         
+        void normalize();
+        
 };
 
 

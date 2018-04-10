@@ -8,7 +8,6 @@
 #include <assimp/postprocess.h>     // Post processing flags
 
 
-
 #include <iostream>
 #include <assert.h>
 #include <string.h>
@@ -19,6 +18,7 @@ void Bone::dumpToBuffer(std::vector<int>& vertex_buff, std::vector<float>& weigh
     DEBUG(Debug::Info, "Bone has %d record to dump\n", _weights.size());
     std::cout << _offset;
 
+    normalize();
     
     int i = 0;
     
@@ -37,11 +37,24 @@ void Bone::dumpToBuffer(std::vector<int>& vertex_buff, std::vector<float>& weigh
         weight_buff[p.first * 4 + offset] = p.second;
     }
 }
+
+void Bone::normalize() {
+    float mag = 0;
+    
+    for (std::pair<uint, float> p: _weights)
+        mag += p.second * p.second;
+        
+    mag = sqrt(mag);
+        
+    for (std::pair<uint, float> p: _weights)
+        _weights[p.first] = p.second / mag;
+}
+
 void Bone::setTransformation(const glm::mat4& mat) {
-    //~ DEBUG(Debug::Info, "-- Update bone at %d\n", _frag);
+    DEBUG(Debug::Info, "-- Update bone id %d at %d\n", _boneid, _frag);
     glUniformMatrix4fv(_frag, 1, GL_TRUE, &(mat * _offset)[0][0]);
-    //~ glUniformMatrix4fv(_frag, 1, GL_FALSE, &(mat)[0][0]);
-    //~ std::cout << (mat * _offset);
+    //~ glUniformMatrix4fv(_frag, 1, GL_TRUE, &(mat)[0][0]);
+    std::cout << (mat * _offset);
 }
 
 Mesh::Mesh():
@@ -167,13 +180,23 @@ void Mesh::setBones(std::vector<Bone*> bones, Shader* s)
     std::vector<GLfloat> weight_buffer(_len_points * 4, 0.0);
     
     s->use();
+    int bone_id = 0;
     for (Bone* b: bones){        
-        b->id(Bone::LAST_ID);
+        b->id(bone_id);
         b->dumpToBuffer(bones_buffer, weight_buffer);
         
         // Binding to the GLSL bones
-        b->frag_id(s->getUniformLocation("gBones[" + std::to_string(Bone::LAST_ID++) +"]"));
+        DEBUG(Debug::Info, "gBones[%d]\n", bone_id);
+        b->frag_id(s->getUniformLocation("gBones[" + std::to_string(bone_id) +"]"));
+        bone_id++;
         b->setTransformation(glm::mat4(1.f));
+    }        
+    for (int v = 0; v < _len_points; v ++){
+        float total_weight = 0; 
+        for (int w = 0; w < 4; w++)
+            total_weight += weight_buffer[v * 4 + w];
+        //~ if (total_weight != 1.f)
+            printf("w of %d:%f\n", v, total_weight);
     }
     
     // Uploading to GPU
