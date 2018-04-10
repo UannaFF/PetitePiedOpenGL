@@ -57,7 +57,7 @@ void Bone::setTransformation(const glm::mat4& mat) {
     std::cout << (mat * _offset);
 }
 
-Mesh::Mesh():
+VertexArray::Mesh():
     _len_points(0),
     _mode(GL_TRIANGLES)
 {    
@@ -73,7 +73,7 @@ Mesh::Mesh():
     _material = nullptr;
 }
 
-void Mesh::setVertex(std::vector<GLfloat> vertex)
+void VertexArray::setVertex(std::vector<GLfloat> vertex)
 {            
     glBindVertexArray(_vertex_array_id);
     DEBUG(Debug::Info, "Mesh has %d vertices\n", vertex.size());
@@ -83,14 +83,14 @@ void Mesh::setVertex(std::vector<GLfloat> vertex)
 
 }
 
-void Mesh::setUV(std::vector<GLfloat> uv)
+void VertexArray::setUV(std::vector<GLfloat> uv)
 {    
     glBindVertexArray(_vertex_array_id);
     glBindBuffer(GL_ARRAY_BUFFER, _uvbuffer);
     glBufferData(GL_ARRAY_BUFFER, uv.size() * sizeof(GLfloat), &uv[0], GL_STATIC_DRAW);
 }
 
-void Mesh::setNormal(std::vector<GLfloat> normal)
+void VertexArray::setNormal(std::vector<GLfloat> normal)
 {    
     glBindVertexArray(_vertex_array_id);
     DEBUG(Debug::Info, "Mesh has %d normal\n", normal.size());
@@ -98,14 +98,14 @@ void Mesh::setNormal(std::vector<GLfloat> normal)
     glBufferData(GL_ARRAY_BUFFER, normal.size() * sizeof(GLfloat), &normal[0], GL_STATIC_DRAW);
 }
 
-void Mesh::setIndice(std::vector<unsigned short> indices)
+void VertexArray::setIndice(std::vector<unsigned short> indices)
 {    
     glBindVertexArray(_vertex_array_id);
     glBindBuffer(GL_ARRAY_BUFFER, _indice);
     glBufferData(GL_ARRAY_BUFFER, indices.size() * sizeof(GLfloat), &indices[0], GL_STATIC_DRAW);
 }
 
-Mesh::~Mesh()
+VertexArray::~Mesh()
 {        
     glDeleteBuffers(1, &_vertexbuffer);
     glDeleteBuffers(1, &_uvbuffer);
@@ -116,7 +116,7 @@ Mesh::~Mesh()
     glDeleteVertexArrays(1, &_vertex_array_id);
 }
 
-void Mesh::draw(Shader* usedShader){
+void VertexArray::draw(glm::mat4 projection, glm::mat4 view, glm::mat4 model){
     if (_material)
         _material->apply(usedShader);
     
@@ -174,7 +174,7 @@ void Mesh::draw(Shader* usedShader){
     glDisableVertexAttribArray(4);
 }
 
-void Mesh::setBones(std::vector<Bone*> bones, Shader* s)
+void VertexArray::setBones(std::vector<Bone*> bones, Shader* s)
 {   
     std::vector<GLint> bones_buffer(_len_points * 4, 0);
     std::vector<GLfloat> weight_buffer(_len_points * 4, 0.0);

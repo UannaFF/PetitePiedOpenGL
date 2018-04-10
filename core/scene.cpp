@@ -260,12 +260,6 @@ void Scene::render(){
     defaultShader()->use();    
     defaultShader()->setMat4("model", mat);
     
-    glm::mat4 bone(0.592056, -0.750088, -0.15035, -0.0665687,
-      0.576882, 0.622695, -0.452484, -0.0276781,
-      0.435611, 0.271241, 0.803574, -0.640044,
-      5.05164e-38, -0.0995924, 3.02157e-39, 1);
-    defaultShader()->setMat4("gBones[1]", bone);
-    
     process(glfwGetTime());
     
     _main_node->draw();

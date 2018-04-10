@@ -13,6 +13,7 @@ class Shader {
         inline GLuint getUniformLocation(std::string id) { return getUniformLocation(id.c_str()); }
         inline GLuint getUniformLocation(const char* id) { return glGetUniformLocation(_programe_id, id); }
         inline void use() { return glUseProgram(_programe_id); }
+        inline void deuse() { return glUseProgram(0); }
         
         inline void setVec3(const std::string &name, const glm::vec3 &value) const { 
             glUniform3fv(glGetUniformLocation(_programe_id, name.c_str()), 1, &value[0]); 
