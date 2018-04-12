@@ -172,9 +172,9 @@ class Channel {
     
         inline Node* node() const { return _node; }
     private:
-        Node* _node;
         std::map<float, std::vector<Key*>> _keys;
         std::vector<Bone*> _bones;
+        Node* _node;
 };
 
 class Animation {
@@ -197,6 +197,7 @@ class Animation {
         
         std::string _name;
         std::map<Node*, Channel*> _channel;
+        //~ std::vector<Channel*> _channel;
         double _tick_per_sec;
         double _duration;
 };

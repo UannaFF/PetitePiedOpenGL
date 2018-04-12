@@ -14,8 +14,7 @@
 class Texture;
 class Shader;
 class Material;
-class Joint;
-class NodeAnimator;
+class Node;
 
 #define GL_LAYOUT_VERTEXARRAY 0
 #define GL_LAYOUT_UV 1
@@ -32,7 +31,7 @@ typedef struct VertexWeight {
 
 class Bone {
     public:
-        Bone(glm::mat4 offset): _offset(offset), _weights(), _frag(0) {}
+        Bone(glm::mat4 offset): _offset(offset), _weights(), _frag(0), _node(nullptr) {}
         
         void dumpToBuffer(std::vector<int>& vertex_buff, std::vector<float>& weight_buff);
         
@@ -42,10 +41,10 @@ class Bone {
             _weights.insert(std::make_pair(vertext_id, weight));
         }
         
-        inline void frag_id(GLint f) { _frag = f; }
-        inline GLint frag_id() { return _frag; }
+        inline void attach(Node* n) { _node = n; }
+        inline Node* node() { return _node; }
         
-        void setTransformation(const glm::mat4& mat);
+        glm::mat4 transformation() const ;
         
         inline void id(uint i) { _boneid = i; }
         inline uint id() const { return _boneid; }
@@ -57,6 +56,8 @@ class Bone {
         glm::mat4 _offset;
         std::map<uint, float> _weights;
         
+        Node* _node;
+        
         void normalize();
         
 };
@@ -64,22 +65,15 @@ class Bone {
 
 class VertexArray {
     public:
-        Mesh();
-        ~Mesh();
+        VertexArray();
+        ~VertexArray();
         void setVertex(std::vector<GLfloat> vertex);
         void setUV(std::vector<GLfloat> uv);
         void setNormal(std::vector<GLfloat> normal);
         void setIndice(std::vector<unsigned short> normal);
         void setBones(std::vector<Bone*> b, Shader* s);
         
-        inline void setMode(GLenum m){_mode = m; }
-        inline GLenum mode() const { return _mode; }
-        
-        inline void bind() const { return glBindVertexArray(_vertex_array_id); }
-        
-        virtual void draw(GLint primitive);
-        
-        inline void setMaterial(Material* m) { _material = m; }        
+        virtual void draw(GLint primitive);    
 
     private:
         GLuint _vertex_array_id;
@@ -91,53 +85,41 @@ class VertexArray {
         GLuint _bones_id;
         GLuint _weight;
         
-        Material* _material;
-        Shader* _shader;
-        
         int _len_points;
-        
-        GLenum _mode;
         
         //~ std::vector<Bone*> _bones;
 };
 
 class Mesh : public Drawable {
     public:
-        Mesh(Shader* s):_shader(s) {}
+        Mesh(Shader* s, VertexArray* va, std::vector<Bone*> bones):_shader(s), _vao(va), _bones(bones), _material(nullptr) {}
+        ~Mesh();
         
-        void draw(glm::mat4 projection, glm::mat4 view, glm::mat4 model){
-            _shader->use();
-
-            // setup camera geometry parameters
-            _shader->setMat4("projection", projection, GL_TRUE);
-            _shader->setMat4("view", view, GL_TRUE);
-
-            // bone world transform matrices need to be passed for skinning
-            for (Bone* b: _bones){
-                bone_matrix = node.world_transform @ self.bone_offsets[bone_id]
-
-                bone_loc = GL.glGetUniformLocation(shid, 'boneMatrix[%d]' % bone_id)
-                GL.glUniformMatrix4fv(bone_loc, 1, True, bone_matrix)
-
-            // draw mesh vertex array
-            _vao->draw(VA_PRIMITIVE)
-
-            // leave with clean OpenGL state, to make it easier to detect problems
-            __shader->deuse(0);
+        void draw(glm::mat4 projection, glm::mat4 view, glm::mat4 model);
+        
+        void dump(int level){
+            std::cout << std::setw(level * 4) << "Mesh with " << _bones.size() << " bones." << std::endl;
         }
-    private:
-        GLint VA_PRIMITIVE; //= GL.GL_TRIANGLES
-    
-        std::vector<Bind*> _bones;
+        
+        inline void setMaterial(Material* m) { _material = m; }  
+          
+        inline VertexArray* VAO() const { return _vao; }    
+        inline void setVAO(VertexArray* va) { _vao = va; }   
+          
+        inline const std::vector<Bone*>& bones() const { return _bones; }  
+        
+        static GLint VA_PRIMITIVE; //= GL.GL_TRIANGLES
+    private:    
+        Material* _material;
+        
+        std::vector<Bone*> _bones;
         Shader* _shader;
         VertexArray* _vao;
 };
 
 class Skybox : public Mesh {
     public:
-        Skybox();
-        void setEverything();
-        ~Skybox();
+        Skybox(Shader* s);
 
         //Define a big cube
     

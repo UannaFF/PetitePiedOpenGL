@@ -31,11 +31,11 @@ void main()
     BoneTransform += gBones[BoneIDs[3]] * Weights[3];
     
     FragPos = vec3(model * vec4(aPos, 1.0));
-    Normal = (BoneTransform * vec4(aNormal, 0.0)).xyz;  
-    //~ Normal = mat3(transpose(inverse(model))) * aNormal;  
+    //~ Normal = (BoneTransform * vec4(aNormal, 0.0)).xyz;  
+    Normal = mat3(transpose(inverse(model))) * aNormal;  
     
-    vec4 PosL      = BoneTransform * vec4(aPos, 1.0);
-    //~ vec4 PosL      = vec4(aPos, 1.0);
+    //~ vec4 PosL      = BoneTransform * vec4(aPos, 1.0);
+    vec4 PosL      = vec4(aPos, 1.0);
     mat4 mvp = projection * view * model;
     gl_Position = mvp * PosL;
     //~ gl_Position = mvp * vec4(aPos, 1.0);

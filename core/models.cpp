@@ -1,5 +1,6 @@
 #include "models.hpp"
 #include "common.hpp"
+#include "scene.hpp"
 #include "texture.hpp"
 #include "shader.hpp"
 #include "material.hpp"
@@ -13,6 +14,7 @@
 #include <string.h>
 
 int Bone::LAST_ID = 0;
+GLint Mesh::VA_PRIMITIVE = GL_TRIANGLES;
 
 void Bone::dumpToBuffer(std::vector<int>& vertex_buff, std::vector<float>& weight_buff){
     DEBUG(Debug::Info, "Bone has %d record to dump\n", _weights.size());
@@ -50,16 +52,13 @@ void Bone::normalize() {
         _weights[p.first] = p.second / mag;
 }
 
-void Bone::setTransformation(const glm::mat4& mat) {
-    DEBUG(Debug::Info, "-- Update bone id %d at %d\n", _boneid, _frag);
-    glUniformMatrix4fv(_frag, 1, GL_TRUE, &(mat * _offset)[0][0]);
-    //~ glUniformMatrix4fv(_frag, 1, GL_TRUE, &(mat)[0][0]);
-    std::cout << (mat * _offset);
+glm::mat4 Bone::transformation() const {
+    //~ DEBUG(Debug::Info, "-- Update bone id %d\n", _boneid);
+    return _node->world_transformation() * _offset;
 }
 
-VertexArray::Mesh():
-    _len_points(0),
-    _mode(GL_TRIANGLES)
+VertexArray::VertexArray():
+    _len_points(0)
 {    
     glGenVertexArrays(1, &_vertex_array_id);
                 
@@ -69,43 +68,68 @@ VertexArray::Mesh():
     glGenBuffers(1, &_indice);
     glGenBuffers(1, &_bones_id);
     glGenBuffers(1, &_weight);
-
-    _material = nullptr;
 }
 
 void VertexArray::setVertex(std::vector<GLfloat> vertex)
 {            
     glBindVertexArray(_vertex_array_id);
-    DEBUG(Debug::Info, "Mesh has %d vertices\n", vertex.size());
+    DEBUG(Debug::Info, "VertexArray has %d vertices\n", vertex.size());
+    
+    glEnableVertexAttribArray(GL_LAYOUT_VERTEXARRAY);
     glBindBuffer(GL_ARRAY_BUFFER, _vertexbuffer);
     glBufferData(GL_ARRAY_BUFFER, vertex.size() * sizeof(GLfloat), &vertex[0], GL_STATIC_DRAW);
+    glVertexAttribPointer(GL_LAYOUT_VERTEXARRAY, 3,                  // size
+        GL_FLOAT,           // type
+        GL_FALSE,           // normalized?
+        0,                  // stride
+        (void*)0            // array buffer offset
+    );
     _len_points = vertex.size();
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
 
 }
 
 void VertexArray::setUV(std::vector<GLfloat> uv)
 {    
     glBindVertexArray(_vertex_array_id);
+    DEBUG(Debug::Info, "VertexArray has %d UV\n", uv.size());
+    
+    glEnableVertexAttribArray(GL_LAYOUT_UV);
     glBindBuffer(GL_ARRAY_BUFFER, _uvbuffer);
     glBufferData(GL_ARRAY_BUFFER, uv.size() * sizeof(GLfloat), &uv[0], GL_STATIC_DRAW);
+    glVertexAttribPointer(GL_LAYOUT_UV, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
 }
 
 void VertexArray::setNormal(std::vector<GLfloat> normal)
 {    
     glBindVertexArray(_vertex_array_id);
-    DEBUG(Debug::Info, "Mesh has %d normal\n", normal.size());
+    DEBUG(Debug::Info, "VertexArray has %d normal\n", normal.size());
+    
+    glEnableVertexAttribArray(GL_LAYOUT_NORMAL);
     glBindBuffer(GL_ARRAY_BUFFER, _normal);
     glBufferData(GL_ARRAY_BUFFER, normal.size() * sizeof(GLfloat), &normal[0], GL_STATIC_DRAW);
+    glVertexAttribPointer(GL_LAYOUT_NORMAL, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
 }
 
 void VertexArray::setIndice(std::vector<unsigned short> indices)
 {    
-    glBindVertexArray(_vertex_array_id);
-    glBindBuffer(GL_ARRAY_BUFFER, _indice);
-    glBufferData(GL_ARRAY_BUFFER, indices.size() * sizeof(GLfloat), &indices[0], GL_STATIC_DRAW);
+    //~ glBindVertexArray(_vertex_array_id);
+    //~ DEBUG(Debug::Info, "VertexArray has %d indices\n", indices.size());
+    //~ glBindVertexArray(_vertex_array_id);
+    //~ glBindBuffer(GL_ARRAY_BUFFER, _indice);
+    //~ glBufferData(GL_ARRAY_BUFFER, indices.size() * sizeof(GLfloat), &indices[0], GL_STATIC_DRAW);
+    //~ glBindVertexArray(0);
 }
 
-VertexArray::~Mesh()
+VertexArray::~VertexArray()
 {        
     glDeleteBuffers(1, &_vertexbuffer);
     glDeleteBuffers(1, &_uvbuffer);
@@ -116,62 +140,62 @@ VertexArray::~Mesh()
     glDeleteVertexArrays(1, &_vertex_array_id);
 }
 
-void VertexArray::draw(glm::mat4 projection, glm::mat4 view, glm::mat4 model){
-    if (_material)
-        _material->apply(usedShader);
-    
+void VertexArray::draw(GLint primitive){
     // 1rst attribute buffer : vertices
-    glEnableVertexAttribArray(GL_LAYOUT_VERTEXARRAY);
-    glBindBuffer(GL_ARRAY_BUFFER, _vertexbuffer);
-    glVertexAttribPointer(
-        GL_LAYOUT_VERTEXARRAY,                  // attribute. No particular reason for 0, but must match the layout in the shader.
-        3,                  // size
-        GL_FLOAT,           // type
-        GL_FALSE,           // normalized?
-        0,                  // stride
-        (void*)0            // array buffer offset
-    );
+    glBindVertexArray(_vertex_array_id);
+    
+    //~ glEnableVertexAttribArray(GL_LAYOUT_VERTEXARRAY);
+    //~ glBindBuffer(GL_ARRAY_BUFFER, _vertexbuffer);
+    //~ glVertexAttribPointer(
+        //~ GL_LAYOUT_VERTEXARRAY,                  // attribute. No particular reason for 0, but must match the layout in the shader.
+        //~ 3,                  // size
+        //~ GL_FLOAT,           // type
+        //~ GL_FALSE,           // normalized?
+        //~ 0,                  // stride
+        //~ (void*)0            // array buffer offset
+    //~ );
 
     // 2nd attribute buffer : UVs
-    if(_uvbuffer) {
-        glEnableVertexAttribArray(GL_LAYOUT_UV);
-        glBindBuffer(GL_ARRAY_BUFFER, _uvbuffer);
-        glVertexAttribPointer(GL_LAYOUT_UV, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
-    }
+    //~ if(_uvbuffer) {
+        //~ glEnableVertexAttribArray(GL_LAYOUT_UV);
+        //~ glBindBuffer(GL_ARRAY_BUFFER, _uvbuffer);
+        //~ glVertexAttribPointer(GL_LAYOUT_UV, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+    //~ }
     
     // 3rd attribute buffer : Normals
-    if(_normal) {
-        glEnableVertexAttribArray(GL_LAYOUT_NORMAL);
-        glBindBuffer(GL_ARRAY_BUFFER, _normal);
-        glVertexAttribPointer(GL_LAYOUT_NORMAL, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-    }
+    //~ if(_normal) {
+        //~ glEnableVertexAttribArray(GL_LAYOUT_NORMAL);
+        //~ glBindBuffer(GL_ARRAY_BUFFER, _normal);
+        //~ glVertexAttribPointer(GL_LAYOUT_NORMAL, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+    //~ }
 
-    // 4th attribute buffer : Bones
-    if(_bones_id) {
-        glEnableVertexAttribArray(GL_LAYOUT_BONES);
-        glBindBuffer(GL_ARRAY_BUFFER, _bones_id);
-        glVertexAttribPointer(GL_LAYOUT_BONES, 4, GL_INT, GL_FALSE, 0, nullptr);
-    }
+    //~ // 4th attribute buffer : Bones
+    //~ if(_bones_id) {
+        //~ glEnableVertexAttribArray(GL_LAYOUT_BONES);
+        //~ glBindBuffer(GL_ARRAY_BUFFER, _bones_id);
+        //~ glVertexAttribPointer(GL_LAYOUT_BONES, 4, GL_INT, GL_FALSE, 0, nullptr);
+    //~ }
 
-    // 5th attribute buffer : Weight
-    if(_weight) {
-        glEnableVertexAttribArray(GL_LAYOUT_WEIGHT);
-        glBindBuffer(GL_ARRAY_BUFFER, _weight);
-        glVertexAttribPointer(GL_LAYOUT_WEIGHT, 4, GL_FLOAT, GL_FALSE, 0, nullptr);
-    }
+    //~ // 5th attribute buffer : Weight
+    //~ if(_weight) {
+        //~ glEnableVertexAttribArray(GL_LAYOUT_WEIGHT);
+        //~ glBindBuffer(GL_ARRAY_BUFFER, _weight);
+        //~ glVertexAttribPointer(GL_LAYOUT_WEIGHT, 4, GL_FLOAT, GL_FALSE, 0, nullptr);
+    //~ }
 
     // Index buffer
-    if(_indice)
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _indice);
+    //~ if(_indice)
+        //~ glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _indice);
     
     // Draw !
-    glDrawArrays(_mode, 0, _len_points);
+    glDrawArrays(primitive, 0, _len_points);
 
-    glDisableVertexAttribArray(0);
-    glDisableVertexAttribArray(1);
-    glDisableVertexAttribArray(2);
-    glDisableVertexAttribArray(3);
-    glDisableVertexAttribArray(4);
+    //~ glDisableVertexAttribArray(0);
+    //~ glDisableVertexAttribArray(1);
+    //~ glDisableVertexAttribArray(2);
+    //~ glDisableVertexAttribArray(3);
+    //~ glDisableVertexAttribArray(4);
+    glBindVertexArray(0);
 }
 
 void VertexArray::setBones(std::vector<Bone*> bones, Shader* s)
@@ -182,39 +206,71 @@ void VertexArray::setBones(std::vector<Bone*> bones, Shader* s)
     s->use();
     int bone_id = 0;
     for (Bone* b: bones){        
-        b->id(bone_id);
+        b->id(bone_id++);
         b->dumpToBuffer(bones_buffer, weight_buffer);
-        
-        // Binding to the GLSL bones
-        DEBUG(Debug::Info, "gBones[%d]\n", bone_id);
-        b->frag_id(s->getUniformLocation("gBones[" + std::to_string(bone_id) +"]"));
-        bone_id++;
-        b->setTransformation(glm::mat4(1.f));
     }        
     for (int v = 0; v < _len_points; v ++){
         float total_weight = 0; 
         for (int w = 0; w < 4; w++)
             total_weight += weight_buffer[v * 4 + w];
         //~ if (total_weight != 1.f)
-            printf("w of %d:%f\n", v, total_weight);
+            //~ printf("w of %d:%f\n", v, total_weight);
     }
     
     // Uploading to GPU
-   	glBindBuffer(GL_ARRAY_BUFFER, _bones_id);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(GLint) * bones_buffer.size(), &bones_buffer[0], GL_STATIC_DRAW);
-   	glBindBuffer(GL_ARRAY_BUFFER, _weight);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * weight_buffer.size(), &weight_buffer[0], GL_STATIC_DRAW);
+    //~ glBindVertexArray(_vertex_array_id);
+   	//~ glBindBuffer(GL_ARRAY_BUFFER, _bones_id);
+	//~ glBufferData(GL_ARRAY_BUFFER, sizeof(GLint) * bones_buffer.size(), &bones_buffer[0], GL_STATIC_DRAW);
+   	//~ glBindBuffer(GL_ARRAY_BUFFER, _weight);
+	//~ glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * weight_buffer.size(), &weight_buffer[0], GL_STATIC_DRAW);
+    //~ glBindVertexArray(0);
 
 }
 
-Skybox::Skybox() {
+void Mesh::draw(glm::mat4 projection, glm::mat4 view, glm::mat4 model){
+    _shader->use();    
 
+    // setup camera geometry parameters
+    _shader->setMat4("projection", projection);
+    _shader->setMat4("view", view);
+    // bone world transform matrices need to be passed for skinning
+    for (Bone* b: _bones)
+        //~ _shader->setMat4("gBones[" + std::to_string(b->id()) + "]", b->transformation(), GL_TRUE);
+        _shader->setMat4("gBones[" + std::to_string(b->id()) + "]", glm::mat4(1.f));
 
+    if (_material)
+        _material->apply(_shader);
+    else {
+        
+        // light properties
+        glm::vec3 lightColor;
+        lightColor.x = sin(glfwGetTime() * 2.0f);
+        lightColor.y = sin(glfwGetTime() * 0.7f);
+        lightColor.z = sin(glfwGetTime() * 1.3f);
+        glm::vec3 diffuseColor = lightColor   * glm::vec3(0.5f); // decrease the influence
+        glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f); // low influence
+        _shader->setVec3("light.ambient", ambientColor);
+        _shader->setVec3("light.diffuse", diffuseColor);
+        _shader->setVec3("light.specular", 1.0f, 1.0f, 1.0f);
+    }
+    // draw mesh vertex array
+    _vao->draw(VA_PRIMITIVE);
 
+    // leave with clean OpenGL state, to make it easier to detect problems
+    //~ _shader->deuse();
 }
 
-void Skybox::setEverything() {
-        //Define a big cube
+Mesh::~Mesh(){
+    for (Bone* b: _bones)
+        delete b;
+    delete _vao;
+}
+
+Skybox::Skybox(Shader* s):
+    Mesh::Mesh(s, nullptr, std::vector<Bone*>())
+{
+    VertexArray* va = new VertexArray();
+
     std::vector<GLfloat> points = {
       -10.0f,  10.0f, -10.0f, //back cube assume top left back corner
       -10.0f, -10.0f, -10.0f,
@@ -323,11 +379,9 @@ void Skybox::setEverything() {
         
     };
 
-    setVertex(points);
-    setIndice(indices);
-    setUV(uv);
-}
-
-Skybox::~Skybox() {
-
+    va->setVertex(points);
+    va->setIndice(indices);
+    va->setUV(uv);
+    
+    setVAO(va);
 }

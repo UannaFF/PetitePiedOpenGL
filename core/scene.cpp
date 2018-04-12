@@ -7,6 +7,7 @@
 #include "light.hpp"
 #include "material.hpp"
 #include "animations.hpp"
+#include "camera.hpp"
 
 #include <map>
 #include <iostream>
@@ -16,14 +17,13 @@ Scene::Scene():
     _models(),
     _textures(),
     _main_node(nullptr),
-    _camera(nullptr),
+    _cameras(),
+    _active_camera(nullptr),
     _shaders(),
     _animations(),
-    _current_animation()
-   // _hasSkybox(false)
+    _current_animation(),
+    _skybox(nullptr)
 {
-    //_hasSkybox = false;
-    //_skybox_shader = 0;
 }
 
 void Scene::displayNodeTree(){ _main_node->dump(); }
@@ -40,9 +40,9 @@ Scene* Scene::import(std::string path, Shader* shader){
     
     Scene* s = new Scene;
     s->setShader(shader);
-    s->defaultShader()->use();
+    //~ s->defaultShader()->use();
     
-    std::multimap<std::string, Bone*> bones_to_bind;
+    std::map<std::string, Bone*> bones_to_bind;
     
     std::string directory = path.substr(0, path.find_last_of('/'));
     
@@ -98,7 +98,7 @@ Scene* Scene::import(std::string path, Shader* shader){
     DEBUG(Debug::Info, "Meshes: %d\n", scene->mNumMeshes);
     for (int m = 0; m < scene->mNumMeshes; m++){    
         const aiMesh* mesh = scene->mMeshes[m];
-        Mesh* v = new Mesh;
+        VertexArray* v = new VertexArray;
 
         // Fill vertices positions
         std::vector<GLfloat> vertices;
@@ -152,9 +152,9 @@ Scene* Scene::import(std::string path, Shader* shader){
         }
        
         // Fill bones n
+        std::vector<Bone*> bones; 
         if (mesh->HasBones()){      
-            std::vector<Bone*> bones; 
-            DEBUG(Debug::Info, "mesh has %d bone\n", mesh->mNumBones);      
+            DEBUG(Debug::Info, "Mesh has %d bones\n", mesh->mNumBones);      
             for (unsigned int i=0; i<mesh->mNumBones; i++){
                 Bone* b = new Bone(aiMatrix4x4toglmMat4(mesh->mBones[i]->mOffsetMatrix));
                 for (int w = 0; w < mesh->mBones[i]->mNumWeights; w++)
@@ -167,9 +167,10 @@ Scene* Scene::import(std::string path, Shader* shader){
             v->setBones(bones, shader);
         }
         
+        Mesh* _m = new Mesh(shader, v, bones);
         if(mesh->mMaterialIndex >= 0)
-            v->setMaterial(materials[mesh->mMaterialIndex]);
-        s->addMesh(v);
+            _m->setMaterial(materials[mesh->mMaterialIndex]);
+        s->addMesh(_m);
     }
     
     // Loading nodes
@@ -179,10 +180,18 @@ Scene* Scene::import(std::string path, Shader* shader){
     for (int v = 0; v < scene->mRootNode->mNumMeshes; v++)
         _va.push_back(s->getMesh(scene->mRootNode->mMeshes[v]));
         
-    Node* _root_node = new Node(scene->mRootNode->mName.data, _va, aiMatrix4x4toglmMat4(scene->mRootNode->mTransformation), s);
+    Node* _root_node = new Node(scene->mRootNode->mName.data, aiMatrix4x4toglmMat4(scene->mRootNode->mTransformation), s);
     s->_parseNode(_root_node, scene->mRootNode->mChildren, scene->mRootNode->mNumChildren);
     s->setRootNode(_root_node);
     // The "scene" pointer will be deleted automatically by "importer"
+    
+    for (std::pair<std::string, Bone*> p: bones_to_bind){
+        Node* relatedNode = s->findNode(p.first);
+        if (relatedNode)
+            p.second->attach(relatedNode);
+        else
+            throw new SceneException("Bones '"+p.first+"' doesn't refer to any node.");
+    }
     
     // Parsing animations
     DEBUG(Debug::Info, "Animation: %d\n", scene->mNumAnimations);
@@ -196,17 +205,21 @@ Scene* Scene::import(std::string path, Shader* shader){
         
         for (int k = 0; k < animation->mNumChannels; k++){ 
             aiNodeAnim* channel = animation->mChannels[k];
-            
-            DEBUG(Debug::Info, "Bone for the node '%s'...\n", channel->mNodeName.data);
                 
             Node* relatedNode = s->findNode(channel->mNodeName.data);
             if (!relatedNode)
                 throw new SceneException(std::string(channel->mNodeName.data) + " not found in the nodes hierachy");
                 
                 
-            std::vector<Bone*> relatedBones;
+            std::vector<Bone*> relatedBones; 
+        
+            for (std::pair<std::string, Drawable*> child: relatedNode->children())
+                if (dynamic_cast<Mesh*>(child.second))
+                    relatedBones.insert(relatedBones.end(), ((Mesh*)child.second)->bones().cbegin(), ((Mesh*)child.second)->bones().cend());
             
-            std::multimap<std::string, Bone*>::iterator it;
+            std::map<std::string, Bone*>::iterator it;
+            
+
             while ((it = bones_to_bind.find(channel->mNodeName.data)) != bones_to_bind.end()){
                 relatedBones.push_back(it->second);
                 bones_to_bind.erase (it);
@@ -214,9 +227,8 @@ Scene* Scene::import(std::string path, Shader* shader){
             
                               
             if (relatedBones.empty())
-                throw new SceneException(std::string(channel->mNodeName.data) + " has no bones");
-            else
-                DEBUG(Debug::Info, "%s has %d bones\n", channel->mNodeName.data, relatedBones.size());
+                //~ throw new SceneException(std::string(channel->mNodeName.data) + " has no bones");
+                continue;
                 
                 
             Channel* c = new Channel(relatedNode, relatedBones);
@@ -242,27 +254,23 @@ Scene* Scene::import(std::string path, Shader* shader){
     return s;
 }
 void Scene::render(){
-   // printf("Llego al render\n");
-    glm::mat4 mat = glm::mat4(1.f); //this changes the state somewhow
+        
+    if (!_active_camera)
+        throw new SceneException("No camera selected for rendering.");
 
     // Ligth goes here
 
     //Draw skybox
-    if(_hasSkybox) {
-        _skybox_shader->use();
-        _skybox->bind();
-        _skybox_texture->apply(_skybox_shader->getUniformLocation("cube_texture"));
+    if(_skybox) {
+        //~ _skybox_shader->use();
+        //~ _skybox_texture->apply(_skybox_shader->getUniformLocation("cube_texture"));
         
-        _skybox_shader->setMat4("model", mat);
-        _skybox->draw(_skybox_shader);
+        //~ _skybox->draw(_active_camera->projectionMatrix(), _active_camera->viewMatrix(), _active_camera->viewMatrix());
     }
-
-    defaultShader()->use();    
-    defaultShader()->setMat4("model", mat);
     
-    process(glfwGetTime());
+    //~ process(glfwGetTime());
     
-    _main_node->draw();
+    _main_node->draw(_active_camera->projectionMatrix(), _active_camera->viewMatrix(), glm::mat4(1.f));
 }
 
 void Scene::playAnimation( int anim){
@@ -279,15 +287,12 @@ void Scene::addMesh(Mesh* m){
 }
 
 void Scene::setSkybox(std::string folder, std::string vertex_name, std::string fragment_name) {
-    _hasSkybox = true;
-    _skybox_shader = Shader::fromFiles(vertex_name, fragment_name);
-
-    _skybox_shader->use();
-    _skybox = new Skybox();
-
-    _skybox->setEverything();
-
-    _skybox_texture = Texture::getCubemapTexture(folder, false);
+    //~ _hasSkybox = true;
+    _skybox = new Skybox(Shader::fromFiles(vertex_name, fragment_name));
+    
+    Material* skybox_mat = new Material();
+    skybox_mat->addTexture(Texture::getCubemapTexture(folder, false));
+    _skybox->setMaterial(skybox_mat);
 }
 
 Node* Scene::findNode(std::string n) const {
@@ -296,25 +301,22 @@ Node* Scene::findNode(std::string n) const {
 
 void Scene::_parseNode(Node* current, aiNode ** children, unsigned int nb_child){
     for (unsigned int c = 0; c < nb_child; c++){
-        aiNode* curr_child = children[c];
-        std::vector<Mesh*> _va;
-        
+        aiNode* curr_child = children[c];        
+            
+        Node* n = new Node(curr_child->mName.data, aiMatrix4x4toglmMat4(curr_child->mTransformation), this, current);
         DEBUG(Debug::Info, "Node '%s' has %d meshes\n", curr_child->mName.data, curr_child->mNumMeshes);
         for (int v = 0; v < curr_child->mNumMeshes; v++){
             //~ DEBUG(Debug::Info, "Node '%s' contains %d\n", curr_child->mName.data, curr_child->mMeshes[v]);
-            _va.push_back(getMesh(curr_child->mMeshes[v]));
+            n->addChild("", getMesh(curr_child->mMeshes[v]));
         }
-            
-        Node* n = new Node(curr_child->mName.data, _va, aiMatrix4x4toglmMat4(curr_child->mTransformation), this, current);
         _parseNode(n, curr_child->mChildren, curr_child->mNumChildren);   
         current->addChild(curr_child->mName.data, n);     
     }
 }
 
 
-Node::Node(std::string name, std::vector<Mesh*> m, glm::mat4 transformation, Scene* scene, Node* parent):
+Node::Node(std::string name, glm::mat4 transformation, Scene* scene, Node* parent):
     _name(name),
-    _meshs(m),
     _transformation(transformation),
     _parent(parent),
     _scene(scene)
@@ -334,8 +336,10 @@ Node* Node::find(std::string n){
         return this;
         
     for (auto child: _children){
-        Node* f = child.second->find(n);
-        if (f) return f;
+        if (dynamic_cast<Node*>(child.second)){
+            Node* f = ((Node*)child.second)->find(n);
+            if (f) return f;
+        }
     }
     
     return nullptr;
@@ -387,18 +391,11 @@ glm::vec3 aiVector3DtoglmVec3(aiVector3D& ai_col){
     return col;
 }
 
-void Node::draw(glm::mat4 localTransform){
-    //~ glm::mat4 t = applyTransformation(scene()->defaultShader()->getUniformLocation("model"), localTransform);
-    
-    //~ scene()->defaultShader()->use();
-    
-    for (Mesh* _mesh: _meshs){
-        _mesh->bind();
-        _mesh->draw(scene()->defaultShader());
-    }
+void Node::draw(glm::mat4 projection, glm::mat4 view, glm::mat4 model){
+    _world_transformation = _transformation * model;
         
     for (auto child: _children)
-        child.second->draw(localTransform * _transformation);
+        child.second->draw(projection, view, model);
 }
 
 

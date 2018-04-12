@@ -48,9 +48,7 @@ int main(int argc, char** argv){
             Window window(1024, 768, "Petit Pied");
             window.initialise();
             
-            ControlableCamera mainCamera;
-            //~ Camera mainCamera;
-            window.setCamera(mainCamera);
+            ControlableCamera mainCamera(&window);
             
             glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
 
@@ -65,18 +63,21 @@ int main(int argc, char** argv){
             Scene* scene = Scene::import(scene_file, Shader::fromFiles( "shaders/vertexshader_material.glsl", "shaders/fragment_material.glsl"));
             scene->displayNodeTree();
             
+            //~ Camera mainCamera;
+            scene->setCamera(&mainCamera);
+            
             // Create and compile our GLSL program from the shaders
             //~ Shader* shader = Shader::fromFiles( "shaders/vertexshader_material.glsl", "shaders/fragment_material.glsl" );
             //~ Shader* light_shader = Shader::fromFiles( "shaders/vertexshader_light.glsl", "shaders/fragment_light.glsl" );
             //~ Shader* shader = Shader::fromFiles( "shaders/StandardShading.vertexshader", "shaders/StandardShading.fragmentshader" );
             //~ scene->setShader(shader);
 
-            scene->setSkybox("skybox_sky", "shaders/Skyboxshadingvertex.glsl","shaders/Skyboxshadingfragment.glsl" );
+            //~ scene->setSkybox("skybox_sky", "shaders/Skyboxshadingvertex.glsl","shaders/Skyboxshadingfragment.glsl" );
 
-            scene->defaultShader()->use();
+            //~ scene->defaultShader()->use();
             
-            mainCamera.bindView(scene->defaultShader()->getUniformLocation("view"));
-            mainCamera.bindProjection(scene->defaultShader()->getUniformLocation("projection"));
+            //~ mainCamera.bindView(scene->defaultShader()->getUniformLocation("view"));
+            //~ mainCamera.bindProjection(scene->defaultShader()->getUniformLocation("projection"));
             
             // Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
             mainCamera.setProjectionMatrix(glm::perspective(glm::radians(45.0f), window.ratio(), 0.1f, 100.0f));
@@ -89,13 +90,13 @@ int main(int argc, char** argv){
 
 
             
-            scene->skyboxShader()->use();
-            glm::mat4 projection = mainCamera.projectionMatrix();
-            glm::mat4 view = mainCamera.viewMatrix();
-            glUniformMatrix4fv(scene->skyboxShader()->getUniformLocation("projection"), 
-                1, GL_FALSE, &projection[0][0]);
-            glUniformMatrix4fv(scene->skyboxShader()->getUniformLocation("view"), 
-                1, GL_FALSE, &view[0][0]);
+            //~ scene->skyboxShader()->use();
+            //~ glm::mat4 projection = mainCamera.projectionMatrix();
+            //~ glm::mat4 view = mainCamera.viewMatrix();
+            //~ glUniformMatrix4fv(scene->skyboxShader()->getUniformLocation("projection"), 
+                //~ 1, GL_FALSE, &projection[0][0]);
+            //~ glUniformMatrix4fv(scene->skyboxShader()->getUniformLocation("view"), 
+                //~ 1, GL_FALSE, &view[0][0]);
 
 
             //scene->defaultShader()->use();
@@ -128,21 +129,12 @@ int main(int argc, char** argv){
                 // Clear the screen
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-                        
+                
+                scene->defaultShader()->use();        
                 scene->defaultShader()->setVec3("light.position", lightPos);
                 //~ scene->defaultShader()->getUniformLocation("viewPos", camera.Position);
 
 
-                // light properties
-                glm::vec3 lightColor;
-                lightColor.x = sin(glfwGetTime() * 2.0f);
-                lightColor.y = sin(glfwGetTime() * 0.7f);
-                lightColor.z = sin(glfwGetTime() * 1.3f);
-                glm::vec3 diffuseColor = lightColor   * glm::vec3(0.5f); // decrease the influence
-                glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f); // low influence
-                scene->defaultShader()->setVec3("light.ambient", ambientColor);
-                scene->defaultShader()->setVec3("light.diffuse", diffuseColor);
-                scene->defaultShader()->setVec3("light.specular", 1.0f, 1.0f, 1.0f);
     
                 // Update P and V from mouse and keyboard
                 mainCamera.updateFromMouse();
@@ -151,13 +143,13 @@ int main(int argc, char** argv){
 
                 // Bind and Set our "myTextureSampler" sampler to use Texture
                 //~ texture->set(TextureID);
-                scene->skyboxShader()->use();
-                glm::mat4 projection = mainCamera.projectionMatrix();
-            glm::mat4 view = mainCamera.viewMatrix();
-                glUniformMatrix4fv(scene->skyboxShader()->getUniformLocation("projection"), 
-                    1, GL_FALSE, &projection[0][0]);
-                glUniformMatrix4fv(scene->skyboxShader()->getUniformLocation("view"), 
-                    1, GL_FALSE, &view[0][0]);
+                //~ scene->skyboxShader()->use();
+                //~ glm::mat4 projection = mainCamera.projectionMatrix();
+            //~ glm::mat4 view = mainCamera.viewMatrix();
+                //~ glUniformMatrix4fv(scene->skyboxShader()->getUniformLocation("projection"), 
+                    //~ 1, GL_FALSE, &projection[0][0]);
+                //~ glUniformMatrix4fv(scene->skyboxShader()->getUniformLocation("view"), 
+                    //~ 1, GL_FALSE, &view[0][0]);
                 
                 scene->render();
 

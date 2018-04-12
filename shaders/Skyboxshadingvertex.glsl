@@ -10,7 +10,8 @@ layout (location = 4) in vec4 Weights;
 //layout(location = 1) in vec2 vertexUV;
 
 //in vec3 vp;
-out vec3 texcoords;
+//~ out vec3 texcoords;
+out vec2 TexCoords;
 
 // Values that stay constant for the whole mesh.
 //uniform mat4 MVP;
@@ -24,7 +25,8 @@ uniform mat4 projection;
 //uniform vec3 LightPosition_worldspace;
 
 void main() {
-  texcoords = vec3(aPos.x, aPos.y, aPos.z);
+  //~ texcoords = vec3(aPos.x, aPos.y, aPos.z);
+    TexCoords = aTexCoords;   
   //texcoords = vec3(aTexCoords, aPos.z);
   mat4 MVP = projection * view * model;
   gl_Position = MVP * vec4(aPos, 1.0);

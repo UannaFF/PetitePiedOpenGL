@@ -1,26 +1,32 @@
 #include "window.hpp"
 #include "common.hpp"
 #include "camera.hpp"
+
+#include <iostream>
     
 Window::Window(int width, int height, std::string title):
     _gl_window(glfwCreateWindow(width, height, title.c_str(), NULL, NULL)) {
     
     if( _gl_window == NULL )
-	    throw new OpenGLException("Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible. Try the 2.1 version of the tutorials.\n");
+	    throw new OpenGLException("Failed to open GLFW window\n", 0);
         
-}
-
-void Window::setCamera(Camera& c) {
-    _active_camera = &c;
-    c.setParent(this);
 }
 
 bool Window::initialise(){
     glfwMakeContextCurrent(_gl_window); // Initialize GLEW
+    
 	glewExperimental=true; // Needed in core profile
-	if (glewInit() != GLEW_OK)
-	    throw new OpenGLException("Failed to initialize GLEW\n");
+    GLenum err;
+    
+	if ((err = glewInit()) != GLEW_OK)
+	    throw new OpenGLException("Failed to initialize GLEW", err);
+            
+    while ((err = glGetError()) != GL_NO_ERROR && err != GL_INVALID_ENUM)
+        throw new OpenGLException("OpenGL error", err);
 	
+
+    std::cout << "OpenGL " << glGetString(GL_VERSION) << ", GLSL " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
+  
     glfwSetInputMode(_gl_window, GLFW_STICKY_KEYS, GL_TRUE);
     
     return 0;

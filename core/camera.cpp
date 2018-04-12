@@ -1,5 +1,6 @@
 #include "camera.hpp"
 #include "window.hpp"
+#include "common.hpp"
 
 using namespace glm;
 
@@ -22,15 +23,15 @@ void Camera::setProjectionMatrix(glm::mat4 p){
 }
         
 
-ControlableCamera::ControlableCamera():
-    Camera::Camera(),
+ControlableCamera::ControlableCamera(Window*p):
+    Camera::Camera(p),
     _position(1.f), _horizontalAngle(3.14f), _verticalAngle(0.0f), _initialFoV(45.0f),
     _speed(3.0f), _mouseSpeed(0.005f){
 }
 
 void ControlableCamera::updateFromMouse(){
     if (!parent())
-        throw new OpenGLException("Camera has no parent window.");
+        throw new OpenGLException("Camera has no parent window.", 0);
     
 	// glfwGetTime is called only once, the first time this function is called
 	static double lastTime = glfwGetTime();

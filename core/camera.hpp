@@ -49,7 +49,7 @@ class Camera {
 
 class ControlableCamera: public Camera {
     public:
-        ControlableCamera();
+        ControlableCamera(Window*p = nullptr);
         void updateFromMouse();
         
         inline void setPosition(glm::vec3 p){ _position = p; }

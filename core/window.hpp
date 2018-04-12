@@ -35,11 +35,6 @@ class Window {
             return _gl_window;
         }
         
-        void setCamera(Camera& c);
-        
-        inline Camera* camera() {
-            return _active_camera;
-        }
         inline float ratio() { return width() / height(); }
         
         inline int width() {
@@ -56,7 +51,6 @@ class Window {
         
     private:
         GLFWwindow* _gl_window;
-        Camera* _active_camera;
 };
 
 #endif
