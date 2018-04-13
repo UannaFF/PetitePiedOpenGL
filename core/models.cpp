@@ -101,7 +101,6 @@ void VertexArray::setUV(std::vector<GLfloat> uv)
     glBufferData(GL_ARRAY_BUFFER, uv.size() * sizeof(GLfloat), &uv[0], GL_STATIC_DRAW);
     glVertexAttribPointer(GL_LAYOUT_UV, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 }
 
@@ -115,19 +114,19 @@ void VertexArray::setNormal(std::vector<GLfloat> normal)
     glBufferData(GL_ARRAY_BUFFER, normal.size() * sizeof(GLfloat), &normal[0], GL_STATIC_DRAW);
     glVertexAttribPointer(GL_LAYOUT_NORMAL, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 }
 
 void VertexArray::setIndice(std::vector<unsigned short> indices)
 {    
-    glBindVertexArray(_vertex_array_id);
+    glBindVertexArray(_vertex_array_id);            
     DEBUG(Debug::Info, "VertexArray has %d indice\n", indices.size());
     
-    glEnableVertexAttribArray(GL_LAYOUT_NORMAL);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _indice);
-    glBufferData(GL_ARRAY_BUFFER, indices.size() * sizeof(GLfloat), &indices[0], GL_STATIC_DRAW);
-    glBindVertexArray(0);
+    glEnableVertexAttribArray(GL_LAYOUT_NORMAL);          
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _indice);      
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned short), &indices[0], GL_STATIC_DRAW);          
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); 
+    glBindVertexArray(0);          
 }
 
 VertexArray::~VertexArray()
