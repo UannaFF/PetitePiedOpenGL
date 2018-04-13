@@ -50,7 +50,7 @@ int main(int argc, char** argv){
             
             ControlableCamera mainCamera(&window);
             
-            glClearColor(0.5f, 0.5f, 0.5f, 0.0f);
+            glClearColor(0.7f, 0.7f, 0.7f, 0.0f);
 
             // Enable depth test
             glEnable(GL_DEPTH_TEST);

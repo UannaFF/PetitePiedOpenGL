@@ -19,13 +19,11 @@ GLint Mesh::VA_PRIMITIVE = GL_TRIANGLES;
 void Bone::dumpToBuffer(std::vector<int>& vertex_buff, std::vector<float>& weight_buff){
     DEBUG(Debug::Info, "Bone has %d record to dump\n", _weights.size());
     std::cout << _offset;
-
-    normalize();
     
     int i = 0;
+    normalize();
     
     for (std::pair<uint, float> p: _weights){
-        //~ DEBUG(Debug::Info, " - BoneID: %d VID: %d, weight: %f\n", _boneid, p.first, p.second);
         
         int offset = 0;
         for (; weight_buff[p.first * 4 + offset] != 0.0; offset++){}
@@ -121,10 +119,10 @@ void VertexArray::setIndice(std::vector<unsigned short> indices)
 {    
     glBindVertexArray(_vertex_array_id);            
     DEBUG(Debug::Info, "VertexArray has %d indice\n", indices.size());
-    
-    glEnableVertexAttribArray(GL_LAYOUT_NORMAL);          
+       
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _indice);      
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned short), &indices[0], GL_STATIC_DRAW);          
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLushort), &indices[0], GL_STATIC_DRAW);  
+            
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); 
     glBindVertexArray(0);          
 }
@@ -149,6 +147,9 @@ VertexArray::~VertexArray()
 void VertexArray::draw(GLint primitive){
     glBindVertexArray(_vertex_array_id);
     glDrawArrays(primitive, 0, _len_points);
+    //~ glDrawElements(primitive, _len_points / 3, GL_UNSIGNED_SHORT, nullptr);
+    //~ int size;  glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
+    //~ glDrawElements(GL_TRIANGLES, size/sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
     glBindVertexArray(0);
 }
 
@@ -163,13 +164,14 @@ void VertexArray::setBones(std::vector<Bone*> bones, Shader* s)
         b->id(bone_id++);
         b->dumpToBuffer(bones_buffer, weight_buffer);
     }        
-    for (int v = 0; v < _len_points; v ++){
-        float total_weight = 0; 
-        for (int w = 0; w < 4; w++)
-            total_weight += weight_buffer[v * 4 + w];
+    //~ for (int v = 0; v < _len_points; v ++){
+        //~ float total_weight = 0; 
+            //~ total_weight += weight_buffer[v * 4 + w];
         //~ if (total_weight != 1.f)
             //~ printf("w of %d:%f\n", v, total_weight);
-    }
+    //~ }
+    for (int b = 0; b < 4; b++)
+        DEBUG(Debug::Info, " - BoneID: %d VID: %d, weight: %f, offset: %d\n", bones_buffer[2000 * 4 + b], 2000, weight_buffer[2000 * 4 + b], b);
     
     // Uploading to GPU    
     glBindVertexArray(_vertex_array_id);
@@ -201,8 +203,8 @@ void Mesh::draw(glm::mat4 projection, glm::mat4 view, glm::mat4 model){
     
     // bone world transform matrices need to be passed for skinning
     for (Bone* b: _bones){
-        _shader->setMat4("gBones[" + std::to_string(b->id()) + "]", b->transformation(), GL_TRUE);
-        std::cout << b->transformation();
+        _shader->setMat4("gBones[" + std::to_string(b->id()) + "]", b->transformation());
+        //~ std::cout << "gBones[" + std::to_string(b->id()) + "]" << b->transformation();
     }
         //~ _shader->setMat4("gBones[" + std::to_string(b->id()) + "]", glm::mat4(1.f));
 

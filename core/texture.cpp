@@ -53,15 +53,11 @@ Texture::~Texture(){
 }
 
 void Texture::apply(GLuint framgment_id) {
-	glActiveTexture(GL_TEXTURE0 + _id); //snot so sure about this texturenumber
-
-    //~ //if(_isSkybox) 
-    	//~ glBindTexture(GL_TEXTURE_CUBE_MAP, _texture_id);
-    //else 
+    activate();
+    glUniform1i(framgment_id, 0);
     bind();
 
     // Set our framgment_id sampler to use Texture Unit 0
-    glUniform1i(framgment_id, 0);
 
 }
 
@@ -105,6 +101,7 @@ Texture* Texture::getCubemapTexture(std::string directory, bool gamma) {
 
 
 	std::string final_path = "./res/"+directory+"/";
+    
 	t->bind();
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     
@@ -172,8 +169,6 @@ Texture* Texture::fromFile(std::string filename, std::string directory, bool gam
     
     Texture* t = new Texture;
 
-    glGenTextures(1, &(t->_texture_id));
-
     int width, height, nrComponents;
     unsigned char *data = stbi_load(filename.c_str(), &width, &height, &nrComponents, 0);
     
@@ -192,7 +187,8 @@ Texture* Texture::fromFile(std::string filename, std::string directory, bool gam
             break;
         }
 
-        glBindTexture(GL_TEXTURE_2D, t->id());
+        t->bind();
+        
         glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
 
@@ -200,6 +196,7 @@ Texture* Texture::fromFile(std::string filename, std::string directory, bool gam
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        t->unbind();
     }
     else
         DEBUG(Debug::Error, "Texture failed to load at path: %s\n", filename.c_str());

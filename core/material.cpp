@@ -64,7 +64,7 @@ void Material::apply(Shader* shader){
     
     for(unsigned int i = 0; i < _textures.size(); i++){
         Texture* t = _textures[i];
-        glActiveTexture(GL_TEXTURE0 + i); // active proper texture unit before binding
+        //~ glActiveTexture(GL_TEXTURE0 + i); // active proper texture unit before binding
         // retrieve texture number (the N in diffuse_textureN)
         
         std::string fragment_name = "texture_";
@@ -83,15 +83,16 @@ void Material::apply(Shader* shader){
             fragment_name += "height" + std::to_string(binder.height++);
             break;
         case Texture::Cube:
-            fragment_name += "cube" + std::to_string(binder.height++);
+            fragment_name += "cube";
             break;
         }
 
                  
     
         DEBUG(Debug::info, "Applying material '%s'(%d)\n", fragment_name.c_str(), shader->getUniformLocation(fragment_name.c_str()));                                // now set the sampler to the correct texture unit
-        glUniform1i(shader->getUniformLocation(fragment_name.c_str()), i);
+        //~ glUniform1i(shader->getUniformLocation(fragment_name.c_str()), i);
         // and finally bind the texture
-        glBindTexture(GL_TEXTURE_2D, t->id());
+        //~ glBindTexture(GL_TEXTURE_2D, t->id());
+        t->apply(shader->getUniformLocation(fragment_name.c_str()));
     }
 }

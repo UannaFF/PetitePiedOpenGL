@@ -20,6 +20,8 @@ class Node;
 #define GL_LAYOUT_NORMAL 2
 #define GL_LAYOUT_BONES 3
 #define GL_LAYOUT_WEIGHT 4
+#define GL_LAYOUT_TANGENT 5
+#define GL_LAYOUT_BITANGENT 6
 
 class Bone {
     public:
@@ -65,17 +67,14 @@ class VertexArray {
         void setIndice(std::vector<unsigned short> normal);
         void setBones(std::vector<Bone*> b, Shader* s);
         
+        void computeTangentBasis(std::vector<GLfloat>& v, std::vector<GLfloat>& u, std::vector<GLfloat>& n);
+        
         virtual void draw(GLint primitive);    
 
     private:
         GLuint _vertex_array_id;
         
-        GLuint _vertexbuffer;
-        GLuint _uvbuffer;
-        GLuint _normal;
-        GLuint _indice;
-        GLuint _bones_id;
-        GLuint _weight;
+        GLuint _vertexbuffer, _uvbuffer, _normal, _indice, _bones_id, _weight, _tangent, _bitangent;
         
         int _len_points;
         

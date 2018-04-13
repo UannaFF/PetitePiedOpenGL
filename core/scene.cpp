@@ -149,6 +149,7 @@ Scene* Scene::import(std::string path, Shader* shader){
                 indices.push_back(mesh->mFaces[i].mIndices[1]);
                 indices.push_back(mesh->mFaces[i].mIndices[2]);
             }
+            DEBUG(Debug::Info, "Mesh has %d primitive\n", mesh->mPrimitiveTypes); 
             v->setIndice(indices);
         }
        
@@ -266,7 +267,7 @@ void Scene::render(){
         //~ _skybox_shader->use();
         //~ _skybox_texture->apply(_skybox_shader->getUniformLocation("cube_texture"));
         
-        _skybox->draw(_active_camera->projectionMatrix(), _active_camera->viewMatrix(), _active_camera->viewMatrix());
+        _skybox->draw(_active_camera->projectionMatrix(), _active_camera->viewMatrix(), glm::mat4(1.f));
     }
     
     process(glfwGetTime());

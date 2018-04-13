@@ -171,3 +171,10 @@ void Shader::setMat4(const std::string &name, const glm::mat4 &mat, bool inverse
         throw new ShaderUniformNotFoundException("No uniform '"+ name + "' found in the shader");
     glUniformMatrix4fv(glGetUniformLocation(_programe_id, name.c_str()), 1, inverse, &mat[0][0]);
 }
+void Shader::setFloat(const std::string &name, float val) const {
+    if (SHADER_IN_USE != _programe_id) 
+        throw new ShaderNotUseException(this);
+    if (glGetUniformLocation(_programe_id, name.c_str()) < 0) 
+        throw new ShaderUniformNotFoundException("No uniform '"+ name + "' found in the shader");
+    glUniform1f(glGetUniformLocation(_programe_id, name.c_str()), val);
+}
