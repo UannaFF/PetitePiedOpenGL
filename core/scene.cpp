@@ -40,6 +40,7 @@ Scene* Scene::import(std::string path, Shader* shader){
     
     Scene* s = new Scene;
     s->setShader(shader);
+    shader->name("default_material");
     //~ s->defaultShader()->use();
     
     std::map<std::string, Bone*> bones_to_bind;
@@ -265,10 +266,10 @@ void Scene::render(){
         //~ _skybox_shader->use();
         //~ _skybox_texture->apply(_skybox_shader->getUniformLocation("cube_texture"));
         
-        //~ _skybox->draw(_active_camera->projectionMatrix(), _active_camera->viewMatrix(), _active_camera->viewMatrix());
+        _skybox->draw(_active_camera->projectionMatrix(), _active_camera->viewMatrix(), _active_camera->viewMatrix());
     }
     
-    //~ process(glfwGetTime());
+    process(glfwGetTime());
     
     _main_node->draw(_active_camera->projectionMatrix(), _active_camera->viewMatrix(), glm::mat4(1.f));
 }
@@ -287,7 +288,7 @@ void Scene::addMesh(Mesh* m){
 }
 
 void Scene::setSkybox(std::string folder, std::string vertex_name, std::string fragment_name) {
-    //~ _hasSkybox = true;
+
     _skybox = new Skybox(Shader::fromFiles(vertex_name, fragment_name));
     
     Material* skybox_mat = new Material();

@@ -11,7 +11,6 @@
 #include <string>
 #include <map>
 
-class Texture;
 class Shader;
 class Material;
 class Node;
@@ -19,15 +18,8 @@ class Node;
 #define GL_LAYOUT_VERTEXARRAY 0
 #define GL_LAYOUT_UV 1
 #define GL_LAYOUT_NORMAL 2
-//~ #define GL_LAYOUT_INDICE 0
 #define GL_LAYOUT_BONES 3
 #define GL_LAYOUT_WEIGHT 4
-
-typedef struct VertexWeight {
-    uint vertex_id;
-    float weight;
-} vertex_weight_t;
-
 
 class Bone {
     public:
@@ -98,7 +90,7 @@ class Mesh : public Drawable {
         void draw(glm::mat4 projection, glm::mat4 view, glm::mat4 model);
         
         void dump(int level){
-            std::cout << std::setw(level * 4) << "Mesh with " << _bones.size() << " bones." << std::endl;
+            std::cout << std::setw(level * 2) << "Mesh with " << _bones.size() << " bones." << std::endl;
         }
         
         inline void setMaterial(Material* m) { _material = m; }  

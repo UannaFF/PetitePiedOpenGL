@@ -82,6 +82,9 @@ void Material::apply(Shader* shader){
         case Texture::Height:
             fragment_name += "height" + std::to_string(binder.height++);
             break;
+        case Texture::Cube:
+            fragment_name += "cube" + std::to_string(binder.height++);
+            break;
         }
 
                  

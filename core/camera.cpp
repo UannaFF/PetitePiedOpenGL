@@ -12,20 +12,16 @@ Camera::Camera(Window* p):
 
 void Camera::setViewMatrix(glm::mat4 v){
     _viewMatrix = v;
-    if (_view_fragment > -1)
-        glUniformMatrix4fv(_view_fragment, 1, GL_FALSE, &v[0][0]);
 }
 
 void Camera::setProjectionMatrix(glm::mat4 p){
     _projectionMatrix = p;
-    if (_projection_fragment > -1)
-        glUniformMatrix4fv(_projection_fragment, 1, GL_FALSE, &p[0][0]);
 }
         
 
 ControlableCamera::ControlableCamera(Window*p):
     Camera::Camera(p),
-    _position(1.f), _horizontalAngle(3.14f), _verticalAngle(0.0f), _initialFoV(45.0f),
+    _position(0, 5, -5), _horizontalAngle(0), _verticalAngle(0.0f), _initialFoV(45.0f),
     _speed(3.0f), _mouseSpeed(0.005f){
 }
 

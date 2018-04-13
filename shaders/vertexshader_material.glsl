@@ -34,8 +34,8 @@ void main()
     //~ Normal = (BoneTransform * vec4(aNormal, 0.0)).xyz;  
     Normal = mat3(transpose(inverse(model))) * aNormal;  
     
-    //~ vec4 PosL      = BoneTransform * vec4(aPos, 1.0);
-    vec4 PosL      = vec4(aPos, 1.0);
+    vec4 PosL      = BoneTransform * vec4(aPos, 1.0);
+    //~ vec4 PosL      = vec4(aPos, 1.0);
     mat4 mvp = projection * view * model;
     gl_Position = mvp * PosL;
     //~ gl_Position = mvp * vec4(aPos, 1.0);

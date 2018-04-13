@@ -50,7 +50,7 @@ int main(int argc, char** argv){
             
             ControlableCamera mainCamera(&window);
             
-            glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
+            glClearColor(0.5f, 0.5f, 0.5f, 0.0f);
 
             // Enable depth test
             glEnable(GL_DEPTH_TEST);
@@ -72,7 +72,7 @@ int main(int argc, char** argv){
             //~ Shader* shader = Shader::fromFiles( "shaders/StandardShading.vertexshader", "shaders/StandardShading.fragmentshader" );
             //~ scene->setShader(shader);
 
-            //~ scene->setSkybox("skybox_sky", "shaders/Skyboxshadingvertex.glsl","shaders/Skyboxshadingfragment.glsl" );
+            scene->setSkybox("skybox_sky", "shaders/Skyboxshadingvertex.glsl","shaders/Skyboxshadingfragment.glsl" );
 
             //~ scene->defaultShader()->use();
             
@@ -83,9 +83,9 @@ int main(int argc, char** argv){
             mainCamera.setProjectionMatrix(glm::perspective(glm::radians(45.0f), window.ratio(), 0.1f, 100.0f));
             // Camera matrix
             mainCamera.setViewMatrix(glm::lookAt(
-                                        glm::vec3(20,15,0), // Camera in World Space
+                                        glm::vec3(100,50,100), // Camera in World Space
                                         glm::vec3(1,1,1), // and looks at the origin
-                                        glm::vec3(0,-1,0)  // Head is up (set to 0,-1,0 to look upside-down)
+                                        glm::vec3(0,1,0)  // Head is up (set to 0,-1,0 to look upside-down)
                                    ));
 
 
@@ -117,7 +117,7 @@ int main(int argc, char** argv){
                 
             //~ std::cout << std::endl;
                 
-            glm::vec3 lightPos = glm::vec3(4,4,4);
+            
             
             
             window.hideCursor();
@@ -130,8 +130,22 @@ int main(int argc, char** argv){
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
                 
-                scene->defaultShader()->use();        
+                scene->defaultShader()->use();  
+                glm::vec3 lightPos = glm::vec3(4,4,4);      
                 scene->defaultShader()->setVec3("light.position", lightPos);
+                    
+                glm::vec3 lightColor;
+                lightColor.x = sin(glfwGetTime() * 2.0f);
+                lightColor.y = sin(glfwGetTime() * 0.7f);
+                lightColor.z = sin(glfwGetTime() * 1.3f);
+                glm::vec3 diffuseColor = lightColor   * glm::vec3(0.5f); // decrease the influence
+                glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f); // low influence
+                scene->defaultShader()->setVec3("light.ambient", ambientColor);
+                scene->defaultShader()->setVec3("light.diffuse", diffuseColor);
+                scene->defaultShader()->setVec3("light.specular", 1.0f, 1.0f, 1.0f);
+                
+                scene->defaultShader()->deuse();  
+                
                 //~ scene->defaultShader()->getUniformLocation("viewPos", camera.Position);
 
 
@@ -176,6 +190,11 @@ int main(int argc, char** argv){
     
     } catch (SceneException* e){
             std::cout << "Scene exception: " << e->what() << std::endl;
+            glfwTerminate();
+            return EXIT_FAILURE;
+    
+    } catch (ShaderException* e){
+            std::cout << "Shader exception: " << e->what() << std::endl;
             glfwTerminate();
             return EXIT_FAILURE;
     

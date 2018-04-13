@@ -5,7 +5,9 @@
 #include <GL/glew.h>
 #include <glm/glm.hpp>
 
-class ShaderUniformNotFoundException : public std::exception {
+class ShaderException : public std::exception {};
+
+class ShaderUniformNotFoundException : public ShaderException {
     public:
         ShaderUniformNotFoundException(std::string s): _what(s){}
         const char* what() const noexcept { return _what.c_str(); }
@@ -29,10 +31,14 @@ class Shader {
         void setVec3(const std::string &name, float x, float y, float z) const;
         void setMat4(const std::string &name, const glm::mat4 &mat, bool inverse = GL_FALSE) const;
 
+        inline std::string name() const { return _name; }
+        inline void name(std::string name) { _name = name; }
         
         static Shader* fromFiles(std::string vertex_path, std::string fragment_path);
     private:
         GLuint _programe_id;
+        
+        std::string _name;
         
         static GLuint SHADER_IN_USE;
         
@@ -40,7 +46,7 @@ class Shader {
         
 };
 
-class ShaderNotUseException : public std::exception {
+class ShaderNotUseException : public ShaderException {
     public:
         ShaderNotUseException(const Shader* s): _who(s){}
         const char* what() const noexcept { return "Requested shader element is not in use"; }

@@ -7,11 +7,7 @@
 #include <glm/glm.hpp>
 
 #include <GL/glew.h>
-
-
-namespace Debug {
-    enum Level {VERBOSE, INFO, WARNING, ERROR};
-}
+#include <GL/glew.h>
 
 #define DEBUG(priority,format,args...)                                 \
                  fprintf(stderr, format, ## args);                     \
@@ -39,5 +35,15 @@ class Drawable {
 };
 
 std::ostream& operator<<(std::ostream& cout, const glm::mat4& m);
+
+namespace Debug {
+    enum Level {VERBOSE, INFO, WARNING, ERROR};
+    
+    inline void CheckOpenGLError(std::string label){   
+        GLenum err;     
+        while ((err = glGetError()) != GL_NO_ERROR)
+            throw new OpenGLException(label, err);
+    }
+}
 
 #endif
