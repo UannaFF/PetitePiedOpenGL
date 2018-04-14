@@ -24,10 +24,9 @@ class Material {
     public:
         enum ShadingMode {None, Phong, Fresnel};
     
-        Material(glm::vec3 ambient = glm::vec3(0.f), glm::vec3 diffuse = glm::vec3(0.f), glm::vec3 specular = glm::vec3(0.f), float shininess = 0.f);
+        Material(glm::vec3 ambient, glm::vec3 diffuse, glm::vec3 specular, float shininess);
         
         inline void setTextures(std::vector<Texture*>& t) { _textures = t; }
-        inline void addTexture(Texture* t){ _textures.push_back(t); }
         
         bool setShadingMode(aiShadingMode m);
         

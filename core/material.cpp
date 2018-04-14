@@ -56,7 +56,6 @@ void Material::apply(Shader* shader){
     // TODO: Phong, and Fresnel
     
     tex_bind_t binder = {1, 1, 1, 1};
-    
     glUniform3fv(shader->getUniformLocation("material.ambient"), 1, &(_ambient[0]));
     glUniform3fv(shader->getUniformLocation("material.diffuse"), 1, &(_diffuse[0]));
     glUniform3fv(shader->getUniformLocation("material.specular"), 1, &(_specular[0]));
@@ -89,7 +88,7 @@ void Material::apply(Shader* shader){
 
                  
     
-        DEBUG(Debug::info, "Applying material '%s'(%d)\n", fragment_name.c_str(), shader->getUniformLocation(fragment_name.c_str()));                                // now set the sampler to the correct texture unit
+        //DEBUG(Debug::info, "Applying material '%s'(%d) and idtex %d\n", fragment_name.c_str(), shader->getUniformLocation(fragment_name.c_str()), t->texId());                                // now set the sampler to the correct texture unit
         //~ glUniform1i(shader->getUniformLocation(fragment_name.c_str()), i);
         // and finally bind the texture
         //~ glBindTexture(GL_TEXTURE_2D, t->id());

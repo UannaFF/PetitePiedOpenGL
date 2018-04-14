@@ -294,8 +294,11 @@ void Scene::setSkybox(std::string folder, std::string vertex_name, std::string f
 
     _skybox = new Skybox(Shader::fromFiles(vertex_name, fragment_name));
     
-    Material* skybox_mat = new Material();
-    skybox_mat->addTexture(Texture::getCubemapTexture(folder, false));
+    Material* skybox_mat = new Material(glm::vec3(0,0,0), glm::vec3(0,0,0), glm::vec3(0,0,0), 0.f);
+    std::vector<Texture*> t;
+    t.reserve(1);
+    t.push_back(Texture::getCubemapTexture(folder, false));
+    skybox_mat->setTextures(t);
     _skybox->setMaterial(skybox_mat);
 }
 

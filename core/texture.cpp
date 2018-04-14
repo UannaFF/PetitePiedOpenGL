@@ -17,14 +17,17 @@ uint Texture::LAST_ID = 0;
 
 Texture::Texture(Type t):
     _type(t), _id(LAST_ID++)
-{
+{   
+    (_type == Cube ? _id = 0:printf(""));
+    activate();
 	glGenTextures(1, &_texture_id);     
 }
 
 Texture::Texture(unsigned char* data, int width, int height):
     Texture()
 {	
-	// "Bind" the newly created texture : all future texture functions will modify this texture	
+	// "Bind" the newly created texture : all future texture functions will modify this texture
+    activate();
     bind();
 
 	// Give the image to OpenGL
@@ -54,13 +57,13 @@ Texture::~Texture(){
 
 void Texture::apply(GLuint framgment_id) {
     activate();
-    glUniform1i(framgment_id, 0);
     bind();
+    glUniform1i(framgment_id, _id);
+    
 
     // Set our framgment_id sampler to use Texture Unit 0
 
 }
-
 
 unsigned char* Texture::getDataFromFile(std::string path, GLenum*format, int *width, int *height) {
 	int nrComponents;
@@ -104,6 +107,7 @@ Texture* Texture::getCubemapTexture(std::string directory, bool gamma) {
 
 	std::string final_path = "./res/"+directory+"/";
     
+    t->activate();
 	t->bind();
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     
@@ -189,6 +193,7 @@ Texture* Texture::fromFile(std::string filename, std::string directory, bool gam
             break;
         }
 
+        t->activate();
         t->bind();
         
         glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
