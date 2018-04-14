@@ -13,54 +13,11 @@
 #include "common.hpp"
 #include "material.hpp"
 #include <glm/gtc/matrix_transform.hpp>
+#include "scene.hpp"
 
 using namespace std;
 using namespace glm;
 
-glm::vec3 aiColor3DtoglmVec3(aiColor3D& ai_col){
-    
-    glm::vec3 col;
-    
-    col.x = ai_col.r;
-    col.y = ai_col.g;
-    col.z = ai_col.b;
-    
-    return col;
-}
-
-glm::vec3 aiVector3DtoglmVec3(aiVector3D& ai_col){
-    
-    glm::vec3 col;
-    
-    col.x = ai_col.x;
-    col.y = ai_col.y;
-    col.z = ai_col.z;
-    
-    return col;
-}
-
-glm::mat4 aiMatrix4x4toglmMat4(aiMatrix4x4t<float>& ai_mat){
-    glm::mat4 mat;
-    
-    mat[0].x = ai_mat.a1;
-    mat[0].y = ai_mat.a2;
-    mat[0].z = ai_mat.a3;
-    mat[0].w = ai_mat.a4;
-    mat[1].x = ai_mat.b1;
-    mat[1].y = ai_mat.b2;
-    mat[1].z = ai_mat.b3;
-    mat[1].w = ai_mat.b4;
-    mat[2].x = ai_mat.c1;
-    mat[2].y = ai_mat.c2;
-    mat[2].z = ai_mat.c3;
-    mat[2].w = ai_mat.c4;
-    mat[3].x = ai_mat.d1;
-    mat[3].y = ai_mat.d2;
-    mat[3].z = ai_mat.d3;
-    mat[3].w = ai_mat.d4;
-    
-    return mat;
-}
 
 Light::Light():
 	_pos(0,0,0),
@@ -68,7 +25,10 @@ Light::Light():
 {
 
     _shader = Shader::fromFiles( "shaders/vertexshader_light.glsl", "shaders/fragment_light.glsl");
-	 Assimp::Importer importer;
+    Scene *sc = Scene::import("./res/sphere.dae", _shader);
+    _mesh = (Mesh*)sc->rootNode()->children().begin()->second;
+
+	/* Assimp::Importer importer;
 	 std::string path = "./res/sphere.dae";
 	 std::string directory = path.substr(0, path.find_last_of('/'));
     const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs);
@@ -184,13 +144,14 @@ Light::Light():
         if(mesh->mMaterialIndex >= 0)
             _mesh->setMaterial(materials[mesh->mMaterialIndex]);
         //s->addMesh(v);
-    }
+    }*/
 }
 
-void Light::draw(mat4 localTransform){
+void Light::draw(glm::mat4 proj, glm::mat4 view){
 	glm::mat4 mat = glm::translate(glm::mat4(1.f), _pos);
     _shader->use();
-    _mesh->bind();
-    _shader->setMat4("model", mat);
-    _mesh->draw(_shader);
+    //_mesh->bind();
+    //_shader->setMat4("model", mat);
+    _mesh->draw(proj ,view ,mat);
+    _shader->deuse();
 }

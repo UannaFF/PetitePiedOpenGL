@@ -22,7 +22,7 @@
 
 class Texture {
     public:
-        enum Type {Diffuse, Specular, Normal, Height};
+        enum Type {Diffuse, Specular, Normal, Height, Cube};
     
         /**!
          * \short Create a texture out of a bitmap buffer
@@ -31,38 +31,40 @@ class Texture {
          * \param height The bitmap height
          */
         Texture(unsigned char* buffer, int width, int height);
-        Texture(bool sky);
 
-        /**!
-         * \short Create an empty texture
-         */
-        Texture();
         /**!
          * \short Create an empty texture of type \ref Type
          */
-        Texture(Type);
+        Texture(Type t = Diffuse);
         ~Texture();
         
         inline GLuint id() const { return _texture_id; }
         inline Type type() const { return _type; }
         inline void type(Type t) { _type = t; }
         
+        inline void bind() { glBindTexture((_type == Cube ? GL_TEXTURE_CUBE_MAP : GL_TEXTURE_2D), _texture_id); }
+        inline void unbind() { glBindTexture((_type == Cube ? GL_TEXTURE_CUBE_MAP : GL_TEXTURE_2D), 0); }
+        
+        inline void activate() { glActiveTexture(GL_TEXTURE0 + _id); }
+        //~ inline void unbind() { glBindTexture((_type == Cube ? GL_TEXTURE_CUBE_MAP : GL_TEXTURE_2D), 0); }
+        
         //~ static Texture* fromBitmap(std::string);
         //~ static Texture* fromDDS(std::string);
         void apply(GLuint framgment_id);
+        
         static Texture* getCubemapTexture(std::string directory, bool gamma);
         static Texture* fromFile(std::string filename, std::string directory = "", bool gamma = false);
-        //void apply(GLuint framgment_id);
+
         static unsigned char* getDataFromFile(std::string path, GLenum*format, int *width, int *height);
 
 
         static std::map<std::string, Texture*> LOADED;
-
-        bool _isSkybox;
+    private:              
+        static uint LAST_ID;
+        
+        uint _id;
+        
         GLuint _texture_id;
-    private:
-        
-        
         Type _type;
         std::string _path;
 };

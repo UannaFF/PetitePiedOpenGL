@@ -47,15 +47,15 @@ void Channel::applyBones(float AnimationTime, glm::mat4& currentTransformation, 
         }
     }
     
-    delete pos;
-    delete rot;
+    //~ delete pos;
+    //~ delete rot;
     
     //~ std::cout << "position:" << std::endl << glm::translate(glm::mat4(1.f), *pos) <<  std::endl << "rot:" << std::endl << rot->toRotationMatrix() << std::endl;
     currentTransformation *= (glm::translate(glm::mat4(1.f), *pos) * rot->toRotationMatrix());
     //~ std::cout << "global:" << std::endl << GlobalInverseTransform <<  std::endl << "local:" << std::endl << currentTransformation << std::endl;
 
     for (Bone*b: _bones)
-        b->setTransformation(GlobalInverseTransform * currentTransformation);
+        b->node()->setTransformation(currentTransformation);
 }
 
 Quaternion::Quaternion():
@@ -167,7 +167,8 @@ void Animation::_recusive_bones(Node* n, Scene* s, const glm::mat4& globalInvers
     
     }
         
-    for (auto child: n->children())
-        _recusive_bones(child.second, s, globalInverseTransform, localTransform, AnimationTime);
+    for (std::pair<std::string, Drawable*> child: n->children())
+        if (dynamic_cast<Node*>(child.second))
+            _recusive_bones((Node*)child.second, s, globalInverseTransform, localTransform, AnimationTime);
 }
 

@@ -15,6 +15,7 @@
 #include <set>
 #include <string>
 #include "models.hpp"
+#include "common.hpp"
 #include "light.hpp"
 
 class Mesh;
@@ -43,11 +44,11 @@ class Scene {
     
         Scene();
         
-        inline Mesh* getMesh(unsigned int i){ return _models[i]; }
-        
+        inline Mesh* getMesh(unsigned int i){ return _models[i]; }        
         void addMesh(Mesh* m);
+        
         inline void addTexture(Texture* t){ _textures.push_back(t); }
-        inline void setCamera(Camera* c){ _camera = c; }
+        inline void setCamera(Camera* c){ _active_camera = c; }
         inline void setRootNode(Node* n){ _main_node = n; }
         inline void setAnimations(std::vector<Animation*> a){ _animations = a; }
 
@@ -65,9 +66,9 @@ class Scene {
             return it->second;
         }
         
-        inline Shader* skyboxShader() const{
-            return _skybox->shader();
-        }
+        //~ inline Shader* skyboxShader() const{
+            //~ return _skybox_shader;
+        //~ }
         void process(float timestamp);
         void render();
         void displayNodeTree();
@@ -93,15 +94,17 @@ class Scene {
         std::vector<Animation*> _animations;
         
         std::set<Animation*> _current_animation;
+        std::set<Camera*> _cameras;
 
         std::vector<Light*> _lights;
 
         Skybox *_skybox;
-        bool _hasSkybox;
-        
+        //~ Texture *_skybox_texture;
+        //~ bool _hasSkybox;
+        //~ Shader *_skybox_shader;
 
         Node* _main_node;
-        Camera* _camera;
+        Camera* _active_camera;
 
 
         
@@ -109,9 +112,9 @@ class Scene {
         
 };
 
-class Node {
+class Node: public Drawable {
     public:
-        Node(std::string name, std::vector<Mesh*> m, glm::mat4 transformation, Scene* scene, Node* parent = nullptr);
+        Node(std::string name, glm::mat4 transformation, Scene* scene, Node* parent = nullptr);
         
         inline glm::mat4 applyTransformation(GLuint model_vert, glm::mat4 localTransform = glm::mat4(1.f)){
             glm::mat4 t = localTransform * _transformation;
@@ -119,26 +122,29 @@ class Node {
             return t;
         }
         
-        void draw(glm::mat4 localTransform = glm::mat4(1.f));
+        virtual void draw(glm::mat4 projection, glm::mat4 view, glm::mat4 model);
         
         void dump(int level = 0);
         Node* find(std::string);
         
-        inline void addChild(std::string i, Node* n) { _children.insert(std::pair<std::string, Node*>(i, n)); }
+        inline void addChild(std::string i, Drawable* n) { _children.insert(std::pair<std::string, Drawable*>(i, n)); }
         
         inline std::string name() const { return _name; }
+        
+        inline void setTransformation(glm::mat4 t) { _transformation = t; }
         inline glm::mat4 transformation() { return _transformation; }
+        
+        inline glm::mat4 world_transformation() { return _world_transformation; }
+        
         inline Scene* scene() const     { return _scene; }
-        inline std::vector<Mesh*> meshs() const { return _meshs; }
-        inline std::map<std::string, Node*> children() const { return _children; }
+        inline std::multimap<std::string, Drawable*> children() const { return _children; }
     private:
-        std::vector<Mesh*> _meshs;
-        std::map<std::string, Node*> _children;
+        std::multimap<std::string, Drawable*> _children;
         
         std::string _name;
         
-        glm::mat4 _transformation;
-        
+        glm::mat4 _transformation;        
+        glm::mat4 _world_transformation;        
         
         Node* _parent;
         Scene* _scene;

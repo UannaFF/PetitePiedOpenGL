@@ -8,21 +8,24 @@
 
 using namespace std;
 
+GLuint Shader::SHADER_IN_USE = 0;
+
 Shader::Shader(string VertexShaderCode, string FragmentShaderCode){
     GLuint VertexShaderID = glCreateShader(GL_VERTEX_SHADER);
 	GLuint FragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
     GLint Result = GL_FALSE;
 	int InfoLogLength;
 
-GLenum err;
+    GLenum err;
 	// Compile Vertex Shader
 	DEBUG(Debug::Info, "Compiling shader\n");
 	char const * VertexSourcePointer = VertexShaderCode.c_str();
 	//printf("Vertex source path: %s\n", VertexSourcePointer);
 	glShaderSource(VertexShaderID, 1, &VertexSourcePointer , NULL);
-	while ((err = glGetError()) != GL_NO_ERROR) {
-        std::cerr << "before vertex init OpenGL error: " << err << std::endl;
-    }
+	
+	while ((err = glGetError()) != GL_NO_ERROR)
+        throw new OpenGLException("Shader initialisation", err);
+        
 	glCompileShader(VertexShaderID);
 
 	/*while ((err = glGetError()) != GL_NO_ERROR) {
@@ -38,9 +41,8 @@ GLenum err;
 		DEBUG(Debug::Warning, "%s\n", &VertexShaderErrorMessage[0]);
 	}
 
-	while ((err = glGetError()) != GL_NO_ERROR) {
-        std::cerr << "after vertex init OpenGL error: " << err << std::endl;
-    }
+	while ((err = glGetError()) != GL_NO_ERROR)
+        throw new OpenGLException("Vertex compilation", err);
 
 
 	// Compile Fragment Shader
@@ -58,9 +60,8 @@ GLenum err;
 		DEBUG(Debug::Warning, "%s\n", &FragmentShaderErrorMessage[0]);
 	}
 
-	while ((err = glGetError()) != GL_NO_ERROR) {
-        std::cerr << "after fragment compileOpenGL error: " << err << std::endl;
-    }
+	while ((err = glGetError()) != GL_NO_ERROR)
+        throw new OpenGLException("Fragment compilation", err);
 
 	// Link the program
 	DEBUG(Debug::Info, "Linking program\n");
@@ -84,9 +85,8 @@ GLenum err;
 	
 	glDeleteShader(VertexShaderID);
 	glDeleteShader(FragmentShaderID);
-	while ((err = glGetError()) != GL_NO_ERROR) {
-        std::cerr << "after everytgubg OpenGL error: " << err << std::endl;
-    }
+	while ((err = glGetError()) != GL_NO_ERROR)
+        throw new OpenGLException("Impossible finalyse shader loading", 0);
 
 }
 
@@ -108,7 +108,7 @@ Shader* Shader::fromFiles(string vertex_file_path, string fragment_file_path){
 		VertexShaderCode = sstr.str();
 		VertexShaderStream.close();
 	} else
-        throw new OpenGLException("Impossible to open " + vertex_file_path);
+        throw new OpenGLException("Impossible to open " + vertex_file_path, 0);
 
 	// Read the Fragment Shader code from the file
 	std::string FragmentShaderCode;
@@ -119,7 +119,62 @@ Shader* Shader::fromFiles(string vertex_file_path, string fragment_file_path){
 		FragmentShaderCode = sstr.str();
 		FragmentShaderStream.close();
 	} else
-        throw new OpenGLException("Impossible to open " + fragment_file_path);
+        throw new OpenGLException("Impossible to open " + fragment_file_path, 0);
 
 	return new Shader(VertexShaderCode, FragmentShaderCode);
+}
+
+
+GLuint Shader::getUniformLocation(std::string id){
+    if (SHADER_IN_USE != _programe_id) 
+        throw new ShaderNotUseException(this);
+    return getUniformLocation(id.c_str());
+}
+
+GLuint Shader::getUniformLocation(const char* id){
+    if (SHADER_IN_USE != _programe_id) 
+        throw new ShaderNotUseException(this);
+    return glGetUniformLocation(_programe_id, id);
+}
+
+void Shader::use() {
+    if (SHADER_IN_USE != _programe_id){
+        SHADER_IN_USE = _programe_id;
+        glUseProgram(_programe_id); 
+    }
+}
+void Shader::deuse() { 
+    if (SHADER_IN_USE == _programe_id){
+        SHADER_IN_USE = 0;
+        glUseProgram(0); 
+    }
+}
+
+void Shader::setVec3(const std::string &name, const glm::vec3 &value) const {
+    if (SHADER_IN_USE != _programe_id) 
+        throw new ShaderNotUseException(this);
+    if (glGetUniformLocation(_programe_id, name.c_str()) < 0) 
+        throw new ShaderUniformNotFoundException("No uniform '"+ name + "' found in the shader");
+    glUniform3fv(glGetUniformLocation(_programe_id, name.c_str()), 1, &value[0]); 
+}        
+void Shader::setVec3(const std::string &name, float x, float y, float z) const { 
+    if (SHADER_IN_USE != _programe_id) 
+        throw new ShaderNotUseException(this);
+    if (glGetUniformLocation(_programe_id, name.c_str()) < 0) 
+        throw new ShaderUniformNotFoundException("No uniform '"+ name + "' found in the shader");
+    glUniform3f(glGetUniformLocation(_programe_id, name.c_str()), x, y, z); 
+}
+void Shader::setMat4(const std::string &name, const glm::mat4 &mat, bool inverse) const {
+    if (SHADER_IN_USE != _programe_id) 
+        throw new ShaderNotUseException(this);
+    if (glGetUniformLocation(_programe_id, name.c_str()) < 0) 
+        throw new ShaderUniformNotFoundException("No uniform '"+ name + "' found in the shader");
+    glUniformMatrix4fv(glGetUniformLocation(_programe_id, name.c_str()), 1, inverse, &mat[0][0]);
+}
+void Shader::setFloat(const std::string &name, float val) const {
+    if (SHADER_IN_USE != _programe_id) 
+        throw new ShaderNotUseException(this);
+    if (glGetUniformLocation(_programe_id, name.c_str()) < 0) 
+        throw new ShaderUniformNotFoundException("No uniform '"+ name + "' found in the shader");
+    glUniform1f(glGetUniformLocation(_programe_id, name.c_str()), val);
 }

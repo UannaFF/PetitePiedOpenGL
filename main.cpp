@@ -16,7 +16,6 @@
 #include "core/texture.hpp"
 #include "core/models.hpp"
 #include "core/scene.hpp"
-#include "core/light.hpp"
 
 using namespace glm;
 
@@ -49,11 +48,9 @@ int main(int argc, char** argv){
             Window window(1024, 768, "Petit Pied");
             window.initialise();
             
-            ControlableCamera mainCamera;
-            //~ Camera mainCamera;
-            window.setCamera(mainCamera);
+            ControlableCamera mainCamera(&window);
             
-            glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
+            glClearColor(0.7f, 0.7f, 0.7f, 0.0f);
 
             // Enable depth test
             glEnable(GL_DEPTH_TEST);
@@ -66,6 +63,9 @@ int main(int argc, char** argv){
             Scene* scene = Scene::import(scene_file, Shader::fromFiles( "shaders/vertexshader_material.glsl", "shaders/fragment_material.glsl"));
             scene->displayNodeTree();
             
+            //~ Camera mainCamera;
+            scene->setCamera(&mainCamera);
+            
             // Create and compile our GLSL program from the shaders
             //~ Shader* shader = Shader::fromFiles( "shaders/vertexshader_material.glsl", "shaders/fragment_material.glsl" );
             //~ Shader* light_shader = Shader::fromFiles( "shaders/vertexshader_light.glsl", "shaders/fragment_light.glsl" );
@@ -74,29 +74,29 @@ int main(int argc, char** argv){
 
             scene->setSkybox("mountain-skyboxes/Nalovardo", "shaders/Skyboxshadingvertex.glsl","shaders/Skyboxshadingfragment.glsl" );
 
-            scene->defaultShader()->use();
+            //~ scene->defaultShader()->use();
             
-            mainCamera.bindView(scene->defaultShader()->getUniformLocation("view"));
-            mainCamera.bindProjection(scene->defaultShader()->getUniformLocation("projection"));
+            //~ mainCamera.bindView(scene->defaultShader()->getUniformLocation("view"));
+            //~ mainCamera.bindProjection(scene->defaultShader()->getUniformLocation("projection"));
             
             // Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
             mainCamera.setProjectionMatrix(glm::perspective(glm::radians(45.0f), window.ratio(), 0.1f, 100.0f));
             // Camera matrix
             mainCamera.setViewMatrix(glm::lookAt(
-                                        glm::vec3(20,15,0), // Camera in World Space
+                                        glm::vec3(100,50,100), // Camera in World Space
                                         glm::vec3(1,1,1), // and looks at the origin
-                                        glm::vec3(0,-1,0)  // Head is up (set to 0,-1,0 to look upside-down)
+                                        glm::vec3(0,1,0)  // Head is up (set to 0,-1,0 to look upside-down)
                                    ));
 
 
             
-            scene->skyboxShader()->use();
-            glm::mat4 projection = mainCamera.projectionMatrix();
-            glm::mat4 view = mainCamera.viewMatrix();
-            glUniformMatrix4fv(scene->skyboxShader()->getUniformLocation("projection"), 
-                1, GL_FALSE, &projection[0][0]);
-            glUniformMatrix4fv(scene->skyboxShader()->getUniformLocation("view"), 
-                1, GL_FALSE, &view[0][0]);
+            //~ scene->skyboxShader()->use();
+            //~ glm::mat4 projection = mainCamera.projectionMatrix();
+            //~ glm::mat4 view = mainCamera.viewMatrix();
+            //~ glUniformMatrix4fv(scene->skyboxShader()->getUniformLocation("projection"), 
+                //~ 1, GL_FALSE, &projection[0][0]);
+            //~ glUniformMatrix4fv(scene->skyboxShader()->getUniformLocation("view"), 
+                //~ 1, GL_FALSE, &view[0][0]);
 
 
             //scene->defaultShader()->use();
@@ -117,11 +117,7 @@ int main(int argc, char** argv){
                 
             //~ std::cout << std::endl;
                 
-            //glm::vec3 lightPos = glm::vec3(4,4,4);
-
-            Light *light = new Light();
-            light->setPos(glm::vec3(-4,4,4));
-
+            
             
             
             window.hideCursor();
@@ -133,26 +129,26 @@ int main(int argc, char** argv){
                 // Clear the screen
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-                        
-               // scene->defaultShader()->setVec3("light.position", light->getPos());
+                
+                scene->defaultShader()->use();  
+                glm::vec3 lightPos = glm::vec3(4,4,4);      
+                scene->defaultShader()->setVec3("light.position", lightPos);
+                    
+                glm::vec3 lightColor;
+                lightColor.x = sin(glfwGetTime() * 2.0f);
+                lightColor.y = sin(glfwGetTime() * 0.7f);
+                lightColor.z = sin(glfwGetTime() * 1.3f);
+                glm::vec3 diffuseColor = lightColor   * glm::vec3(0.5f); // decrease the influence
+                glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f); // low influence
+                scene->defaultShader()->setVec3("light.ambient", ambientColor);
+                scene->defaultShader()->setVec3("light.diffuse", diffuseColor);
+                scene->defaultShader()->setVec3("light.specular", 1.0f, 1.0f, 1.0f);
+                
+                scene->defaultShader()->deuse();  
+                
                 //~ scene->defaultShader()->getUniformLocation("viewPos", camera.Position);
 
 
-                // light properties
-                //light->setColor(vec3(sin(glfwGetTime() * 2.0f), sin(glfwGetTime() * 0.7f), sin(glfwGetTime() * 1.3f)));
-                light->setColor(vec3(0.0, 1.0, 0.0));
-
-                /*glm::vec3 lightColor;
-                lightColor.x = sin(glfwGetTime() * 2.0f);
-                lightColor.y = sin(glfwGetTime() * 0.7f);
-                lightColor.z = sin(glfwGetTime() * 1.3f);*/
-
-
-                /*scene->defaultShader()->setVec3("light.ambient", ambientColor);
-                scene->defaultShader()->setVec3("light.diffuse", diffuseColor);
-                scene->defaultShader()->setVec3("light.specular", 1.0f, 1.0f, 1.0f);*/
-                
-        
                 // Update P and V from mouse and keyboard
                 mainCamera.updateFromMouse();
                 
@@ -160,22 +156,13 @@ int main(int argc, char** argv){
 
                 // Bind and Set our "myTextureSampler" sampler to use Texture
                 //~ texture->set(TextureID);
-                scene->skyboxShader()->use();
-                glm::mat4 projection = mainCamera.projectionMatrix();
-                glm::mat4 view = mainCamera.viewMatrix();
-
-                glUniformMatrix4fv(scene->skyboxShader()->getUniformLocation("projection"), 
-                    1, GL_FALSE, &projection[0][0]);
-                glUniformMatrix4fv(scene->skyboxShader()->getUniformLocation("view"), 
-                    1, GL_FALSE, &view[0][0]);
-
-                light->shader()->use();
-                glUniformMatrix4fv(light->shader()->getUniformLocation("projection"), 
-                    1, GL_FALSE, &projection[0][0]);
-                glUniformMatrix4fv(light->shader()->getUniformLocation("view"), 
-                    1, GL_FALSE, &view[0][0]);
-
-                scene->addLight(light);
+                //~ scene->skyboxShader()->use();
+                //~ glm::mat4 projection = mainCamera.projectionMatrix();
+            //~ glm::mat4 view = mainCamera.viewMatrix();
+                //~ glUniformMatrix4fv(scene->skyboxShader()->getUniformLocation("projection"), 
+                    //~ 1, GL_FALSE, &projection[0][0]);
+                //~ glUniformMatrix4fv(scene->skyboxShader()->getUniformLocation("view"), 
+                    //~ 1, GL_FALSE, &view[0][0]);
                 
                 scene->render();
 
@@ -202,6 +189,11 @@ int main(int argc, char** argv){
     
     } catch (SceneException* e){
             std::cout << "Scene exception: " << e->what() << std::endl;
+            glfwTerminate();
+            return EXIT_FAILURE;
+    
+    } catch (ShaderException* e){
+            std::cout << "Shader exception: " << e->what() << std::endl;
             glfwTerminate();
             return EXIT_FAILURE;
     

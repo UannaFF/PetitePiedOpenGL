@@ -33,7 +33,7 @@ class Light {
             s->setVec3("light.diffuse", diffuseColor);
             s->setVec3("light.specular", specular.x, specular.y, specular.z);
         }
-        void draw(glm::mat4 localTransform);
+        void draw(glm::mat4 proj, glm::mat4 view);
         Shader* shader() {return _shader;}
 };
 

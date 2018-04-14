@@ -31,5 +31,5 @@ void main() {
 
   //texcoords = normalize(vec3(a_position.x, a_position.y, a_position.z));
          //v_cubemapTexture = normalize(texture_pos.xyz); 
-  //gl_Position =  MVP * vec4(aPos,1);
+  //~ gl_Position =  MVP * vec4(aPos,1);
 }
