@@ -151,13 +151,15 @@ void Shader::deuse() {
 }
 
 void Shader::setVec3(const std::string &name, const glm::vec3 &value) const {
+	Debug::CheckOpenGLError("Set vec3");
     if (SHADER_IN_USE != _programe_id) 
         throw new ShaderNotUseException(this);
     if (glGetUniformLocation(_programe_id, name.c_str()) < 0) 
         throw new ShaderUniformNotFoundException("No uniform '"+ name + "' found in the shader");
     glUniform3fv(glGetUniformLocation(_programe_id, name.c_str()), 1, &value[0]); 
 }        
-void Shader::setVec3(const std::string &name, float x, float y, float z) const { 
+void Shader::setVec3(const std::string &name, float x, float y, float z) const {
+	Debug::CheckOpenGLError("Set vec3 2");
     if (SHADER_IN_USE != _programe_id) 
         throw new ShaderNotUseException(this);
     if (glGetUniformLocation(_programe_id, name.c_str()) < 0) 
@@ -165,6 +167,7 @@ void Shader::setVec3(const std::string &name, float x, float y, float z) const {
     glUniform3f(glGetUniformLocation(_programe_id, name.c_str()), x, y, z); 
 }
 void Shader::setMat4(const std::string &name, const glm::mat4 &mat, bool inverse) const {
+	//Debug::CheckOpenGLError("Set mat4");
     if (SHADER_IN_USE != _programe_id) 
         throw new ShaderNotUseException(this);
     if (glGetUniformLocation(_programe_id, name.c_str()) < 0) 

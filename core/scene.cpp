@@ -42,7 +42,7 @@ Scene* Scene::import(std::string path, Shader* shader){
     shader->name("default_material");
     //~ s->defaultShader()->use();
     
-    std::map<std::string, Bone*> bones_to_bind;
+    std::multimap<std::string, Bone*> bones_to_bind;
     
     std::string directory = path.substr(0, path.find_last_of('/'));
     

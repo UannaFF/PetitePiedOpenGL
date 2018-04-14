@@ -123,7 +123,7 @@ int main(int argc, char** argv){
             window.hideCursor();
             window.centerCursor();
             
-            scene->playAnimation(0);
+            //scene->playAnimation(0);
             
             do{ 
                 // Clear the screen
@@ -131,7 +131,7 @@ int main(int argc, char** argv){
 
                 
                 scene->defaultShader()->use();  
-                glm::vec3 lightPos = glm::vec3(4,4,4);      
+                /*glm::vec3 lightPos = glm::vec3(4,4,4);      
                 scene->defaultShader()->setVec3("light.position", lightPos);
                     
                 glm::vec3 lightColor;
@@ -143,7 +143,7 @@ int main(int argc, char** argv){
                 scene->defaultShader()->setVec3("light.ambient", ambientColor);
                 scene->defaultShader()->setVec3("light.diffuse", diffuseColor);
                 scene->defaultShader()->setVec3("light.specular", 1.0f, 1.0f, 1.0f);
-                
+                */
                 scene->defaultShader()->deuse();  
                 
                 //~ scene->defaultShader()->getUniformLocation("viewPos", camera.Position);
