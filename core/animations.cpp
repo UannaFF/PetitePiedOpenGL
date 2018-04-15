@@ -54,9 +54,9 @@ void Channel::applyBones(float AnimationTime, glm::mat4& currentTransformation, 
     delete pos;
     delete rot;
     
-    for (Bone*b: _bones)
-        b->node()->setTransformation(currentTransformation);
+    for (Bone*b: _bones){
         //~ b->node()->setTransformation(currentTransformation);
+    }
 }
 
 Quaternion::Quaternion():

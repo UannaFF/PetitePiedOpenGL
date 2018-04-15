@@ -198,7 +198,7 @@ void Mesh::draw(glm::mat4 projection, glm::mat4 view, glm::mat4 model){
     // bone world transform matrices need to be passed for skinning
     for (Bone* b: _bones){
         _shader->setMat4("gBones[" + std::to_string(b->id()) + "]", b->transformation(), GL_TRUE);
-        std::cout << "gBones[" + std::to_string(b->id()) + "]" << std::endl << b->transformation();
+        //~ std::cout << "gBones[" + std::to_string(b->id()) + "]" << std::endl << b->transformation();
     }
 
     if (_material)

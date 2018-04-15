@@ -21,7 +21,7 @@ void Camera::setProjectionMatrix(glm::mat4 p){
 
 ControlableCamera::ControlableCamera(Window*p):
     Camera::Camera(p),
-    _position(0, 0, 0), _horizontalAngle(3.14), _verticalAngle(0), _initialFoV(45.0f),
+    _position(7.0, 4.6, 2.29), _horizontalAngle(glm::radians(214.)), _verticalAngle(glm::radians(-260.)), _initialFoV(45.0f),
     _speed(3.0f), _mouseSpeed(0.005f){
 }
 
@@ -49,9 +49,9 @@ void ControlableCamera::updateFromMouse(){
 	
     // Reset cam
 	if (glfwGetKey( parent()->internal(), GLFW_KEY_P ) == GLFW_PRESS){
-        _horizontalAngle = 3.14; // Theta
-        _verticalAngle   = 0; // Phy
-        _position = glm::vec3(0, 0, 0);
+        _horizontalAngle = glm::radians(214.); // Theta
+        _verticalAngle   = glm::radians(-260.); // Phy
+        _position = glm::vec3(7.0, 4.6, 2.29);
 	}
 
 	// Direction : Spherical coordinates to Cartesian coordinates conversion

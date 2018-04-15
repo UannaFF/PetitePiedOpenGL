@@ -64,16 +64,27 @@ int main(int argc, char** argv){
             //~ std::vector<Mesh*> models = Mesh::fromOBJ("Environement.obj");
             //~ Scene* scene = Scene::import(scene_file, Shader::fromFiles( "shaders/vertexshader_material.glsl", "shaders/fragment_material.glsl"));
             Shader* shader = Shader::fromFiles( "shaders/vertexshader_material.glsl", "shaders/fragment_material.glsl");
-            //~ Scene* scene = Scene::import("res/Dinosaure/Environement/Sol+Eau/volcano_lowpoly.dae", shader);
+            Scene* scene = Scene::import("res/Dinosaure/Environement/Sol+Eau/volcano_lowpoly.dae", shader);
             
-            Scene* scene = Scene::import("res/Dinosaure/Environement/Végétation/végétation.dae", shader);
-            //~ scene->rootNode()->addChild("vegetation", veg->rootNode());
+            Scene* veg = Scene::import("res/Dinosaure/Environement/Végétation/végétation.dae", shader);
+            scene->rootNode()->addChild("vegetation", veg->rootNode());
+            
+            Scene* diplo = Scene::import("res/Dinosaure/diplodocus/diplo.dae", shader);
+            
+            glm::mat4 diplo_rotate_scale = glm::scale(
+                glm::rotate(diplo->rootNode()->transformation(), glm::radians(180.f), glm::vec3(1.0f, 0.0f, 0.0f)),
+                glm::vec3(0.1f)
+            );
+            diplo->rootNode()->setTransformation(diplo_rotate_scale);
+            diplo->rootNode()->dump(0);
+            //~ Node* diplo2 = new Node("diplo2", ,scene, scene->rootNode())
+            scene->rootNode()->addChild("diplo", diplo->rootNode());
             
             //~ Scene* scene = new Scene;
             scene->setShader(Shader::fromFiles( "shaders/vertexshader_marker.glsl", "shaders/fragment_marker.glsl"), Scene::BonesDebugShader);
             //~ scene->setShader(Shader::fromFiles( "shaders/vertexshader_material.glsl", "shaders/fragment_material.glsl"));
             //~ scene->setRootNode(new Node("main", glm::mat4(1.f), scene));
-            scene->displayNodeTree();
+            //~ scene->displayNodeTree();
             
             // Cube test
             //~ VertexArray* cube = new VertexArray;
@@ -126,6 +137,9 @@ int main(int argc, char** argv){
             scene->playAnimation(0);
             glm::vec3 lightPos = glm::vec3(0,-2.7, 4);   
             
+            float time_last_frame = glfwGetTime();
+            DEBUG(Debug::Info, "\n");
+            
             do{ 
                 // Clear the screen
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -149,14 +163,14 @@ int main(int argc, char** argv){
                     lightPos.x -= 0.1;
                 scene->defaultShader()->setVec3("light.position", lightPos);
                     
-                glm::vec3 lightColor;
-                lightColor.x = sin(glfwGetTime() * 2.0f);
-                lightColor.y = sin(glfwGetTime() * 0.7f);
-                lightColor.z = sin(glfwGetTime() * 1.3f);
-                glm::vec3 diffuseColor = lightColor   * glm::vec3(0.5f); // decrease the influence
-                glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f); // low influence
-                scene->defaultShader()->setVec3("light.ambient", ambientColor);
-                scene->defaultShader()->setVec3("light.diffuse", diffuseColor);
+                //~ glm::vec3 lightColor;
+                //~ lightColor.x = sin(glfwGetTime() * 2.0f);
+                //~ lightColor.y = sin(glfwGetTime() * 0.7f);
+                //~ lightColor.z = sin(glfwGetTime() * 1.3f);
+                //~ glm::vec3 diffuseColor = lightColor   * glm::vec3(0.5f); // decrease the influence
+                //~ glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f); // low influence
+                scene->defaultShader()->setVec3("light.ambient", 1.0f, 1.0f, 1.0f);
+                scene->defaultShader()->setVec3("light.diffuse", 1.0f, 1.0f, 1.0f);
                 scene->defaultShader()->setVec3("light.specular", 1.0f, 1.0f, 1.0f);
                 
                 scene->defaultShader()->deuse();  
@@ -188,12 +202,15 @@ int main(int argc, char** argv){
 
                 // Swap buffers
                 window.postDrawingEvent();
+                DEBUG(Debug::Info, "\rFPS: %f", 1.f / (glfwGetTime() - time_last_frame));
+                time_last_frame = glfwGetTime();
             }
 
             // Check if the ESC key was pressed or the window was closed
             while( window.keyStatus(GLFW_KEY_ESCAPE) != GLFW_PRESS &&
                     !window.shouldClose());
 
+            DEBUG(Debug::Info, "\n");
             // Cleanup VBO and shader
             //~ delete shader;
             //~ delete texture;
