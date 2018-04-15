@@ -47,15 +47,16 @@ void Channel::applyBones(float AnimationTime, glm::mat4& currentTransformation, 
         }
     }
     
-    //~ delete pos;
-    //~ delete rot;
-    
     //~ std::cout << "position:" << std::endl << glm::translate(glm::mat4(1.f), *pos) <<  std::endl << "rot:" << std::endl << rot->toRotationMatrix() << std::endl;
     currentTransformation *= (glm::translate(glm::mat4(1.f), *pos) * rot->toRotationMatrix());
     //~ std::cout << "global:" << std::endl << GlobalInverseTransform <<  std::endl << "local:" << std::endl << currentTransformation << std::endl;
 
+    delete pos;
+    delete rot;
+    
     for (Bone*b: _bones)
         b->node()->setTransformation(currentTransformation);
+        //~ b->node()->setTransformation(currentTransformation);
 }
 
 Quaternion::Quaternion():
@@ -151,6 +152,9 @@ Quaternion Quaternion::interpolate(Quaternion b, float blend) {
     }
     result.normalize();
     return result;
+}
+
+RotationKey::RotationKey(Quaternion value): _value(value){
 }
 
 void Animation::applyBones(float AnimationTime, Scene* s)

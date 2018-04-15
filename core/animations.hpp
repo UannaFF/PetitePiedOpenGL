@@ -138,7 +138,7 @@ class PositionKey : public Key {
 
 class RotationKey : public Key {
     public:
-        RotationKey(Quaternion value): _value(value) {}
+        RotationKey(Quaternion value);
         inline glm::mat4 value() const { return _value.toRotationMatrix(); }
         inline Quaternion rotation() const { return _value; }
     private:
