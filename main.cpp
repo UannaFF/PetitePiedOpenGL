@@ -17,6 +17,8 @@
 #include "core/models.hpp"
 #include "core/scene.hpp"
 
+#include "assets/utils.hpp"
+
 using namespace glm;
 
 int main(int argc, char** argv){
@@ -60,24 +62,41 @@ int main(int argc, char** argv){
             //~ glEnable(GL_CULL_FACE);
 
             //~ std::vector<Mesh*> models = Mesh::fromOBJ("Environement.obj");
+            //~ Scene* scene = Scene::import(scene_file, Shader::fromFiles( "shaders/vertexshader_material.glsl", "shaders/fragment_material.glsl"));
             Scene* scene = Scene::import(scene_file, Shader::fromFiles( "shaders/vertexshader_material.glsl", "shaders/fragment_material.glsl"));
+            //~ Scene* scene = new Scene;
+            scene->setShader(Shader::fromFiles( "shaders/vertexshader_marker.glsl", "shaders/fragment_marker.glsl"), Scene::BonesDebugShader);
+            //~ scene->setShader(Shader::fromFiles( "shaders/vertexshader_material.glsl", "shaders/fragment_material.glsl"));
+            //~ scene->setRootNode(new Node("main", glm::mat4(1.f), scene));
             scene->displayNodeTree();
+            
+            // Cube test
+            //~ VertexArray* cube = new VertexArray;
+            //~ cube->setVertex({1,  1,  -1,
+                             //~ 1, -1,  -1,
+                             //~ -1, -1, -1,
+                             //~ -1,  1, -1,
+                             //~ 1,  1,  1,
+                             //~ 1, -1,  1,
+                             //~ -1, -1, 1,
+                             //~ -1, 1,  1});
+            //~ cube->setIndice({0, 2, 3,  
+                             //~ 7, 5, 4,  
+                             //~ 4, 1, 0,  
+                             //~ 5, 2, 1,  
+                             //~ 2, 7, 3,  
+                             //~ 0, 7, 4,  
+                             //~ 0, 1, 2,  
+                             //~ 7, 6, 5,  
+                             //~ 4, 5, 1,  
+                             //~ 5, 6, 2,  
+                             //~ 2, 6, 7,  
+                             //~ 0, 3, 7});
+            //~ scene->rootNode()->addChild("cube", new Mesh(Shader::fromFiles( "shaders/vertexshader_marker.glsl", "shaders/fragment_marker.glsl"), cube, std::vector<Bone*>()));
+
             
             //~ Camera mainCamera;
             scene->setCamera(&mainCamera);
-            
-            // Create and compile our GLSL program from the shaders
-            //~ Shader* shader = Shader::fromFiles( "shaders/vertexshader_material.glsl", "shaders/fragment_material.glsl" );
-            //~ Shader* light_shader = Shader::fromFiles( "shaders/vertexshader_light.glsl", "shaders/fragment_light.glsl" );
-            //~ Shader* shader = Shader::fromFiles( "shaders/StandardShading.vertexshader", "shaders/StandardShading.fragmentshader" );
-            //~ scene->setShader(shader);
-
-            scene->setSkybox("skybox_sky", "shaders/Skyboxshadingvertex.glsl","shaders/Skyboxshadingfragment.glsl" );
-
-            //~ scene->defaultShader()->use();
-            
-            //~ mainCamera.bindView(scene->defaultShader()->getUniformLocation("view"));
-            //~ mainCamera.bindProjection(scene->defaultShader()->getUniformLocation("projection"));
             
             // Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
             mainCamera.setProjectionMatrix(glm::perspective(glm::radians(45.0f), window.ratio(), 0.1f, 100.0f));
@@ -88,35 +107,11 @@ int main(int argc, char** argv){
                                         glm::vec3(0,1,0)  // Head is up (set to 0,-1,0 to look upside-down)
                                    ));
 
-
+            // Marker
+            scene->rootNode()->addChild("marker", new ReferenceMarker(Shader::fromFiles( "shaders/vertexshader_marker.glsl", "shaders/fragment_marker.glsl")));
             
-            //~ scene->skyboxShader()->use();
-            //~ glm::mat4 projection = mainCamera.projectionMatrix();
-            //~ glm::mat4 view = mainCamera.viewMatrix();
-            //~ glUniformMatrix4fv(scene->skyboxShader()->getUniformLocation("projection"), 
-                //~ 1, GL_FALSE, &projection[0][0]);
-            //~ glUniformMatrix4fv(scene->skyboxShader()->getUniformLocation("view"), 
-                //~ 1, GL_FALSE, &view[0][0]);
-
-
-            //scene->defaultShader()->use();
-
-            // Load the texture using any two methods
-            //~ Texture* texture = Texture::fromBitmap("uvtemplate.bmp");
-            //~ Texture* texture = Texture::fromDDS("uvmap.DDS");
-            
-            //~ if (!texture)
-                //~ throw new OpenGLException("Cannot create the texture");
-            
-            // Get a handle for our "myTextureSampler" uniform
-            //~ GLuint TextureID  = scene->defaultShader()->getUniformLocation("myTextureSampler");
-
-            // Get a handle for our "LightPosition" uniform
-            //~ GLuint LightID = scene->defaultShader()->getUniformLocation("LightPosition_worldspace");
-
-                
-            //~ std::cout << std::endl;
-                
+            // Skybox
+            //~ scene->setSkybox("skybox_sky", "shaders/Skyboxshadingvertex.glsl","shaders/Skyboxshadingfragment.glsl" );
             
             
             
@@ -124,14 +119,29 @@ int main(int argc, char** argv){
             window.centerCursor();
             
             scene->playAnimation(0);
+            glm::vec3 lightPos = glm::vec3(0,-2.7, 4);   
             
             do{ 
                 // Clear the screen
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
                 
-                scene->defaultShader()->use();  
-                glm::vec3 lightPos = glm::vec3(4,4,4);      
+                scene->defaultShader()->use();
+                
+                if (glfwGetKey( window.internal(), GLFW_KEY_E ) == GLFW_PRESS)
+                    lightPos.z += 0.1;
+                if (glfwGetKey( window.internal(), GLFW_KEY_S ) == GLFW_PRESS)
+                    lightPos.z -= 0.1;
+                
+                if (glfwGetKey( window.internal(), GLFW_KEY_Z ) == GLFW_PRESS)
+                    lightPos.y += 0.1;
+                if (glfwGetKey( window.internal(), GLFW_KEY_X ) == GLFW_PRESS)
+                    lightPos.y -= 0.1;
+                
+                if (glfwGetKey( window.internal(), GLFW_KEY_Q ) == GLFW_PRESS)
+                    lightPos.x += 0.1;
+                if (glfwGetKey( window.internal(), GLFW_KEY_D ) == GLFW_PRESS)
+                    lightPos.x -= 0.1;
                 scene->defaultShader()->setVec3("light.position", lightPos);
                     
                 glm::vec3 lightColor;

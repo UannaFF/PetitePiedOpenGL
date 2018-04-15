@@ -24,19 +24,23 @@ uniform mat4 gBones[MAX_BONES];
 void main()
 {
 
-    mat4 BoneTransform = mat4(1.);
-    BoneTransform += gBones[BoneIDs[0]] * Weights[0];
-    BoneTransform += gBones[BoneIDs[1]] * Weights[1];
+    //~ mat4 BoneTransform = mat4(1.);
+    mat4 BoneTransform = gBones[BoneIDs.x] * Weights.x;
+    BoneTransform += gBones[BoneIDs.y] * Weights.y;
     BoneTransform += gBones[BoneIDs[2]] * Weights[2];
     BoneTransform += gBones[BoneIDs[3]] * Weights[3];
     
     FragPos = vec3(model * vec4(aPos, 1.0));
-    //~ Normal = (BoneTransform * vec4(aNormal, 0.0)).xyz;  
-    Normal = mat3(transpose(inverse(model))) * aNormal;  
+    Normal = (BoneTransform * vec4(aNormal, 0.0)).xyz;  
+    //~ Normal = mat3(transpose(inverse(model))) * aNormal;
     
     vec4 PosL      = BoneTransform * vec4(aPos, 1.0);
     //~ vec4 PosL      = vec4(aPos, 1.0);
     mat4 mvp = projection * view * model;
+    
+    vec4 NormalL = BoneTransform * vec4(aNormal, 0.0);
+    Normal = (model * NormalL).xyz;
+    
     gl_Position = mvp * PosL;
     //~ gl_Position = mvp * vec4(aPos, 1.0);
     //~ gl_Position = mvp * (BoneTransform * vec4(aPos,1));

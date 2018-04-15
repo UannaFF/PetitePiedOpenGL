@@ -28,13 +28,7 @@ class Camera {
         void setProjectionMatrix(glm::mat4 p);
         
         inline void bindProjection(GLuint frag){ _projection_fragment = frag; }
-        inline void bindView(GLuint frag){ _view_fragment = frag; }
-        
-        inline void update(){
-            glUniformMatrix4fv(_projection_fragment, 1, GL_FALSE, &_projectionMatrix[0][0]);
-            glUniformMatrix4fv(_view_fragment, 1, GL_FALSE, &_viewMatrix[0][0]);
-        }
-        
+        inline void bindView(GLuint frag){ _view_fragment = frag; }        
         
     private:
         Window* _parent;
