@@ -69,22 +69,36 @@ int main(int argc, char** argv){
             Scene* veg = Scene::import("res/Dinosaure/Environement/Végétation/végétation.dae", shader);
             scene->rootNode()->addChild("vegetation", veg->rootNode());
             
-            Scene* diplo = Scene::import("res/Dinosaure/diplodocus/diplo.dae", shader);
+            Scene* diplo_scene = Scene::import("res/Dinosaure/diplodocus/diplo.dae", shader);
+            Node * diplo1 = new Node(*diplo_scene->rootNode());
+            //~ Node * diplo2 = new Node(*diplo_scene->rootNode());
             
             glm::mat4 diplo_rotate_scale = glm::scale(
-                glm::rotate(diplo->rootNode()->transformation(), glm::radians(180.f), glm::vec3(1.0f, 0.0f, 0.0f)),
+                glm::rotate(diplo1->transformation(), glm::radians(180.f), glm::vec3(1.0f, 0.0f, 0.0f)),
                 glm::vec3(0.1f)
             );
-            diplo->rootNode()->setTransformation(diplo_rotate_scale);
-            diplo->rootNode()->dump(0);
-            //~ Node* diplo2 = new Node("diplo2", ,scene, scene->rootNode())
-            scene->rootNode()->addChild("diplo", diplo->rootNode());
+            diplo1->setTransformation(diplo_rotate_scale);
+            //~ diplo2->setTransformation(glm::translate(diplo_rotate_scale, glm::vec3(10.f, 0., 0.)));
+
+            scene->rootNode()->addChild("diplo", diplo1);
+            //~ scene->rootNode()->addChild("diplo", diplo2);
+            
+            Scene* boat_scene = Scene::import("res/Dinosaure/Boat/boat.dae", shader);
+            glm::mat4 boat_rotate_scale = 
+                glm::rotate(glm::scale(glm::inverse(glm::translate(boat_scene->rootNode()->transformation(), glm::vec3(0.1,0,0.f))),
+                glm::vec3(0.1f)
+            ), glm::radians(-90.f), glm::vec3(1.0f, 0.0f, 0.0f));
+            
+            std::cout << boat_rotate_scale;
+            
+            boat_scene->rootNode()->setTransformation(boat_rotate_scale);
+            scene->rootNode()->addChild("boat", boat_scene->rootNode());
             
             //~ Scene* scene = new Scene;
-            scene->setShader(Shader::fromFiles( "shaders/vertexshader_marker.glsl", "shaders/fragment_marker.glsl"), Scene::BonesDebugShader);
+            //~ scene->setShader(Shader::fromFiles( "shaders/vertexshader_marker.glsl", "shaders/fragment_marker.glsl"), Scene::BonesDebugShader);
             //~ scene->setShader(Shader::fromFiles( "shaders/vertexshader_material.glsl", "shaders/fragment_material.glsl"));
             //~ scene->setRootNode(new Node("main", glm::mat4(1.f), scene));
-            //~ scene->displayNodeTree();
+            scene->displayNodeTree();
             
             // Cube test
             //~ VertexArray* cube = new VertexArray;
@@ -127,7 +141,7 @@ int main(int argc, char** argv){
             scene->rootNode()->addChild("marker", new ReferenceMarker(Shader::fromFiles( "shaders/vertexshader_marker.glsl", "shaders/fragment_marker.glsl")));
             
             // Skybox
-            //~ scene->setSkybox("skybox_sky", "shaders/Skyboxshadingvertex.glsl","shaders/Skyboxshadingfragment.glsl" );
+            scene->setSkybox("skybox_sky", "shaders/Skyboxshadingvertex.glsl","shaders/Skyboxshadingfragment.glsl" );
             
             
             
