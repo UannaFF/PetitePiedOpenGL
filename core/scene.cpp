@@ -367,21 +367,21 @@ Node* Node::find(std::string n){
     return nullptr;
 }
 
-glm::mat4 aiMatrix4x4toglmMat4(aiMatrix4x4t<float>& ai_mat, bool z_up){
+glm::mat4 aiMatrix4x4toglmMat4(aiMatrix4x4t<float>& ai_mat){
     glm::mat4 mat;
     
     mat[0].x = ai_mat.a1;
     mat[0].y = ai_mat.a2;
     mat[0].z = ai_mat.a3;
     mat[0].w = ai_mat.a4;
-    mat[(!z_up ? 1 : 2)].x = ai_mat.b1;
-    mat[(!z_up ? 1 : 2)].y = ai_mat.b2;
-    mat[(!z_up ? 1 : 2)].z = ai_mat.b3;
-    mat[(!z_up ? 1 : 2)].w = ai_mat.b4;
-    mat[(z_up ? 1 : 2)].x = ai_mat.c1;
-    mat[(z_up ? 1 : 2)].y = ai_mat.c2;
-    mat[(z_up ? 1 : 2)].z = ai_mat.c3;
-    mat[(z_up ? 1 : 2)].w = ai_mat.c4;
+    mat[1].x = ai_mat.b1;
+    mat[1].y = ai_mat.b2;
+    mat[1].z = ai_mat.b3;
+    mat[1].w = ai_mat.b4;
+    mat[2].x = ai_mat.c1;
+    mat[2].y = ai_mat.c2;
+    mat[2].z = ai_mat.c3;
+    mat[2].w = ai_mat.c4;
     mat[3].x = ai_mat.d1;
     mat[3].y = ai_mat.d2;
     mat[3].z = ai_mat.d3;
@@ -402,13 +402,13 @@ glm::vec3 aiColor3DtoglmVec3(aiColor3D& ai_col){
     return col;
 }
 
-glm::vec3 aiVector3DtoglmVec3(aiVector3D& ai_col, bool z_up){
+glm::vec3 aiVector3DtoglmVec3(aiVector3D& ai_col){
     
     glm::vec3 col;
     
     col.x = ai_col.x;
-    col.y = (!z_up ? ai_col.y : ai_col.z);
-    col.z = (z_up ? ai_col.y : ai_col.z);
+    col.y = ai_col.y;
+    col.z = ai_col.z;
     
     return col;
 }

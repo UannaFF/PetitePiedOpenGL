@@ -135,8 +135,8 @@ class Node: public Drawable {
         Scene* _scene;
 };
 
-glm::mat4 aiMatrix4x4toglmMat4(aiMatrix4x4t<float>& ai_mat, bool z_up = false);
+glm::mat4 aiMatrix4x4toglmMat4(aiMatrix4x4t<float>& ai_mat);
 glm::vec3 aiColor3DtoglmVec3(aiColor3D& ai_col);
-glm::vec3 aiVector3DtoglmVec3(aiVector3D& ai_vec, bool z_up = false);
+glm::vec3 aiVector3DtoglmVec3(aiVector3D& ai_vec);
 
 #endif

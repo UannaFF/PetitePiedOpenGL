@@ -5,8 +5,6 @@ layout (location = 1) in vec2 aTexCoords;
 layout (location = 2) in vec3 aNormal;
 layout (location = 3) in ivec4 BoneIDs;
 layout (location = 4) in vec4 Weights;
-//~ layout (location = 3) in int BoneIDs;
-//~ layout (location = 4) in float Weights;
 
 in vec3 LightDirection_cameraspace;
 
@@ -32,23 +30,13 @@ void main()
     
     FragPos = vec3(model * vec4(aPos, 1.0));
     //~ Normal = (BoneTransform * vec4(aNormal, 0.0)).xyz;  
-    //~ Normal = mat3(transpose(inverse(model))) * aNormal;
+    Normal = mat3(transpose(inverse(model))) * aNormal;
     
-    vec4 PosL      = BoneTransform * vec4(aPos, 1.0);
-    //~ vec4 PosL      = vec4(aPos, 1.0);
+    //~ vec4 PosL      = BoneTransform * vec4(aPos, 1.0);
+    //~ vec4 PosL      = BoneTransform * vec4(aPos, 1.0);
+    vec4 PosL      = vec4(aPos, 1.0);
     mat4 mvp = projection * view * model;
     
-    vec4 NormalL = BoneTransform * vec4(aNormal, 0.0);
-    Normal = (model * NormalL).xyz;
-    
     gl_Position = mvp * PosL;
-    //~ gl_Position = mvp * vec4(aPos, 1.0);
-    //~ gl_Position = mvp * (BoneTransform * vec4(aPos,1));
-    //~ gl_Position = projection * view * model * vec4(aPos,1);
-    
-    
-    //~ gl_Position = projection * view * model * vec4(aPos,1);
-    //~ gl_Position = projection * view * model *vec4(aPos,1);
-
     TexCoords = aTexCoords;    
 }

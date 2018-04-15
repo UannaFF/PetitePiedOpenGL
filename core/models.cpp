@@ -27,7 +27,7 @@ void Bone::dumpToBuffer(std::vector<int>& vertex_buff, std::vector<float>& weigh
         int offset = 0;
         for (; weight_buff[p.first * 4 + offset] != 0.0; offset++){}
         
-        if (offset >= 1)
+        if (offset >= 4)
             continue;
             
         assert(offset < 4);
