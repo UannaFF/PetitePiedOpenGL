@@ -23,11 +23,26 @@ Scene::Scene():
     _current_animation(),
     _skybox(nullptr)
 {
+    
+    //Set some lights in the scene
+    //defaultShader()->use();
+    _lights.reserve(2);
+    Light *l = new Light();
+    l->setPos(glm::vec3(4.0, 4.0, 4.0));
+    l->setColor(glm::vec3(1.0, 0.0, 0.0));
+    l->setColor(glm::vec3(1.0, 0.0, 0.0));
+    
+    /*Light *l2 = new Light();
+    l2->setPos(glm::vec3(4.0, 4.0, -4.0));
+    l2->setColor(glm::vec3(0.0, 0.0, 1.0));*/
+    _lights.push_back(l);
+    
 }
 
 void Scene::displayNodeTree(){ _main_node->dump(); }
 
 Scene* Scene::import(std::string path, Shader* shader){
+    
 
     Assimp::Importer importer;
 
@@ -112,6 +127,7 @@ Scene* Scene::import(std::string path, Shader* shader){
         v->setVertex(vertices);
 
         // Fill vertices texture coordinates
+        std::vector<GLfloat> uvsd;
         for (int channel = 0; channel < mesh->GetNumUVChannels(); channel++) {
             std::vector<GLfloat> uvs;
             uvs.reserve(mesh->mNumVertices);
@@ -122,6 +138,7 @@ Scene* Scene::import(std::string path, Shader* shader){
             }
             //~ v->addUV(uvs);
             v->setUV(uvs);
+            uvsd = uvs;
         }
 
         // Fill vertices normals
@@ -135,7 +152,11 @@ Scene* Scene::import(std::string path, Shader* shader){
                 normals.push_back(n.z);
             }
             v->setNormal(normals);
+            
+            //If scene has normals and uvs and vertices create tangent and bitangent
+            v->computeTangentBasis(vertices, uvsd, normals);
         }
+
 
 
         // Fill face indices
@@ -260,9 +281,9 @@ void Scene::render(){
         throw new SceneException("No camera selected for rendering.");
 
     glm::mat4 mat(1.f);
-    for(Light* light : _lights) {
+    /*for(Light* light : _lights) {
         light->draw(_active_camera->projectionMatrix(), _active_camera->viewMatrix());
-    }
+    }*/
 
     //Draw skybox
     if(_skybox) {

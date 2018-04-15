@@ -66,6 +66,9 @@ VertexArray::VertexArray():
     glGenBuffers(1, &_indice);
     glGenBuffers(1, &_bones_id);
     glGenBuffers(1, &_weight);
+    
+    glGenBuffers(1, &_tangent);
+    glGenBuffers(1, &_bitangent);
 }
 
 void VertexArray::setVertex(std::vector<GLfloat> vertex)
@@ -141,6 +144,8 @@ VertexArray::~VertexArray()
     glDeleteBuffers(1, &_indice);
     glDeleteBuffers(1, &_bones_id);
     glDeleteBuffers(1, &_weight);
+    glDeleteBuffers(1, &_tangent);
+    glDeleteBuffers(1, &_bitangent);
     glDeleteVertexArrays(1, &_vertex_array_id);
 }
 
@@ -191,6 +196,95 @@ void VertexArray::setBones(std::vector<Bone*> bones, Shader* s)
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);    
     glBindVertexArray(0);
+}
+
+void VertexArray::setTangents(std::vector<GLfloat> tangents) {
+    glBindVertexArray(_vertex_array_id);
+    DEBUG(Debug::Info, "VertexArray has %d tangents\n", tangents.size());
+    
+    glEnableVertexAttribArray(GL_LAYOUT_TANGENT);
+    glBindBuffer(GL_ARRAY_BUFFER, _tangent);
+    glBufferData(GL_ARRAY_BUFFER, tangents.size() * sizeof(GLfloat), &tangents[0], GL_STATIC_DRAW);
+    glVertexAttribPointer(GL_LAYOUT_TANGENT, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+}
+
+void VertexArray::setBiTangents(std::vector<GLfloat> bitangents) {
+    glBindVertexArray(_vertex_array_id);
+    DEBUG(Debug::Info, "VertexArray has %d bitangents\n", bitangents.size());
+    
+    glEnableVertexAttribArray(GL_LAYOUT_BITANGENT);
+    glBindBuffer(GL_ARRAY_BUFFER, _bitangent);
+    glBufferData(GL_ARRAY_BUFFER, bitangents.size() * sizeof(GLfloat), &bitangents[0], GL_STATIC_DRAW);
+    glVertexAttribPointer(GL_LAYOUT_BITANGENT, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+}
+
+void VertexArray::computeTangentBasis(std::vector<GLfloat>& v, std::vector<GLfloat>& u, std::vector<GLfloat>& n) {
+    
+    std::vector<GLfloat> tangents;
+    std::vector<GLfloat> bitangents;
+    
+    int j = 0;
+    
+    for ( int i=0; i<v.size() - 9; i+=9){
+
+        // Shortcuts for vertices
+        glm::vec3 v0 = glm::vec3(v[i+0], v[i+2], v[i+3]);
+        glm::vec3 v1 = glm::vec3(v[i+4], v[i+5], v[i+6]);
+        glm::vec3 v2 = glm::vec3(v[i+7], v[i+8], v[i+9]);
+
+        // Shortcuts for UVs
+        glm::vec2 uv0 = glm::vec2(u[j+0], u[j+1]);
+        glm::vec2 uv1 = glm::vec2(u[j+2], u[j+3]);
+        glm::vec2 uv2 = glm::vec2(u[j+4], u[j+5]);
+
+        // Edges of the triangle : position delta
+        glm::vec3 deltaPos1 = v1-v0;
+        glm::vec3 deltaPos2 = v2-v0;
+
+        // UV delta
+        glm::vec2 deltaUV1 = uv1-uv0;
+        glm::vec2 deltaUV2 = uv2-uv0;
+        
+        float r = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV1.y * deltaUV2.x);
+        glm::vec3 tangent = (deltaPos1 * deltaUV2.y   - deltaPos2 * deltaUV1.y)*r;
+        glm::vec3 bitangent = (deltaPos2 * deltaUV1.x   - deltaPos1 * deltaUV2.x)*r;
+        
+        
+        //repeat the information to be passed to every vertex
+        tangents.push_back(tangent.x);
+        tangents.push_back(tangent.y);
+        tangents.push_back(tangent.z);
+        
+        tangents.push_back(tangent.x);
+        tangents.push_back(tangent.y);
+        tangents.push_back(tangent.z);
+        
+        tangents.push_back(tangent.x);
+        tangents.push_back(tangent.y);
+        tangents.push_back(tangent.z);
+        
+        bitangents.push_back(bitangent.x);
+        bitangents.push_back(bitangent.y);
+        bitangents.push_back(bitangent.z);
+        
+        bitangents.push_back(bitangent.x);
+        bitangents.push_back(bitangent.y);
+        bitangents.push_back(bitangent.z);
+        
+        bitangents.push_back(bitangent.x);
+        bitangents.push_back(bitangent.y);
+        bitangents.push_back(bitangent.z);
+        
+        j+=6;
+        
+    }
+    
+    setTangents(tangents);
+    setBiTangents(bitangents);
 }
 
 void Mesh::draw(glm::mat4 projection, glm::mat4 view, glm::mat4 model){

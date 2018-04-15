@@ -59,6 +59,10 @@ class Scene {
         
         inline void setShader(Shader* s, ShaderType t = MaterialShader) {
             _shaders.insert(std::pair<ShaderType, Shader*>(t, s));
+            //bind the shader to the lights; for now its only one
+            for(Light *l : _lights) {
+                l->bind(s, glm::vec3(1.0,1.0, 1.0));
+            }
         }
         inline Shader* defaultShader(ShaderType t = MaterialShader) const {
             auto it = _shaders.find(t);
@@ -77,14 +81,6 @@ class Scene {
         
         void playAnimation( int anim);
 
-        void addLight(Light* l) {
-            defaultShader()->use();
-            _lights.reserve(1);
-            glm::vec3 diffuseColor = l->getColor()   * glm::vec3(0.5f); // decrease the influence
-            glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f); // low influence
-            l->bindAffectedObject(defaultShader(), ambientColor, diffuseColor, glm::vec3(1.0f, 1.0f,1.0f));
-            _lights.push_back(l);
-        }
         
         
     private:

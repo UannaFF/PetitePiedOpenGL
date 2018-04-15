@@ -66,6 +66,8 @@ class VertexArray {
         void setNormal(std::vector<GLfloat> normal);
         void setIndice(std::vector<unsigned short> normal);
         void setBones(std::vector<Bone*> b, Shader* s);
+        void setTangents(std::vector<GLfloat> tangents);
+        void setBiTangents(std::vector<GLfloat> bitangents);
         
         void computeTangentBasis(std::vector<GLfloat>& v, std::vector<GLfloat>& u, std::vector<GLfloat>& n);
         
@@ -100,6 +102,7 @@ class Mesh : public Drawable {
         inline const std::vector<Bone*>& bones() const { return _bones; }  
         
         static GLint VA_PRIMITIVE; //= GL.GL_TRIANGLES
+        
     private:    
         Material* _material;
         
