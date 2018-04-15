@@ -63,7 +63,12 @@ int main(int argc, char** argv){
 
             //~ std::vector<Mesh*> models = Mesh::fromOBJ("Environement.obj");
             //~ Scene* scene = Scene::import(scene_file, Shader::fromFiles( "shaders/vertexshader_material.glsl", "shaders/fragment_material.glsl"));
-            Scene* scene = Scene::import(scene_file, Shader::fromFiles( "shaders/vertexshader_material.glsl", "shaders/fragment_material.glsl"));
+            Shader* shader = Shader::fromFiles( "shaders/vertexshader_material.glsl", "shaders/fragment_material.glsl");
+            //~ Scene* scene = Scene::import("res/Dinosaure/Environement/Sol+Eau/volcano_lowpoly.dae", shader);
+            
+            Scene* scene = Scene::import("res/Dinosaure/Environement/Végétation/végétation.dae", shader);
+            //~ scene->rootNode()->addChild("vegetation", veg->rootNode());
+            
             //~ Scene* scene = new Scene;
             scene->setShader(Shader::fromFiles( "shaders/vertexshader_marker.glsl", "shaders/fragment_marker.glsl"), Scene::BonesDebugShader);
             //~ scene->setShader(Shader::fromFiles( "shaders/vertexshader_material.glsl", "shaders/fragment_material.glsl"));

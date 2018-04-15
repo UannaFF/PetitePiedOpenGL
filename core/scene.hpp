@@ -116,7 +116,7 @@ class Node: public Drawable {
         
         inline std::string name() const { return _name; }
         
-        inline void setTransformation(glm::mat4 t) { _transformation = t; }
+        inline void setTransformation(glm::mat4 t) { /*_transformation = t;*/ }
         inline glm::mat4 transformation() { return _transformation; }
         
         inline glm::mat4 world_transformation() { return _world_transformation; }

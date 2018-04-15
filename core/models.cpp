@@ -193,7 +193,7 @@ void Mesh::draw(glm::mat4 projection, glm::mat4 view, glm::mat4 model){
     // setup camera geometry parameters
     _shader->setMat4("projection", projection);
     _shader->setMat4("view", view);
-    _shader->setMat4("model", model);
+    _shader->setMat4("model", model, GL_TRUE);
     
     // bone world transform matrices need to be passed for skinning
     for (Bone* b: _bones){
@@ -205,7 +205,7 @@ void Mesh::draw(glm::mat4 projection, glm::mat4 view, glm::mat4 model){
         _material->apply(_shader);
         
     // draw mesh vertex array
-    _vao->draw(GL_LINE_STRIP);
+    _vao->draw(VA_PRIMITIVE);
 
     // leave with clean OpenGL state, to make it easier to detect problems
     _shader->deuse();

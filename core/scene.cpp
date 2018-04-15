@@ -108,8 +108,8 @@ Scene* Scene::import(std::string path, Shader* shader){
         for(unsigned int i=0; i<mesh->mNumVertices; i++){
             aiVector3D pos = mesh->mVertices[i];
             vertices.push_back(pos.x);
+            vertices.push_back(-pos.z);
             vertices.push_back(pos.y);
-            vertices.push_back(pos.z);
         }
         v->setVertex(vertices);
 
@@ -133,8 +133,8 @@ Scene* Scene::import(std::string path, Shader* shader){
             for(unsigned int i=0; i<mesh->mNumVertices; i++){
                 aiVector3D n = mesh->mNormals[i];
                 normals.push_back(n.x);
+                normals.push_back(-n.z);
                 normals.push_back(n.y);
-                normals.push_back(n.z);
             }
             v->setNormal(normals);
         }
@@ -414,18 +414,18 @@ glm::vec3 aiVector3DtoglmVec3(aiVector3D& ai_col){
 }
 
 void Node::draw(glm::mat4 projection, glm::mat4 view, glm::mat4 model){
-    _world_transformation = _transformation * model;
+    _world_transformation = model * _transformation;
     
-    std::cout << _name << _transformation;
+    //~ std::cout << _name << _transformation;
     
-    if (_scene->defaultShader(Scene::BonesDebugShader)){
-        VertexArray* va = new VertexArray;
-        glm::vec4 p = (_world_transformation * glm::vec4(0.f, 2.f, 0.f, 0));
-        va->setVertex({0., 0., 0., p.x, p.y, p.z});
-        Mesh* m = new Mesh(_scene->defaultShader(Scene::BonesDebugShader), va);
-        m->draw(projection, view,model);
-        delete m;
-    }
+    //~ if (_scene->defaultShader(Scene::BonesDebugShader)){
+        //~ VertexArray* va = new VertexArray;
+        //~ glm::vec4 p = (_world_transformation * glm::vec4(0.f, 2.f, 0.f, 0));
+        //~ va->setVertex({0., 0., 0., p.x, p.y, p.z});
+        //~ Mesh* m = new Mesh(_scene->defaultShader(Scene::BonesDebugShader), va);
+        //~ m->draw(projection, view, model);
+        //~ delete m;
+    //~ }
         
     for (auto child: _children)
         child.second->draw(projection, view, _world_transformation);

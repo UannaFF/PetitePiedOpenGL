@@ -45,7 +45,7 @@ void ControlableCamera::updateFromMouse(){
 
 	// Compute new orientation
 	_horizontalAngle += _mouseSpeed * float(parent()->width()/2 - xpos ); // Theta
-	_verticalAngle   += _mouseSpeed * float(parent()->height()/2 - ypos ); // Phy
+	_verticalAngle   -= _mouseSpeed * float(parent()->height()/2 - ypos ); // Phy
 	
     // Reset cam
 	if (glfwGetKey( parent()->internal(), GLFW_KEY_P ) == GLFW_PRESS){
@@ -56,16 +56,16 @@ void ControlableCamera::updateFromMouse(){
 
 	// Direction : Spherical coordinates to Cartesian coordinates conversion
 	glm::vec3 direction(
-		cos(_verticalAngle) * sin(_horizontalAngle), 
-		sin(_verticalAngle),
-		cos(_verticalAngle) * cos(_horizontalAngle)
+		sin(_verticalAngle) * cos(_horizontalAngle), 
+		sin(_verticalAngle) * sin(_horizontalAngle),
+		cos(_verticalAngle)
 	);
 	
 	// Right vector
 	glm::vec3 right = glm::vec3(
+		cos(_horizontalAngle - 3.14f/2.0f),
 		sin(_horizontalAngle - 3.14f/2.0f), 
-		0,
-		cos(_horizontalAngle - 3.14f/2.0f)
+		0
 	);
 	
 	// Up vector
