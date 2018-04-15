@@ -23,22 +23,32 @@ struct Light {
 in vec3 FragPos;  
 in vec3 Normal;
 in vec3 PosEyeSpace;
+in vec3 lightDirection_tangentspace;
+in vec3 eyeDirection_tangentspace;
+
   
 uniform vec3 viewPos;
 uniform Material material;
 uniform Light light;
-uniform Light light2;
+uniform float type;
 
+vec4 basicLight() {
+    
+    vec3 l = normalize(light.position.xyz - PosEyeSpace); //light vector
+    float cosTheta = clamp( dot( Normal,l ), 0,1 );
+    return vec4(material.diffuse * light.diffuse * cosTheta / (1*1), 1.0);
+}
 
 //Phong shading for only one light source
 vec4 phongShading(vec4 texColor) {
-    
-    vec4 res = vec4(1.0);
     
     vec3 Normal = normalize(Normal);
     vec3 L = normalize(light.position.xyz - PosEyeSpace); //light vector 
     vec3 E = normalize(-PosEyeSpace); // we are in Eye Coordinates, so EyePos is (0,0,0)  
     vec3 R = normalize(-reflect(L,Normal));
+    
+    float d = dot(L, Normal);
+    bool facing = d > 0.0;
     
     //Ambient component
     vec3 ambient = light.ambient * material.ambient;
@@ -47,7 +57,36 @@ vec4 phongShading(vec4 texColor) {
     vec3 diffuse = light.diffuse * material.diffuse * max(dot(L, Normal), 0.0);
     
     //Specular component
-    vec3 specular = light.specular * material.specular * pow(max(dot(R, E), 0.0), 0.3*material.shininess);
+    vec3 specular = (facing ? light.specular * material.specular * pow(max(dot(R, E), 0.0), 0.3*material.shininess) : vec3(0.0));
+    
+    
+    //return vec4(ambient + diffuse, 1) * texColor + vec4(specular, 1);
+    return vec4(texColor.xyz + ambient + diffuse + specular, 1.0);
+}
+
+vec4 phongShadingBumpMapping(vec4 texColor, vec3 lightDir, vec3 eyeDir, vec3 normal, vec3 normalvec) {
+    
+    lightDir = normalize(lightDir);
+    eyeDir = normalize(eyeDir);
+    
+    //Normal = flag ? normalize(n.xyz+normal1) : normal1;
+    normal = normalize(normal+normalvec);
+    vec3 R = normalize(-reflect(lightDir,normal));
+    
+    //return vec4(normal_tangentspace, 1.0);
+    //vec3 R = normalize(-reflect(lightDir, normal));
+    float d = dot(lightDir, normal);
+    bool facing = d > 0.0;
+    
+    //Ambient component
+    vec3 ambient = light.ambient * material.ambient;
+    
+    //Diffuse component
+    vec3 diffuse = light.diffuse * material.diffuse * max(d, 0.0);
+    
+    //Specular component
+    vec3 specular = (facing ? light.specular * material.specular * pow(max(dot(R, eyeDir), 0.0), material.shininess) : vec3(0.0));
+    
     
     //return vec4(ambient + diffuse, 1) * texColor + vec4(specular, 1);
     return vec4(texColor.xyz + ambient + diffuse + specular, 1.0);
@@ -71,7 +110,18 @@ void main()
     ////////////////////////////////
     
     ///////////////////////////////
-    FragColor = phongShading(texture(texture_diffuse1, TexCoords));
+    //FragColor = phongShading(texture(texture_diffuse1, TexCoords));
+    
+    //Without bumpmapping
+    vec3 Normal = normalize(Normal);
+    vec3 L = normalize(light.position.xyz - PosEyeSpace); //light vector 
+    vec3 E = normalize(-PosEyeSpace); // we are in Eye Coordinates, so EyePos is (0,0,0)
+    
+    //Bump mapping
+    vec3 normal_tangentspace = normalize((texture( texture_height1, TexCoords ).rgb-0.5) * 2.0);
+    //FragColor = phongShadingBumpMapping(texture(texture_diffuse1, TexCoords), L, E, normal_tangentspace);
+    if(type == 1.0) FragColor = phongShading(texture(texture_diffuse1, TexCoords));
+    else FragColor = phongShadingBumpMapping(texture(texture_diffuse1, TexCoords), lightDirection_tangentspace, eyeDirection_tangentspace, normal_tangentspace, Normal);
     //////////////////////////////
     
     // ambient

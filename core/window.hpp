@@ -23,6 +23,10 @@ class Window {
             return glfwGetKey(_gl_window, GLFW_KEY_ESCAPE );
         }
         
+        inline int getKey(int key) const {
+            return glfwGetKey(_gl_window, key );
+        }
+        
         inline void swap() {
             glfwSwapBuffers(_gl_window);
         }

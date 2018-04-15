@@ -208,9 +208,9 @@ void VertexArray::setTangents(std::vector<GLfloat> tangents) {
     glVertexAttribPointer(GL_LAYOUT_TANGENT, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
-}
+}   
 
-void VertexArray::setBiTangents(std::vector<GLfloat> bitangents) {
+void VertexArray::setBitangents(std::vector<GLfloat> bitangents) {
     glBindVertexArray(_vertex_array_id);
     DEBUG(Debug::Info, "VertexArray has %d bitangents\n", bitangents.size());
     
@@ -278,13 +278,15 @@ void VertexArray::computeTangentBasis(std::vector<GLfloat>& v, std::vector<GLflo
         bitangents.push_back(bitangent.x);
         bitangents.push_back(bitangent.y);
         bitangents.push_back(bitangent.z);
+    
+        //printf("Some tangents: %f, %f, %f", tangent.x, tangent.y, tangent.z);
         
         j+=6;
         
     }
     
     setTangents(tangents);
-    setBiTangents(bitangents);
+    //setBiTangents(bitangents);
 }
 
 void Mesh::draw(glm::mat4 projection, glm::mat4 view, glm::mat4 model){

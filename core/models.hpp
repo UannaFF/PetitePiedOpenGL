@@ -67,7 +67,7 @@ class VertexArray {
         void setIndice(std::vector<unsigned short> normal);
         void setBones(std::vector<Bone*> b, Shader* s);
         void setTangents(std::vector<GLfloat> tangents);
-        void setBiTangents(std::vector<GLfloat> bitangents);
+        void setBitangents(std::vector<GLfloat> bitangents);
         
         void computeTangentBasis(std::vector<GLfloat>& v, std::vector<GLfloat>& u, std::vector<GLfloat>& n);
         

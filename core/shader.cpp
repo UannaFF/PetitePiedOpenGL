@@ -141,6 +141,7 @@ void Shader::use() {
     if (SHADER_IN_USE != _programe_id){
         SHADER_IN_USE = _programe_id;
         glUseProgram(_programe_id); 
+        //Debug::CheckOpenGLError("error using");
     }
 }
 void Shader::deuse() { 
@@ -159,7 +160,7 @@ void Shader::setVec3(const std::string &name, const glm::vec3 &value) const {
     glUniform3fv(glGetUniformLocation(_programe_id, name.c_str()), 1, &value[0]); 
 }        
 void Shader::setVec3(const std::string &name, float x, float y, float z) const {
-	Debug::CheckOpenGLError("Set vec3 2");
+	//Debug::CheckOpenGLError("Set vec3 2");
     if (SHADER_IN_USE != _programe_id) 
         throw new ShaderNotUseException(this);
     if (glGetUniformLocation(_programe_id, name.c_str()) < 0) 

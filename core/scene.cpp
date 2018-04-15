@@ -26,9 +26,9 @@ Scene::Scene():
     
     //Set some lights in the scene
     //defaultShader()->use();
-    _lights.reserve(2);
+    _lights.reserve(1);
     Light *l = new Light();
-    l->setPos(glm::vec3(4.0, 4.0, 4.0));
+    l->setPos(glm::vec3(4.0, 4.0, 1.0));
     l->setColor(glm::vec3(1.0, 0.0, 0.0));
     l->setColor(glm::vec3(1.0, 0.0, 0.0));
     
@@ -46,7 +46,7 @@ Scene* Scene::import(std::string path, Shader* shader){
 
     Assimp::Importer importer;
 
-    const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs);
+    const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs |  aiProcess_CalcTangentSpace);
     if( !scene) {
         DEBUG(Level::ERROR, "[Assimp] Errror while reading: %s\n", importer.GetErrorString());
         return nullptr;
@@ -55,7 +55,10 @@ Scene* Scene::import(std::string path, Shader* shader){
     Scene* s = new Scene;
     s->setShader(shader);
     shader->name("default_material");
-    //~ s->defaultShader()->use();
+    shader->use();
+    shader->setFloat("type", 1.0);
+    shader->setFloat("type", 1.0);
+     shader->deuse();
     
     std::multimap<std::string, Bone*> bones_to_bind;
     
@@ -154,10 +157,29 @@ Scene* Scene::import(std::string path, Shader* shader){
             v->setNormal(normals);
             
             //If scene has normals and uvs and vertices create tangent and bitangent
-            v->computeTangentBasis(vertices, uvsd, normals);
+            //v->computeTangentBasis(vertices, uvsd, normals);
         }
-
-
+        
+        if(mesh->HasTangentsAndBitangents()) {
+            std::vector<GLfloat> tangents;
+            std::vector<GLfloat> bitangents;
+            tangents.reserve(mesh->mNumVertices);
+            bitangents.reserve(mesh->mNumVertices);
+            for(unsigned int i=0; i<mesh->mNumVertices; i++){
+                aiVector3D t = mesh->mTangents[i];
+                aiVector3D b = mesh->mBitangents[i];
+                tangents.push_back(t.x);
+                tangents.push_back(t.y);
+                tangents.push_back(t.z);
+                
+                bitangents.push_back(b.x);
+                bitangents.push_back(b.y);
+                bitangents.push_back(b.z);
+            }
+            
+            v->setTangents(tangents);
+            v->setBitangents(bitangents);
+        }
 
         // Fill face indices
         if (mesh->HasFaces()){
@@ -280,10 +302,15 @@ void Scene::render(){
     if (!_active_camera)
         throw new SceneException("No camera selected for rendering.");
 
-    glm::mat4 mat(1.f);
-    /*for(Light* light : _lights) {
+    //glm::mat4 mat(1.f);
+    for(Light* light : _lights) {
         light->draw(_active_camera->projectionMatrix(), _active_camera->viewMatrix());
-    }*/
+    }
+    
+    //change light position
+    //printf("time: %d", (int)glfwGetTime());
+    _lights[0]->setPos(glm::vec3((int)glfwGetTime() % 10, 4, 4));
+    _lights[0]->bind(defaultShader(), glm::vec3(1.0, 1.0, 1.0)); 
 
     //Draw skybox
     if(_skybox) {

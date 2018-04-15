@@ -88,7 +88,7 @@ void Material::apply(Shader* shader){
 
                  
     
-        DEBUG(Debug::info, "Applying material '%s'(%d) and idtex %d\n", fragment_name.c_str(), shader->getUniformLocation(fragment_name.c_str()), t->texId());                                // now set the sampler to the correct texture unit
+        //DEBUG(Debug::info, "Applying material '%s'(%d) and idtex %d\n", fragment_name.c_str(), shader->getUniformLocation(fragment_name.c_str()), t->texId());                                // now set the sampler to the correct texture unit
         //~ glUniform1i(shader->getUniformLocation(fragment_name.c_str()), i);
         // and finally bind the texture
         //~ glBindTexture(GL_TEXTURE_2D, t->id());

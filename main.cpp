@@ -63,6 +63,7 @@ int main(int argc, char** argv){
             Scene* scene = Scene::import(scene_file, Shader::fromFiles( "shaders/vertexshader_material.glsl", "shaders/fragment_material.glsl"));
             scene->displayNodeTree();
             
+            
             //~ Camera mainCamera;
             scene->setCamera(&mainCamera);
             
@@ -130,7 +131,9 @@ int main(int argc, char** argv){
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
                 
-                scene->defaultShader()->use();  
+                scene->defaultShader()->use();
+                if(window.getKey( GLFW_KEY_K ) == GLFW_PRESS ) scene->defaultShader()->setFloat("type", 1.0);
+                else if(window.getKey( GLFW_KEY_J ) == GLFW_PRESS ) scene->defaultShader()->setFloat("type", 2.0);
                 /*glm::vec3 lightPos = glm::vec3(4,4,4);      
                 scene->defaultShader()->setVec3("light.position", lightPos);
                     
