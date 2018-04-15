@@ -73,7 +73,7 @@ int main(int argc, char** argv){
             //~ Shader* shader = Shader::fromFiles( "shaders/StandardShading.vertexshader", "shaders/StandardShading.fragmentshader" );
             //~ scene->setShader(shader);
 
-            scene->setSkybox("mountain-skyboxes/Nalovardo", "shaders/Skyboxshadingvertex.glsl","shaders/Skyboxshadingfragment.glsl" );
+            scene->setSkybox("textures/Nalovardo", "shaders/Skyboxshadingvertex.glsl","shaders/Skyboxshadingfragment.glsl" );
  
             //~ scene->defaultShader()->use();
             

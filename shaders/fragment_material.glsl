@@ -85,15 +85,12 @@ vec4 phongShadingBumpMapping(vec4 texColor, vec3 lightDir, vec3 eyeDir, vec3 nor
     vec3 diffuse = light.diffuse * material.diffuse * max(d, 0.0);
     
     //Specular component
-    vec3 specular = (facing ? light.specular * material.specular * pow(max(dot(R, eyeDir), 0.0), material.shininess) : vec3(0.0));
-    
+    //vec3 specular = (facing ? light.specular * material.specular * pow(max(dot(R, eyeDir), 0.0), material.shininess) : vec3(0.0));
+    vec4 specmap = texture(texture_specular1, TexCoords);
+    vec3 specular = clamp(light.specular * material.specular * pow(max(dot(R, eyeDir), 0.0), material.shininess) * specmap.xyz, 0, 1);
     
     //return vec4(ambient + diffuse, 1) * texColor + vec4(specular, 1);
     return vec4(texColor.xyz + ambient + diffuse + specular, 1.0);
-}
-
-vec4 bumpMapping() {
-    return vec4(1.0);
 }
 
 void main()
