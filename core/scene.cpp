@@ -57,7 +57,7 @@ Scene* Scene::import(std::string path, Shader* shader){
     shader->use();
     shader->setFloat("type", 1.0);
     shader->setFloat("type", 1.0);
-     shader->deuse();
+    shader->deuse();
     
     std::multimap<std::string, Bone*> bones_to_bind;
     
