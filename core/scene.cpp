@@ -25,7 +25,6 @@ Scene::Scene():
 {
     
     //Set some lights in the scene
-    //defaultShader()->use();
     _lights.reserve(1);
     Light *l = new Light();
     l->setPos(glm::vec3(4.0, 4.0, 1.0));
@@ -301,7 +300,7 @@ void Scene::render(){
         
     if (!_active_camera)
         throw new SceneException("No camera selected for rendering.");
-
+ 
     //glm::mat4 mat(1.f);
     for(Light* light : _lights) {
         light->draw(_active_camera->projectionMatrix(), _active_camera->viewMatrix());
@@ -309,7 +308,7 @@ void Scene::render(){
     
     //change light position
     //printf("time: %d", (int)glfwGetTime());
-    _lights[0]->setPos(glm::vec3((int)glfwGetTime() % 10, 4, 4));
+    _lights[0]->setPos(glm::vec3(fmod(glfwGetTime(),10), 4, 4));
     _lights[0]->bind(defaultShader(), glm::vec3(1.0, 1.0, 1.0)); 
 
     //Draw skybox

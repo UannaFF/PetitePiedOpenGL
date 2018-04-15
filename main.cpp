@@ -74,7 +74,7 @@ int main(int argc, char** argv){
             //~ scene->setShader(shader);
 
             scene->setSkybox("mountain-skyboxes/Nalovardo", "shaders/Skyboxshadingvertex.glsl","shaders/Skyboxshadingfragment.glsl" );
-
+ 
             //~ scene->defaultShader()->use();
             
             //~ mainCamera.bindView(scene->defaultShader()->getUniformLocation("view"));
