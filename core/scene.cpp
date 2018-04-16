@@ -32,8 +32,8 @@ Scene* Scene::import(std::string path, Shader* shader){
     
     Assimp::Importer importer;
 
-    //~ const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_LimitBoneWeights);
-    const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_JoinIdenticalVertices);
+    //~ const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_LimitBoneWeights);
+    const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_FlipUVs);
     if( !scene) {
         DEBUG(Level::ERROR, "[Assimp] Errror while reading: %s\n", importer.GetErrorString());
         return nullptr;

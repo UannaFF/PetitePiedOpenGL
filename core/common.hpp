@@ -10,10 +10,8 @@
 #include <GL/glew.h>
 
 #define DEBUG(priority,format,args...)                                 \
-                 fprintf(stderr, format, ## args);                     \
-
-#define OBSELETE printf("OBESELETE\n");                                \
-                 assert(false);                                        \
+                 if (priority > Info)                                  \
+                    fprintf(stderr, format, ## args);                  \
 
 class OpenGLException: public std::exception {
     public:

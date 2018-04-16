@@ -38,8 +38,9 @@ std::vector<std::string> TextureLoader::TEXTURED_NODE(
 );
 std::map<std::string, Material*> TextureLoader::MATERIALS({
     {"rock", new Material(glm::vec3(1.0), glm::vec3(0.0), glm::vec3(1.0), 0.5)},
-    {"tree", new Material(glm::vec3(0.0, 0.4, 0.0), glm::vec3(0.0), glm::vec3(0.0, 0.6, 0.0), 0.1)},
-    {"water", new Material(glm::vec3(0.0, 0.0, 1.0), glm::vec3(0.0,0.0, 1.0), glm::vec3(1.0), 0.5)}
+    {"tree", new Material(glm::vec3(0.0, 0.5, 0.0), glm::vec3(0.0), glm::vec3(0.0, 0.6, 0.0), 0.1)},
+    {"water", new Material(glm::vec3(0.0, 0.0, 1.0), glm::vec3(0.0,0.0, 1.0), glm::vec3(1.0), 0.5)},
+    {"plane", new Material(glm::vec3(0.2, 0.04, 0.0), glm::vec3(0.1, 0.05, 0.01), glm::vec3(1.0), 0.5)}
 });
 
 TextureLoader::TextureLoader()
@@ -54,21 +55,21 @@ TextureLoader::TextureLoader()
             m = new Material(glm::vec3(1.0), glm::vec3(1.0), glm::vec3(1.0), 0.1);
             
             //Load diffuse texture
-            Texture* texture = Texture::fromFile((texname+"_base.png"), "res/textures", Texture::Diffuse);
+            Texture* texture = Texture::fromFile((texname+"_base.png"), "textures", Texture::Diffuse);
             if(texture)
                 texs.push_back(texture);
             else
                 DEBUG(Debug::Error, "Cannot load texture %s\n", (texname+"_base.png").c_str());
             
             //Load Normals texture
-            texture = Texture::fromFile((texname+"_normal.png"), "res/textures", Texture::Normal);
+            texture = Texture::fromFile((texname+"_normal.png"), "textures", Texture::Normal);
             if(texture)
                 texs.push_back(texture);
             else
                 DEBUG(Debug::Error, "Cannot load texture %s\n", (texname+"_normal.png").c_str());
             
             //Load Normals texture
-            texture = Texture::fromFile((texname+"_height.png"), "res/textures", Texture::Height);
+            texture = Texture::fromFile((texname+"_height.png"), "textures", Texture::Height);
             if (texture)
                 texs.push_back(texture);
             else

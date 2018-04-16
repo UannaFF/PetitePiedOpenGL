@@ -108,7 +108,7 @@ Texture* Texture::getCubemapTexture(std::string directory, bool gamma) {
 	unsigned char*data;
 
 
-	std::string final_path = "./res/"+directory+"/";
+	std::string final_path = "textures/"+directory+"/";
     
     t->activate();
 	t->bind();

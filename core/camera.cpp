@@ -22,7 +22,7 @@ void Camera::setProjectionMatrix(glm::mat4 p){
 ControlableCamera::ControlableCamera(Window*p):
     Camera::Camera(p),
     _position(7.0, 4.6, 2.29), _horizontalAngle(glm::radians(214.)), _verticalAngle(glm::radians(-260.)), _initialFoV(45.0f),
-    _speed(3.0f), _mouseSpeed(0.005f){
+    _speed(1.0f), _mouseSpeed(0.005f){
 }
 
 void ControlableCamera::updateFromMouse(){
@@ -74,7 +74,7 @@ void ControlableCamera::updateFromMouse(){
     float speed = _speed;
 	// Speed up
 	if (glfwGetKey( parent()->internal(), GLFW_KEY_LEFT_SHIFT ) == GLFW_PRESS || glfwGetKey( parent()->internal(), GLFW_KEY_RIGHT_SHIFT ) == GLFW_PRESS)
-        speed *= 10;
+        speed *= 15;
 
 	// Move forward
 	if (glfwGetKey( parent()->internal(), GLFW_KEY_UP ) == GLFW_PRESS){

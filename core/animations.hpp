@@ -32,8 +32,18 @@ class PositionKey : public Key {
     public:
         PositionKey(glm::vec3 value): _value(value)
         {}
-        inline glm::mat4 value() const { return glm::translate(glm::mat4(0), _value); }
+        inline glm::mat4 value() const { return glm::translate(glm::mat4(1.f), _value); }
         inline glm::vec3 position() const { return _value; }
+    private:
+        glm::vec3 _value;
+};
+
+class ScaleKey : public Key {
+    public:
+        ScaleKey(glm::vec3 value): _value(value)
+        {}
+        inline glm::mat4 value() const { return glm::scale(glm::mat4(1.f), _value); }
+        inline glm::vec3 dimenssion() const { return _value; }
     private:
         glm::vec3 _value;
 };
@@ -49,7 +59,7 @@ class RotationKey : public Key {
 
 class Channel {
     public:
-        Channel(Node* n, std::vector<Bone*> b = std::vector<Bone*>()): _node(n), _bones(b), _positions_keys(), _rotations_keys() {}
+        Channel(Node* n, std::vector<Bone*> b = std::vector<Bone*>()): _node(n), _bones(b), _positions_keys(), _rotations_keys(), _scales_keys() {}
         
         void addKey(float t, PositionKey* k) {
             _positions_keys.insert(std::make_pair(t, k));                
@@ -57,16 +67,21 @@ class Channel {
         void addKey(float t, RotationKey* k) {
             _rotations_keys.insert(std::make_pair(t, k));                
         }
+        void addKey(float t, ScaleKey* k) {
+            _scales_keys.insert(std::make_pair(t, k));                
+        }
         
         void applyBones(float AnimationTime, glm::mat4& currentTransformation, const glm::mat4& GlobalInverseTransform);
         
         std::pair<std::pair<float, PositionKey*>, std::pair<float, PositionKey*>> getPosKeys(float AnimationTime) const;
         std::pair<std::pair<float, RotationKey*>, std::pair<float, RotationKey*>> getRotKeys(float AnimationTime) const;
+        std::pair<std::pair<float, ScaleKey*>, std::pair<float, ScaleKey*>> getScaKeys(float AnimationTime) const;
     
         inline Node* node() const { return _node; }
     private:
         std::map<float, PositionKey*> _positions_keys;
         std::map<float, RotationKey*> _rotations_keys;
+        std::map<float, ScaleKey*> _scales_keys;
         std::vector<Bone*> _bones;
         Node* _node;
 };

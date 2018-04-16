@@ -23,6 +23,16 @@ void Channel::applyBones(float AnimationTime, glm::mat4& currentTransformation, 
         pos += Factor * (poskey.second.second->position() - poskey.first.second->position());
     }
     
+    std::pair<std::pair<float, ScaleKey*>, std::pair<float, ScaleKey*>> scakey = getScaKeys(AnimationTime);
+    
+    glm::vec3 sca(1.f);
+    if (scakey.first.second != nullptr && scakey.second.second != nullptr){
+        DeltaTime = scakey.second.first - scakey.first.first;
+        Factor = (AnimationTime - scakey.first.first) / DeltaTime;
+        sca = glm::vec3(scakey.first.second->dimenssion());
+        sca += Factor * (scakey.second.second->dimenssion() - scakey.first.second->dimenssion());
+    }
+    
     std::pair<std::pair<float, RotationKey*>, std::pair<float, RotationKey*>> rotkey = getRotKeys(AnimationTime);
     glm::quat rot(0.f, 0.f, 0.f, 0.f);
     if (rotkey.first.second != nullptr && rotkey.second.second != nullptr){
@@ -38,7 +48,7 @@ void Channel::applyBones(float AnimationTime, glm::mat4& currentTransformation, 
     translate[1][3] = pos.y;
     translate[2][3] = pos.z;
         
-    _node->setTransformation(glm::inverse(trans) * (glm::toMat4(rot) * translate) * trans);
+    _node->setTransformation(glm::inverse(trans) * (glm::toMat4(rot) * glm::scale(translate, sca)) * trans);
 
     for (Bone*b: _bones){
         b->node()->setTransformation(currentTransformation);
@@ -62,6 +72,19 @@ std::pair<std::pair<float, RotationKey*>, std::pair<float, RotationKey*>> Channe
         auto next = _rotations_keys.begin();
         auto prev = next++;
         for (; next != _rotations_keys.end();){
+            if (next->first > AnimationTime)
+                return std::make_pair(*prev, *next);
+            else
+                prev = next++;
+        }
+    }
+    return std::make_pair(std::make_pair(0, nullptr), std::make_pair(0, nullptr));
+}
+std::pair<std::pair<float, ScaleKey*>, std::pair<float, ScaleKey*>> Channel::getScaKeys(float AnimationTime) const {
+    if (!_scales_keys.empty()){
+        auto next = _scales_keys.begin();
+        auto prev = next++;
+        for (; next != _scales_keys.end();){
             if (next->first > AnimationTime)
                 return std::make_pair(*prev, *next);
             else

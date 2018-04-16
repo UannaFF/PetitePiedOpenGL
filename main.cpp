@@ -102,13 +102,14 @@ int main(int argc, char** argv){
             
             // Skybox
             if (!disable_skybox)
-                scene->setSkybox("skybox_sky", "shaders/vertexshader_skybox.glsl","shaders/fragment_skybox.glsl" );
+                scene->setSkybox("skyboxes/basic_sky", "shaders/vertexshader_skybox.glsl","shaders/fragment_skybox.glsl" );
             
 
             window.hideCursor();
             window.centerCursor();
             
             scene->playAnimation(0);
+            scene->playAnimation(1);
             
             if (display_tree)
                 scene->displayNodeTree();  
@@ -153,10 +154,10 @@ int main(int argc, char** argv){
             //~ delete shader;
             //~ delete texture;
             
-    //~ } catch (OpenGLException* e){
-            //~ std::cout << "OpenGL exception: " << e->what() << std::endl;
-            //~ glfwTerminate();
-            //~ return EXIT_FAILURE;
+    } catch (OpenGLException* e){
+            std::cout << "OpenGL exception: " << e->what() << std::endl;
+            glfwTerminate();
+            return EXIT_FAILURE;
     
     } catch (SceneException* e){
             std::cout << "Scene exception: " << e->what() << std::endl;
