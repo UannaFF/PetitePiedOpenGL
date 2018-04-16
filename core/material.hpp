@@ -13,25 +13,15 @@
 
 class Shader;
 
-typedef struct tex_bind_struct {    
-    unsigned int diffuse;
-    unsigned int specular;
-    unsigned int normal;
-    unsigned int height;
-} tex_bind_t;
-
 class Material {
     public:
-        enum ShadingMode {None, Phong, Fresnel};
     
         Material(glm::vec3 ambient, glm::vec3 diffuse, glm::vec3 specular, float shininess);
         
         inline void setTextures(std::vector<Texture*>& t) { _textures = t; }
         inline std::vector<Texture*> getTextures() { return _textures; }
-        
-        bool setShadingMode(aiShadingMode m);
-        
-        void apply(Shader* usedShader);
+
+        void apply(Shader* usedShader, bool safemode = false);
         
         inline void setAmbient(glm::vec3 a) { _ambient = a;};
         inline void setDiffuse(glm::vec3 d) { _diffuse = d;};
@@ -40,8 +30,6 @@ class Material {
         static std::vector<Texture*> loadMaterialTextures(const aiMaterial *mat, aiTextureType type, Texture::Type text_type, std::string parent_dir);
     private:
         std::vector<Texture*> _textures;
-        
-        ShadingMode _shading_mode;
     
         glm::vec3 _ambient;
         glm::vec3 _diffuse;

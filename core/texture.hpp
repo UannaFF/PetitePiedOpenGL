@@ -52,11 +52,10 @@ class Texture {
         //~ static Texture* fromBitmap(std::string);
         //~ static Texture* fromDDS(std::string);
         void apply(GLuint framgment_id);
-        void apply(GLuint framgment_id, GLuint framgment_conf_id);
         void deapply(GLuint framgment_id);
         
         static Texture* getCubemapTexture(std::string directory, bool gamma);
-        static Texture* fromFile(std::string filename, std::string directory = "", bool gamma = false);
+        static Texture* fromFile(std::string filename, std::string directory = "", Type t = Type::Diffuse);
 
         static unsigned char* getDataFromFile(std::string path, GLenum*format, int *width, int *height);
 

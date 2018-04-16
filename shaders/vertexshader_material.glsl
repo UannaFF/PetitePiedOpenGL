@@ -40,6 +40,7 @@ struct Light {
     vec3 ambient;
     vec3 diffuse;
     vec3 specular;
+    int type;
 };
 
 uniform Light light;

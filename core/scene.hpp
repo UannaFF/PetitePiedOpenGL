@@ -75,7 +75,7 @@ class Scene {
         void addLight(Light*l) {_light = l;};
         Light*light(){return _light;};
         
-        static Scene* import(std::string path, Shader* s, Light*l);
+        static Scene* import(std::string path, Shader* s);
         
         void playAnimation( int anim);
 

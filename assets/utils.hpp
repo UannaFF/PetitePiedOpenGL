@@ -24,12 +24,11 @@ class ReferenceMarker: public Mesh {
 
 class TextureLoader {
     private:
-        std::vector<std::string> _texnames; 
-        std::map<std::string, Material*> _materials;
-        Material* def;
+        static std::vector<std::string> TEXTURED_NODE; 
+        static std::vector<std::string> BOAT_ELEMENT; 
+        static std::map<std::string, Material*> MATERIALS;
     public:
         TextureLoader();
-        ~TextureLoader();
         void loadTextures(Node *node);
 };
 

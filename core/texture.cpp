@@ -61,14 +61,6 @@ void Texture::apply(GLuint framgment_id) {
     glUniform1i(framgment_id, _id);
 }
 
-void Texture::apply(GLuint framgment_id, GLuint framgment_conf_id) {
-    activate();
-    bind();
-    glUniform1i(framgment_id, _id);
-    if(type() != Cube)
-        glUniform1i(framgment_conf_id, 1);
-}
-
 
 void Texture::deapply(GLuint framgment_id) {
     deactivate();
@@ -179,12 +171,12 @@ Texture* Texture::getCubemapTexture(std::string directory, bool gamma) {
 	return t;
 };
 
-Texture* Texture::fromFile(std::string filename, std::string directory, bool gamma)
+Texture* Texture::fromFile(std::string filename, std::string directory, Type type)
 {
     if (!directory.empty())
         filename = directory + '/' + filename;
     
-    Texture* t = new Texture;
+    Texture* t = nullptr;
 
     int width, height, nrComponents;
     unsigned char *data = stbi_load(filename.c_str(), &width, &height, &nrComponents, 0);
@@ -203,7 +195,7 @@ Texture* Texture::fromFile(std::string filename, std::string directory, bool gam
             format = GL_RGBA;
             break;
         }
-
+        t = new Texture(type);
         t->activate();
         t->bind();
         
@@ -216,8 +208,6 @@ Texture* Texture::fromFile(std::string filename, std::string directory, bool gam
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         t->unbind();
     }
-    else
-        DEBUG(Debug::Error, "Texture failed to load at path: %s\n", filename.c_str());
         
     stbi_image_free(data);
 

@@ -29,20 +29,19 @@ Scene::Scene():
 
 void Scene::displayNodeTree(){ _main_node->dump(); }
 
-Scene* Scene::import(std::string path, Shader* shader, Light* l){
+Scene* Scene::import(std::string path, Shader* shader){
     
 
     Assimp::Importer importer;
 
     //~ const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_LimitBoneWeights);
-    const aiScene* scene = importer.ReadFile(path, aiProcess_JoinIdenticalVertices);
+    const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_JoinIdenticalVertices);
     if( !scene) {
         DEBUG(Level::ERROR, "[Assimp] Errror while reading: %s\n", importer.GetErrorString());
         return nullptr;
     }
     
     Scene* s = new Scene;
-    s->addLight(l);
     s->setShader(shader);
     shader->name("default_material");
     
@@ -87,12 +86,9 @@ Scene* Scene::import(std::string path, Shader* shader, Light* l){
             
             material->Get(AI_MATKEY_SHININESS, shininess);        
             
-            aiShadingMode shadingType;
-            material->Get(AI_MATKEY_SHADING_MODEL, shadingType);
             DEBUG(Debug::Info, "material has %d textures\n",textures.size()); 
                    
             Material* mat = new Material(ambient, diffuse, specular, shininess);
-            mat->setShadingMode(shadingType);
             mat->setTextures(textures);
             
             materials.push_back(mat);
@@ -118,6 +114,7 @@ Scene* Scene::import(std::string path, Shader* shader, Light* l){
         // Fill vertices texture coordinates
         std::vector<GLfloat> uvsd;
         for (int channel = 0; channel < mesh->GetNumUVChannels(); channel++) {
+            DEBUG(Debug::Info, "Nb channel: %d, %d\n", mesh->GetNumUVChannels(), mesh->mNumUVComponents);
             std::vector<GLfloat> uvs;
             uvs.reserve(mesh->mNumVertices * 3);
             for(unsigned int i=0; i<mesh->mNumVertices; i++){
@@ -274,7 +271,6 @@ Scene* Scene::import(std::string path, Shader* shader, Light* l){
                 c->addKey(channel->mPositionKeys[j].mTime, new PositionKey(aiVector3DtoglmVec3(channel->mPositionKeys[j].mValue)));
 
             for (int j = 0; j < channel->mNumRotationKeys; j++){             
-                std::cout << relatedNode->name() << channel->mPositionKeys[j].mTime;
                 c->addKey(channel->mRotationKeys[j].mTime, new RotationKey(Quaternion::fromAi(channel->mRotationKeys[j].mValue)));  
             }
             
@@ -307,12 +303,8 @@ void Scene::render(){
     }
 
     //Draw skybox
-    if(_skybox) {
-        //~ _skybox_shader->use();
-        //~ _skybox_texture->apply(_skybox_shader->getUniformLocation("cube_texture"));
-        
+    if(_skybox)       
         _skybox->draw(_active_camera->projectionMatrix(), _active_camera->viewMatrix(), glm::rotate(glm::mat4(1.f), glm::radians(-90.f), glm::vec3(1.0f, 0.0f, 0.0f)));
-    }
     
     process(glfwGetTime());
     

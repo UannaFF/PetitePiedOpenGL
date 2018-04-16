@@ -32,10 +32,6 @@ int main(int argc, char** argv){
 	    return -1;
 	}
     
-    std::string scene_file = "res/rebo.obj";
-    if (argc == 2)
-        scene_file = std::string(argv[1]);
-
 	glfwWindowHint(GLFW_SAMPLES, 16); // 16x antialiasing
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3); // We want OpenGL 3.3
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -98,10 +94,8 @@ int main(int argc, char** argv){
             DEBUG(Debug::Info, "\n");
             
             //test the loading textures<
-            TextureLoader *tl = new TextureLoader();
-            tl->loadTextures(scene->rootNode());
-            
-            delete(tl);
+            TextureLoader tl;
+            tl.loadTextures(scene->rootNode());
             
             do{ 
                 // Clear the screen
@@ -160,7 +154,7 @@ int main(int argc, char** argv){
                 
                 int newState = glfwGetKey( window.internal(), GLFW_KEY_K );
                 if (newState == GLFW_RELEASE && oldState == GLFW_PRESS) {
-                       scene->light()->changeType();
+                       scene->light()->type((Light::Type)(((int)scene->light()->type() + 1) % (int)Light::PhongWithNormal));
                     oldState = newState;
                 }
             
@@ -196,10 +190,10 @@ int main(int argc, char** argv){
             glfwTerminate();
             return EXIT_FAILURE;
     
-    } catch (ShaderException* e){
-            std::cout << "Shader exception: " << e->what() << std::endl;
-            glfwTerminate();
-            return EXIT_FAILURE;
+    //~ } catch (ShaderException* e){
+            //~ std::cout << "Shader exception: " << e->what() << std::endl;
+            //~ glfwTerminate();
+            //~ return EXIT_FAILURE;
     
     }
     glfwTerminate();

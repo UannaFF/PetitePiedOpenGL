@@ -21,13 +21,12 @@ using namespace glm;
 
 Light::Light():
 	_pos(0,0,0),
-	_color(1,1,1)
+	_color(1, 1, 1),
+    _type(PhongWithNormal)
 {
-    type = 1;
 
     _shader = Shader::fromFiles( "shaders/vertexshader_light.glsl", "shaders/fragment_light.glsl");
-    //Scene *sc = Scene::import("./res/sphere.dae", _shader);
-    _mesh = new Mesh(_shader, nullptr, std::vector<Bone*>());
+    _mesh = new Mesh(_shader, nullptr);
     
 
     VertexArray* va = new VertexArray();
@@ -149,11 +148,10 @@ Light::Light():
 
 void Light::draw(glm::mat4 proj, glm::mat4 view){
     _shader->use();
-	glm::mat4 mat = glm::translate(glm::mat4(1.f), _pos);
+    
     _shader->setVec3("color", _color.x, _color.y, _color.z);
+    _mesh->draw(proj ,view, glm::translate(glm::mat4(1.f), _pos));
+    
     _shader->deuse();
-    //_mesh->bind();
-    //_shader->setMat4("model", mat);
-    _mesh->draw(proj ,view ,mat);
     
 }

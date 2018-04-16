@@ -102,18 +102,20 @@ class Mesh : public Drawable {
         static GLint VA_PRIMITIVE; //= GL.GL_TRIANGLES
         
     private:    
-        Material* _material;
         
         std::vector<Bone*> _bones;
         VertexArray* _vao;
         
     protected:
+        Material* _material;
         Shader* _shader;
 };
 
 class Skybox : public Mesh {
     public:
         Skybox(Shader* s);
+        
+        void draw(glm::mat4 projection, glm::mat4 view, glm::mat4 model);
 
         //Define a big cube
     

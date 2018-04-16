@@ -16,10 +16,7 @@
 int Bone::LAST_ID = 0;
 GLint Mesh::VA_PRIMITIVE = GL_TRIANGLES;
 
-void Bone::dumpToBuffer(std::vector<int>& vertex_buff, std::vector<float>& weight_buff){
-    DEBUG(Debug::Info, "Bone has %d record to dump\n", _weights.size());
-    std::cout << _offset;
-    
+void Bone::dumpToBuffer(std::vector<int>& vertex_buff, std::vector<float>& weight_buff){    
     int i = 0;
     
     for (std::pair<uint, float> p: _weights){
@@ -432,4 +429,21 @@ Skybox::Skybox(Shader* s):
     va->setUV(uv);
     
     setVAO(va);
+}
+void Skybox::draw(glm::mat4 projection, glm::mat4 view, glm::mat4 model){            
+    _shader->use();    
+
+    // setup camera geometry parameters
+    _shader->setMat4("projection", projection);
+    _shader->setMat4("view", view);
+    _shader->setMat4("model", model, GL_TRUE);
+
+    if (_material)
+        _material->apply(_shader, true);
+        
+    // draw mesh vertex array
+    VAO()->draw(VA_PRIMITIVE);
+    
+    // leave with clean OpenGL state, to make it easier to detect problems
+    _shader->deuse();
 }
