@@ -47,6 +47,7 @@ class Light {
             glUniform3fv(s->getUniformLocation("light.diffuse"), 1, &(_diffuse[0]));
             glUniform3fv(s->getUniformLocation("light.specular"), 1, &(specular[0]));
             glUniform3fv(s->getUniformLocation("light.ambient"), 1, &(_ambient[0]));
+            printf("Binding light\n");
             s->deuse();
         }
         void draw(glm::mat4 proj, glm::mat4 view);

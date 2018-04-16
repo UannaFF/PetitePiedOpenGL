@@ -323,7 +323,7 @@ void Scene::render(){
     //change light position
     //printf("time: %d", (int)glfwGetTime());
     //_lights[0]->setPos(glm::vec3(fmod(glfwGetTime(),10), 4, 4));
-    //_lights[0]->bind(defaultShader(), glm::vec3(1.0, 1.0, 1.0)); 
+    _lights[0]->bind(defaultShader(), glm::vec3(1.0, 1.0, 1.0)); 
 
     //Draw skybox
     if(_skybox) {
