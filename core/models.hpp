@@ -64,6 +64,8 @@ class VertexArray {
         void setNormal(std::vector<GLfloat> normal);
         void setIndice(std::vector<unsigned short> normal);
         void setBones(std::vector<Bone*> b, Shader* s);
+        void setTangents(std::vector<GLfloat> tangents);
+        void setBitangents(std::vector<GLfloat> bitangents);
         
         void computeTangentBasis(std::vector<GLfloat>& v, std::vector<GLfloat>& u, std::vector<GLfloat>& n);
         
@@ -98,19 +100,22 @@ class Mesh : public Drawable {
         inline const std::vector<Bone*>& bones() const { return _bones; }  
         
         static GLint VA_PRIMITIVE; //= GL.GL_TRIANGLES
+        
     private:    
-        Material* _material;
         
         std::vector<Bone*> _bones;
         VertexArray* _vao;
         
     protected:
+        Material* _material;
         Shader* _shader;
 };
 
 class Skybox : public Mesh {
     public:
         Skybox(Shader* s);
+        
+        void draw(glm::mat4 projection, glm::mat4 view, glm::mat4 model);
 
         //Define a big cube
     

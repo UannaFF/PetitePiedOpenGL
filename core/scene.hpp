@@ -5,6 +5,8 @@
 #include <assimp/scene.h>           // Output data structure
 #include <assimp/postprocess.h>     // Post processing flags
 
+#include "glm/gtc/matrix_transform.hpp"
+
 #include <glm/glm.hpp>
 #include <GL/glew.h>
 
@@ -14,6 +16,7 @@
 #include <string>
 #include "models.hpp"
 #include "common.hpp"
+#include "light.hpp"
 
 class Mesh;
 class Texture;
@@ -24,6 +27,7 @@ class Light;
 class Node;
 class Shader;
 class Animation;
+
 
 class SceneException: public std::exception {
     public:
@@ -70,10 +74,13 @@ class Scene {
         void process(float timestamp);
         void render();
         void displayNodeTree();
+        void addLight(Light*l) {_light = l;};
+        Light*light(){return _light;};
         
         static Scene* import(std::string path, Shader* s);
         
         void playAnimation( int anim);
+
         
         
     private:
@@ -84,6 +91,8 @@ class Scene {
         
         std::set<Animation*> _current_animation;
         std::set<Camera*> _cameras;
+
+        Light* _light;
 
         Skybox *_skybox;
         //~ Texture *_skybox_texture;

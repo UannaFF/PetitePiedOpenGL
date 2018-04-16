@@ -22,9 +22,13 @@
 #include "assets/world.hpp"
 
 using namespace glm;
+static int oldState = GLFW_RELEASE;
 
 int main(int argc, char** argv){
 
+    bool show_fps = false, disable_skybox = false, free_camera = false, display_tree = false;
+    char* marker_attach = NULL;
+    
 	// Initialise GLFW
 	if( !glfwInit() )
 	{
@@ -32,10 +36,28 @@ int main(int argc, char** argv){
 	    return -1;
 	}
     
-    std::string scene_file = "res/rebo.obj";
-    if (argc == 2)
-        scene_file = std::string(argv[1]);
-
+    int argCount;
+    for (argc--, argv++; argc > 0; argc -= argCount, argv += argCount){
+        argCount = 1;
+        if (!strcmp (*argv, "--attach-marker")){
+            argCount++;
+            if (argc > 1)
+                marker_attach = *(argv + 1);
+            else
+                DEBUG(Debug::Error, "--attach-marker requires a positionnal argument.\n");
+        } else if (!strcmp (*argv, "--show-fps")){
+            show_fps = true;
+        } else if (!strcmp (*argv, "--display-tree")){
+            display_tree = true;
+        } else if (!strcmp (*argv, "--disable-skybox")){
+            disable_skybox = true;
+        } else if (!strcmp (*argv, "--free-camera")){
+            free_camera = true;
+        } else {
+            fprintf(stderr, "petit_pied [--attach-marker <node_name> | --free-camera | --show-fps | --display-tree | --disable-skybox]\n\n");
+        }
+    }
+    
 	glfwWindowHint(GLFW_SAMPLES, 16); // 16x antialiasing
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3); // We want OpenGL 3.3
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -56,150 +78,57 @@ int main(int argc, char** argv){
             
             glClearColor(0.7f, 0.7f, 0.7f, 0.0f);
 
-            // Enable depth test
             glEnable(GL_DEPTH_TEST);
-            // Accept fragment if it closer to the camera than the former one
             glDepthFunc(GL_LESS); 
-            // Cull triangles which normal is not towards the camera
-            //~ glEnable(GL_CULL_FACE);
 
-            //~ std::vector<Mesh*> models = Mesh::fromOBJ("Environement.obj");
-            //~ Scene* scene = Scene::import(scene_file, Shader::fromFiles( "shaders/vertexshader_material.glsl", "shaders/fragment_material.glsl"));
-            Scene* scene = DinoWorld::buildScene();
-            
-            
-            Scene* arm_scene = Scene::import("res/Dinosaure/Bras Mécanique/armclean.dae", scene->defaultShader());
-            arm_scene->rootNode()->setTransformation(glm::mat4(1.f));
-            arm_scene->rootNode()->dump(0);
-            arm_scene->rootNode()->find("Base_low_001")->setTransformation(glm::mat4(1.f));
-            
-            arm_scene->rootNode()->find("Arm_low_001")->parent(arm_scene->rootNode()->find("Base_low_001"));
-            arm_scene->rootNode()->find("Arm_low_001")->setTransformation(glm::mat4(1.f));
-            
-            arm_scene->rootNode()->find("Arm2_Low_001")->parent(arm_scene->rootNode()->find("Arm_low_001"));
-            arm_scene->rootNode()->find("Arm2_Low_001")->setTransformation(glm::mat4(1.f) * translation(0, 0, 0.12));
-            
-            arm_scene->rootNode()->find("FingerL_low_001")->parent(arm_scene->rootNode()->find("Arm2_Low_001"));
-            arm_scene->rootNode()->find("FingerL_low_001")->setTransformation(glm::mat4(1.f) * translation(-0.10, -0.01, 0));
-            
-            arm_scene->rootNode()->find("FingerR_low_001")->parent(arm_scene->rootNode()->find("Arm2_Low_001"));
-            arm_scene->rootNode()->find("FingerR_low_001")->setTransformation(glm::mat4(1.f) * translation(-0.10, 0.01, 0));
-            
-            arm_scene->rootNode()->find("Rail_low_001")->parent(scene->rootNode()->find("Main"));
-            arm_scene->rootNode()->find("Rail_low_001")->setTransformation(glm::rotate(translation(-3, -3.45, -0.05), glm::radians(-90.f), glm::vec3(0.0f, 0.0f, 1.0f)));
-            scene->rootNode()->find("Main")->addChild("rail", arm_scene->rootNode()->find("Rail_low_001"));
-            
-            scene->displayNodeTree();
-            
-            Animation* opening_hand = new Animation("FingerClose", 80, 20);
-            Channel* c = new Channel(scene->rootNode()->find("FingerL_low_001"));
-            c->addKey(0, new RotationKey(glm::quat(glm::vec3(0, glm::radians(0.), 0))));
-            c->addKey(40, new RotationKey(glm::quat(glm::vec3(0, glm::radians(60.), 0))));
-            c->addKey(80, new RotationKey(glm::quat(glm::vec3(0, glm::radians(0.), 0))));
-            c->addKey(0, new PositionKey(glm::vec3(-0.90, 0.01, 0)));
-            c->addKey(80, new PositionKey(glm::vec3(-0.90, 0.01, 0)));
-            opening_hand->addChannel(c);
-            c = new Channel(scene->rootNode()->find("FingerR_low_001"));
-            c->addKey(0, new RotationKey(glm::quat(glm::vec3(0, glm::radians(0.), 0))));
-            c->addKey(40, new RotationKey(glm::quat(glm::vec3(0, glm::radians(-60.), 0))));
-            c->addKey(80, new RotationKey(glm::quat(glm::vec3(0, glm::radians(0.), 0))));
-            c->addKey(0, new PositionKey(glm::vec3(-0.90, -0.01, 0)));
-            c->addKey(80, new PositionKey(glm::vec3(-0.90, -0.01, 0)));
-            opening_hand->addChannel(c);
-            
-            scene->addAnimation(opening_hand);
-            
-            
-            glm::mat4 trans = translation(5.7, 1.8, 0);
+            Scene* scene = DinoWorld::buildScene();   
+             
+            TextureLoader* tl = new TextureLoader;
+            tl->loadTextures(scene->rootNode());       
             
             //~ Camera mainCamera;
             scene->setCamera(&mainCamera);
-            
-            // Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
-            mainCamera.setProjectionMatrix(glm::perspective(glm::radians(45.0f), window.ratio(), 0.1f, 100.0f));
-            // Camera matrix
-            mainCamera.setViewMatrix(glm::lookAt(
-                                        glm::vec3(100,50,100), // Camera in World Space
-                                        glm::vec3(1,1,1), // and looks at the origin
-                                        glm::vec3(0,1,0)  // Head is up (set to 0,-1,0 to look upside-down)
-                                   ));
 
             // Marker
-            Node* markerNode = new Node("MarkerNode", glm::mat4(1.f), scene, scene->rootNode());
-            markerNode->addChild("markerMesh", new ReferenceMarker(Shader::fromFiles( "shaders/vertexshader_marker.glsl", "shaders/fragment_marker.glsl")));
-            markerNode->parent(arm_scene->rootNode()->find("Arm2_Low_001"));
-            arm_scene->rootNode()->find("Arm2_Low_001")->addChild("marker", markerNode);
+            if (marker_attach){
+                if (scene->findNode(marker_attach)){
+                    Node* markerNode = new Node("MarkerNode", glm::mat4(1.f), scene, scene->rootNode());
+                    markerNode->addChild("markerMesh", new ReferenceMarker(Shader::fromFiles( "shaders/vertexshader_marker.glsl", "shaders/fragment_marker.glsl")));
+                    markerNode->parent(scene->findNode(marker_attach));
+                    scene->findNode(marker_attach)->addChild("marker", markerNode);
+                } else
+                    DEBUG(Debug::Error, "Cannot find the node '%s' to attach marker on. Skipping\n", marker_attach);
+            }
             
             // Skybox
-            scene->setSkybox("skybox_sky", "shaders/Skyboxshadingvertex.glsl","shaders/Skyboxshadingfragment.glsl" );
+            if (!disable_skybox)
+                scene->setSkybox("skybox_sky", "shaders/vertexshader_skybox.glsl","shaders/fragment_skybox.glsl" );
             
 
             window.hideCursor();
             window.centerCursor();
             
             scene->playAnimation(0);
-            //~ scene->playAnimation(1);
-            glm::vec3 lightPos = glm::vec3(0,-2.7, 4);   
+            
+            if (display_tree)
+                scene->displayNodeTree();  
             
             float time_last_frame = glfwGetTime();
             DEBUG(Debug::Info, "\n");
             
+            
             do{ 
                 // Clear the screen
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
                 
-                scene->defaultShader()->use();
-                
-                if (glfwGetKey( window.internal(), GLFW_KEY_X ) == GLFW_PRESS)
-                    trans[0][3] += 0.05;
-                if (glfwGetKey( window.internal(), GLFW_KEY_W ) == GLFW_PRESS)
-                    trans[0][3] -= 0.05;
-                if (glfwGetKey( window.internal(), GLFW_KEY_Q ) == GLFW_PRESS)
-                    trans[1][3] += 0.05;
-                if (glfwGetKey( window.internal(), GLFW_KEY_D ) == GLFW_PRESS)
-                    trans[1][3] -= 0.05;
-                if (glfwGetKey( window.internal(), GLFW_KEY_U ) == GLFW_PRESS)
-                    trans[2][3] += 0.05;
-                if (glfwGetKey( window.internal(), GLFW_KEY_I ) == GLFW_PRESS)
-                    trans[2][3] -= 0.05;
-                    
-                //~ std::cout << trans[0][3] <<", " << trans[1][3] << ", " << trans[2][3] << std::endl;
-                //~ arm_scene->rootNode()->setTransformation(glm::scale(glm::mat4(1.f), glm::vec3(0.25))* trans);
-                //~ scene->defaultShader()->setVec3("light.position", lightPos);
-                scene->defaultShader()->setVec3("light.position", lightPos);
-                    
-                //~ glm::vec3 lightColor;
-                //~ lightColor.x = sin(glfwGetTime() * 2.0f);
-                //~ lightColor.y = sin(glfwGetTime() * 0.7f);
-                //~ lightColor.z = sin(glfwGetTime() * 1.3f);
-                //~ glm::vec3 diffuseColor = lightColor   * glm::vec3(0.5f); // decrease the influence
-                //~ glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f); // low influence
-                scene->defaultShader()->setVec3("light.ambient", 1.0f, 1.0f, 1.0f);
-                scene->defaultShader()->setVec3("light.diffuse", 1.0f, 1.0f, 1.0f);
-                scene->defaultShader()->setVec3("light.specular", 1.0f, 1.0f, 1.0f);
-                
-                scene->defaultShader()->deuse();  
-                
-                //~ scene->defaultShader()->getUniformLocation("viewPos", camera.Position);
-
-
-    
                 // Update P and V from mouse and keyboard
                 mainCamera.updateFromMouse();
                 
-                //~ glUniform3f(LightID, lightPos.x, lightPos.y, lightPos.z);
-
-                // Bind and Set our "myTextureSampler" sampler to use Texture
-                //~ texture->set(TextureID);
-                //~ scene->skyboxShader()->use();
-                //~ glm::mat4 projection = mainCamera.projectionMatrix();
-            //~ glm::mat4 view = mainCamera.viewMatrix();
-                //~ glUniformMatrix4fv(scene->skyboxShader()->getUniformLocation("projection"), 
-                    //~ 1, GL_FALSE, &projection[0][0]);
-                //~ glUniformMatrix4fv(scene->skyboxShader()->getUniformLocation("view"), 
-                    //~ 1, GL_FALSE, &view[0][0]);
-                
+                int newState = glfwGetKey( window.internal(), GLFW_KEY_K );
+                if (newState == GLFW_RELEASE && oldState == GLFW_PRESS) {
+                       scene->light()->type((Light::Type)(((int)scene->light()->type() + 1) % (int)Light::PhongWithNormal));
+                    oldState = newState;
+                }
                 scene->render();
 
                 // Swap buffers
@@ -208,7 +137,10 @@ int main(int argc, char** argv){
 
                 // Swap buffers
                 window.postDrawingEvent();
-                //~ DEBUG(Debug::Info, "\rFPS: %f", 1.f / (glfwGetTime() - time_last_frame));
+                
+                if (show_fps)
+                    DEBUG(Debug::Info, "\rFPS: %f", 1.f / (glfwGetTime() - time_last_frame));
+                    
                 time_last_frame = glfwGetTime();
             }
 
@@ -221,10 +153,10 @@ int main(int argc, char** argv){
             //~ delete shader;
             //~ delete texture;
             
-    } catch (OpenGLException* e){
-            std::cout << "OpenGL exception: " << e->what() << std::endl;
-            glfwTerminate();
-            return EXIT_FAILURE;
+    //~ } catch (OpenGLException* e){
+            //~ std::cout << "OpenGL exception: " << e->what() << std::endl;
+            //~ glfwTerminate();
+            //~ return EXIT_FAILURE;
     
     } catch (SceneException* e){
             std::cout << "Scene exception: " << e->what() << std::endl;

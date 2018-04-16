@@ -40,9 +40,9 @@ void Channel::applyBones(float AnimationTime, glm::mat4& currentTransformation, 
         
     _node->setTransformation(glm::inverse(trans) * (glm::toMat4(rot) * translate) * trans);
 
-    //~ for (Bone*b: _bones){
-        //~ b->node()->setTransformation(currentTransformation);
-    //~ }
+    for (Bone*b: _bones){
+        b->node()->setTransformation(currentTransformation);
+    }
 }
 std::pair<std::pair<float, PositionKey*>, std::pair<float, PositionKey*>> Channel::getPosKeys(float AnimationTime) const {
     if (!_positions_keys.empty()){

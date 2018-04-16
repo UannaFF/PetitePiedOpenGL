@@ -4,7 +4,6 @@
 
 #include "common.hpp"
 #include "shader.hpp"
-#include "light.hpp"
 #include "material.hpp"
 #include "animations.hpp"
 #include "camera.hpp"
@@ -12,6 +11,7 @@
 #include <map>
 #include <iostream>
 #include <iomanip>
+
 
 Scene::Scene():
     _models(),
@@ -29,11 +29,11 @@ Scene::Scene():
 void Scene::displayNodeTree(){ _main_node->dump(); }
 
 Scene* Scene::import(std::string path, Shader* shader){
-
+    
     Assimp::Importer importer;
 
     //~ const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_LimitBoneWeights);
-    const aiScene* scene = importer.ReadFile(path, aiProcess_JoinIdenticalVertices);
+    const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_JoinIdenticalVertices);
     if( !scene) {
         DEBUG(Level::ERROR, "[Assimp] Errror while reading: %s\n", importer.GetErrorString());
         return nullptr;
@@ -42,7 +42,6 @@ Scene* Scene::import(std::string path, Shader* shader){
     Scene* s = new Scene;
     s->setShader(shader);
     shader->name("default_material");
-    //~ s->defaultShader()->use();
     
     std::multimap<std::string, Bone*> bones_to_bind;
     
@@ -85,12 +84,9 @@ Scene* Scene::import(std::string path, Shader* shader){
             
             material->Get(AI_MATKEY_SHININESS, shininess);        
             
-            aiShadingMode shadingType;
-            material->Get(AI_MATKEY_SHADING_MODEL, shadingType);
             DEBUG(Debug::Info, "material has %d textures\n",textures.size()); 
                    
             Material* mat = new Material(ambient, diffuse, specular, shininess);
-            mat->setShadingMode(shadingType);
             mat->setTextures(textures);
             
             materials.push_back(mat);
@@ -114,7 +110,9 @@ Scene* Scene::import(std::string path, Shader* shader){
         v->setVertex(vertices);
 
         // Fill vertices texture coordinates
+        std::vector<GLfloat> uvsd;
         for (int channel = 0; channel < mesh->GetNumUVChannels(); channel++) {
+            DEBUG(Debug::Info, "Nb channel: %d, %d\n", mesh->GetNumUVChannels(), mesh->mNumUVComponents);
             std::vector<GLfloat> uvs;
             uvs.reserve(mesh->mNumVertices * 3);
             for(unsigned int i=0; i<mesh->mNumVertices; i++){
@@ -124,6 +122,7 @@ Scene* Scene::import(std::string path, Shader* shader){
             }
             //~ v->addUV(uvs);
             v->setUV(uvs);
+            uvsd = uvs;
         }
 
         // Fill vertices normals
@@ -137,8 +136,31 @@ Scene* Scene::import(std::string path, Shader* shader){
                 normals.push_back(n.y);
             }
             v->setNormal(normals);
+            
+            //If scene has normals and uvs and vertices create tangent and bitangent
+            //v->computeTangentBasis(vertices, uvsd, normals);
         }
-
+        
+        if(mesh->HasTangentsAndBitangents()) {
+            std::vector<GLfloat> tangents;
+            std::vector<GLfloat> bitangents;
+            tangents.reserve(mesh->mNumVertices);
+            bitangents.reserve(mesh->mNumVertices);
+            for(unsigned int i=0; i<mesh->mNumVertices; i++){
+                aiVector3D t = mesh->mTangents[i];
+                aiVector3D b = mesh->mBitangents[i];
+                tangents.push_back(t.x);
+                tangents.push_back(t.y);
+                tangents.push_back(t.z);
+                
+                bitangents.push_back(b.x);
+                bitangents.push_back(b.y);
+                bitangents.push_back(b.z);
+            }
+            
+            v->setTangents(tangents);
+            v->setBitangents(bitangents);
+        }
 
         // Fill face indices
         if (mesh->HasFaces()){
@@ -273,15 +295,14 @@ void Scene::render(){
     if (!_active_camera)
         throw new SceneException("No camera selected for rendering.");
 
-    // Ligth goes here
+    if(_light) {
+        _light->setPos(glm::vec3(fmod(glfwGetTime(),20), 10.0, 1.0));
+        _light->bind(defaultShader());
+    }
 
     //Draw skybox
-    if(_skybox) {
-        //~ _skybox_shader->use();
-        //~ _skybox_texture->apply(_skybox_shader->getUniformLocation("cube_texture"));
-        
+    if(_skybox)       
         _skybox->draw(_active_camera->projectionMatrix(), _active_camera->viewMatrix(), glm::rotate(glm::mat4(1.f), glm::radians(-90.f), glm::vec3(1.0f, 0.0f, 0.0f)));
-    }
     
     process(glfwGetTime());
     

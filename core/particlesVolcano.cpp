@@ -58,14 +58,6 @@ ParticuleManager::ParticuleManager(Shader* s):
 
     // Use our shader
     _shader->deuse();
-
-    //~ // Bind our texture in Texture Unit 0
-    //~ glActiveTexture(GL_TEXTURE0);
-    //~ glBindTexture(GL_TEXTURE_2D, Texture);
-    //~ // Set our "myTextureSampler" sampler to use Texture Unit 0
-    //~ glUniform1i(TextureID, 0);
-
-    // 1rst attribute buffer : vertices  
     
 }
 
@@ -99,7 +91,6 @@ int ParticuleManager::update(glm::mat4& view){
 
         float spread = 1.5f;
         glm::vec3 maindir = glm::vec3(0.0f, 10.0f, 0.0f);
-        // Very bad way to generate a random direction;
         glm::vec3 randomdir = glm::vec3(
             (rand()%2000 - 1000.0f)/1000.0f,
             (rand()%2000 - 1000.0f)/1000.0f,
@@ -108,7 +99,6 @@ int ParticuleManager::update(glm::mat4& view){
 
         p.speed = maindir + randomdir*spread;
 
-        // Very bad way to generate a random color
         p.r = (160)+ rand() % 56;
         p.g = rand() % 64;
         p.b = 0;
@@ -159,13 +149,9 @@ int ParticuleManager::update(glm::mat4& view){
     return nb_particles;
 }
 
-// Finds a Particle in _particles_container which isn't used yet.
-// (i.e. life < 0);
 void ParticuleManager::draw(glm::mat4 projection, glm::mat4 view, glm::mat4 model){
     _shader->use();
     int nb_particles = update(view);
-    
-    //~ DEBUG(Debug::Info, "Drawing %d particles\n", nb_particles);
     
     _shader->setVec3("CameraRight_worldspace", view[0][0], view[1][0], view[2][0]);
     _shader->setVec3("CameraUp_worldspace", view[0][1], view[1][1], view[2][1]);
@@ -182,24 +168,18 @@ void ParticuleManager::draw(glm::mat4 projection, glm::mat4 view, glm::mat4 mode
     glBindBuffer(GL_ARRAY_BUFFER, _vertex_buffer);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
-    // 2nd attribute buffer : positions of particles' centers
     glEnableVertexAttribArray(1);
     glBindBuffer(GL_ARRAY_BUFFER, _position_buffer);
     glBufferData(GL_ARRAY_BUFFER, MAX_PARTICLES * 4 * sizeof(GLfloat), NULL, GL_STREAM_DRAW); // Buffer orphaning, a common way to improve streaming perf. See above link for details.
     glBufferSubData(GL_ARRAY_BUFFER, 0, nb_particles * sizeof(GLfloat) * 4, _position_size_data);
     glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
-    // 3rd attribute buffer : particles' colors
     glEnableVertexAttribArray(2);
     glBindBuffer(GL_ARRAY_BUFFER, _color_buffer);
     glBufferData(GL_ARRAY_BUFFER, MAX_PARTICLES * 4 * sizeof(GLubyte), NULL, GL_STREAM_DRAW); // Buffer orphaning, a common way to improve streaming perf. See above link for details.
     glBufferSubData(GL_ARRAY_BUFFER, 0, nb_particles * sizeof(GLubyte) * 4, _color_data);
     glVertexAttribPointer(2, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, (void*)0);
 
-    // These functions are specific to glDrawArrays*Instanced*.
-    // The first parameter is the attribute buffer we're talking about.
-    // The second parameter is the "rate at which generic vertex attributes advance when rendering multiple instances"
-    // http://www.opengl.org/sdk/docs/man/xhtml/glVertexAttribDivisor.xml
     glVertexAttribDivisor(0, 0); // particles vertices : always reuse the same 4 vertices -> 0
     glVertexAttribDivisor(1, 1); // positions : one per quad (its center)                 -> 1
     glVertexAttribDivisor(2, 1); // color : one per quad   
