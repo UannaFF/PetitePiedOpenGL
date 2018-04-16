@@ -40,7 +40,7 @@ class SceneException: public std::exception {
 
 class Scene {
     public:
-        enum ShaderType {MaterialShader, LightShader};
+        enum ShaderType {MaterialShader, LightShader, BonesDebugShader};
     
         Scene();
         

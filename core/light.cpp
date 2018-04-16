@@ -31,47 +31,47 @@ Light::Light():
     VertexArray* va = new VertexArray();
 
     std::vector<GLfloat> points = {
-      -1.0f,  1.0f, -1.0f, //back cube assume top left back corner
-      -1.0f, -1.0f, -1.0f,
-       1.0f, -1.0f, -1.0f,
-       1.0f, -1.0f, -1.0f,
-       1.0f,  1.0f, -1.0f,
-      -1.0f,  1.0f, -1.0f,
+      -0.1f,  0.1f, -0.1f, //back cube assume top left back corner
+      -0.1f, -0.1f, -0.1f,
+       0.1f, -0.1f, -0.1f,
+       0.1f, -0.1f, -0.1f,
+       0.1f,  0.1f, -0.1f,
+      -0.1f,  0.1f, -0.1f,
       
-      -1.0f, -1.0f,  1.0f, //left square front, left, bottom corner
-      -1.0f, -1.0f, -1.0f,
-      -1.0f,  1.0f, -1.0f,
-      -1.0f,  1.0f, -1.0f,
-      -1.0f,  1.0f,  1.0f,
-      -1.0f, -1.0f,  1.0f,
+      -0.1f, -0.1f,  0.1f, //left square front, left, bottom corner
+      -0.1f, -0.1f, -0.1f,
+      -0.1f,  0.1f, -0.1f,
+      -0.1f,  0.1f, -0.1f,
+      -0.1f,  0.1f,  0.1f,
+      -0.1f, -0.1f,  0.1f,
       
-       1.0f, -1.0f, -1.0f, //right square
-       1.0f, -1.0f,  1.0f,
-       1.0f,  1.0f,  1.0f,
-       1.0f,  1.0f,  1.0f,
-       1.0f,  1.0f, -1.0f,
-       1.0f, -1.0f, -1.0f,
+       0.1f, -0.1f, -0.1f, //right square
+       0.1f, -0.1f,  0.1f,
+       0.1f,  0.1f,  0.1f,
+       0.1f,  0.1f,  0.1f,
+       0.1f,  0.1f, -0.1f,
+       0.1f, -0.1f, -0.1f,
        
-      -1.0f, -1.0f,  1.0f, //front square
-      -1.0f,  1.0f,  1.0f,
-       1.0f,  1.0f,  1.0f,
-       1.0f,  1.0f,  1.0f,
-       1.0f, -1.0f,  1.0f,
-      -1.0f, -1.0f,  1.0f,
+      -0.1f, -0.1f,  0.1f, //front square
+      -0.1f,  0.1f,  0.1f,
+       0.1f,  0.1f,  0.1f,
+       0.1f,  0.1f,  0.1f,
+       0.1f, -0.1f,  0.1f,
+      -0.1f, -0.1f,  0.1f,
       
-      -1.0f,  1.0f, -1.0f, //top square
-       1.0f,  1.0f, -1.0f,
-       1.0f,  1.0f,  1.0f,
-       1.0f,  1.0f,  1.0f,
-      -1.0f,  1.0f,  1.0f,
-      -1.0f,  1.0f, -1.0f,
+      -0.1f,  0.1f, -0.1f, //top square
+       0.1f,  0.1f, -0.1f,
+       0.1f,  0.1f,  0.1f,
+       0.1f,  0.1f,  0.1f,
+      -0.1f,  0.1f,  0.1f,
+      -0.1f,  0.1f, -0.1f,
       
-      -1.0f, -1.0f, -1.0f, //bottom square
-      -1.0f, -1.0f,  1.0f,
-       1.0f, -1.0f, -1.0f,
-       1.0f, -1.0f, -1.0f,
-      -1.0f, -1.0f,  1.0f,
-       1.0f, -1.0f,  1.0f
+      -0.1f, -0.1f, -0.1f, //bottom square
+      -0.1f, -0.1f,  0.1f,
+       0.1f, -0.1f, -0.1f,
+       0.1f, -0.1f, -0.1f,
+      -0.1f, -0.1f,  0.1f,
+       0.1f, -0.1f,  0.1f
     };
 
     std::vector<unsigned short> indices = {
@@ -147,11 +147,11 @@ Light::Light():
 
 void Light::draw(glm::mat4 proj, glm::mat4 view){
     _shader->use();
-	glm::mat4 mat = glm::translate(glm::mat4(1.f), _pos);
-    
+	glm::mat4 mat = glm::mat4(6.f);//glm::translate(, _pos);
     _shader->setVec3("color", _color.x, _color.y, _color.z);
+    _shader->deuse();
     //_mesh->bind();
     //_shader->setMat4("model", mat);
     _mesh->draw(proj ,view ,mat);
-    _shader->deuse();
+    
 }

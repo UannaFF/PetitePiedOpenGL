@@ -6,6 +6,10 @@ uniform sampler2D texture_diffuse1;
 uniform sampler2D texture_specular1;
 uniform sampler2D texture_height1; //normal
 
+uniform int texture_diffuse1_passed;
+uniform int texture_specular1_passed;
+uniform int texture_height1_passed; 
+
 struct Material {
     vec3 ambient;
     vec3 diffuse;
@@ -32,6 +36,15 @@ uniform Material material;
 uniform Light light;
 uniform float type;
 
+vec4 basicTextured() {
+    vec3 ambient = light.ambient * material.ambient;
+    vec3 diffuse = light.diffuse * (0.5 * material.diffuse);
+    if(texture_diffuse1_passed == 1)
+        diffuse *= texture(texture_diffuse1, TexCoords).xyz;
+    
+    return vec4(ambient + diffuse, 1.0);
+}
+
 vec4 basicLight() {
     
     vec3 l = normalize(light.position.xyz - PosEyeSpace); //light vector
@@ -57,11 +70,15 @@ vec4 phongShading(vec4 texColor) {
     vec3 diffuse = light.diffuse * material.diffuse * max(dot(L, Normal), 0.0);
     
     //Specular component
-    vec3 specular = (facing ? light.specular * material.specular * pow(max(dot(R, E), 0.0), 0.3*material.shininess) : vec3(0.0));
+    vec3 specular = (facing ? light.specular * material.specular * pow(max(dot(R, E), 0.0), material.shininess) : vec3(0.0));
     
     
     //return vec4(ambient + diffuse, 1) * texColor + vec4(specular, 1);
-    return vec4(texColor.xyz + ambient + diffuse + specular, 1.0);
+    if(texture_diffuse1_passed == 1)
+        return vec4(texColor.xyz + ambient + diffuse + specular, 1.0);
+    else
+        return vec4(ambient + diffuse + specular, 1.0);
+        //return vec4(1.0);
 }
 
 vec4 phongShadingBumpMapping(vec4 texColor, vec3 lightDir, vec3 eyeDir, vec3 normal, vec3 normalvec) {
@@ -117,8 +134,10 @@ void main()
     //Bump mapping
     vec3 normal_tangentspace = normalize((texture( texture_height1, TexCoords ).rgb-0.5) * 2.0);
     //FragColor = phongShadingBumpMapping(texture(texture_diffuse1, TexCoords), L, E, normal_tangentspace);
-    if(type == 1.0) FragColor = phongShading(texture(texture_diffuse1, TexCoords));
+    if(texture_height1_passed == 0) FragColor = phongShading(texture(texture_diffuse1, TexCoords));
     else FragColor = phongShadingBumpMapping(texture(texture_diffuse1, TexCoords), lightDirection_tangentspace, eyeDirection_tangentspace, normal_tangentspace, Normal);
+    //FragColor = basicLight();
+    //FragColor = basicTextured();
     //////////////////////////////
     
     // ambient

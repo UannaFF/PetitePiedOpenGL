@@ -61,37 +61,54 @@ void Material::apply(Shader* shader){
     glUniform3fv(shader->getUniformLocation("material.specular"), 1, &(_specular[0]));
     glUniform1f(shader->getUniformLocation("material.shininess"), _shininess);
     
+    //init
+    glUniform1i(shader->getUniformLocation("texture_diffuse1_passed"), 0);
+    glUniform1i(shader->getUniformLocation("texture_specular1_passed"), 0);
+    glUniform1i(shader->getUniformLocation("texture_normal1_passed"), 0);
+    glUniform1i(shader->getUniformLocation("texture_height1_passed"), 0);
+    
     for(unsigned int i = 0; i < _textures.size(); i++){
         Texture* t = _textures[i];
         //~ glActiveTexture(GL_TEXTURE0 + i); // active proper texture unit before binding
         // retrieve texture number (the N in diffuse_textureN)
         
         std::string fragment_name = "texture_";
+        std::string fragment_name_conf = "texture_";
         
         switch (t->type()){
         case Texture::Diffuse:
             fragment_name += "diffuse" + std::to_string(binder.diffuse++);
+            fragment_name_conf += "diffuse1_passed";
             break;
         case Texture::Specular:
             fragment_name += "specular" + std::to_string(binder.specular++);
+            fragment_name_conf += "specular1_passed";
             break;
         case Texture::Normal:
             fragment_name += "normal" + std::to_string(binder.normal++);
+            fragment_name_conf += "normal1_passed";
             break;
         case Texture::Height:
             fragment_name += "height" + std::to_string(binder.height++);
+            fragment_name_conf += "height1_passed";
             break;
         case Texture::Cube:
             fragment_name += "cube";
+            fragment_name_conf = "";
             break;
         }
 
                  
     
-        //DEBUG(Debug::info, "Applying material '%s'(%d) and idtex %d\n", fragment_name.c_str(), shader->getUniformLocation(fragment_name.c_str()), t->texId());                                // now set the sampler to the correct texture unit
+        //~ DEBUG(Debug::info, "Applying material '%s'(%d)\n", fragment_name.c_str(), shader->getUniformLocation(fragment_name.c_str()));                                // now set the sampler to the correct texture unit
         //~ glUniform1i(shader->getUniformLocation(fragment_name.c_str()), i);
         // and finally bind the texture
         //~ glBindTexture(GL_TEXTURE_2D, t->id());
-        t->apply(shader->getUniformLocation(fragment_name.c_str()));
+        //printf(fragment_name_conf.c_str());
+        if(fragment_name_conf.c_str() != "")
+            t->apply(shader->getUniformLocation(fragment_name.c_str()), shader->getUniformLocation(fragment_name_conf.c_str()));
+        else
+            t->apply(shader->getUniformLocation(fragment_name.c_str()));
     }
 }
+

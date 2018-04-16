@@ -59,10 +59,20 @@ void Texture::apply(GLuint framgment_id) {
     activate();
     bind();
     glUniform1i(framgment_id, _id);
-    
+}
 
-    // Set our framgment_id sampler to use Texture Unit 0
+void Texture::apply(GLuint framgment_id, GLuint framgment_conf_id) {
+    activate();
+    bind();
+    glUniform1i(framgment_id, _id);
+    if(type() != Cube)
+        glUniform1i(framgment_conf_id, 1);
+}
 
+void Texture::deapply(GLuint framgment_id) {
+    deactivate();
+    unbind();
+    glUniform1i(framgment_id, 0);
 }
 
 unsigned char* Texture::getDataFromFile(std::string path, GLenum*format, int *width, int *height) {

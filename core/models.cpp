@@ -21,7 +21,6 @@ void Bone::dumpToBuffer(std::vector<int>& vertex_buff, std::vector<float>& weigh
     std::cout << _offset;
     
     int i = 0;
-    normalize();
     
     for (std::pair<uint, float> p: _weights){
         
@@ -37,33 +36,20 @@ void Bone::dumpToBuffer(std::vector<int>& vertex_buff, std::vector<float>& weigh
         weight_buff[p.first * 4 + offset] = p.second;
     }
 }
-
-void Bone::normalize() {
-    float mag = 0;
-    
-    for (std::pair<uint, float> p: _weights)
-        mag += p.second * p.second;
-        
-    mag = sqrt(mag);
-        
-    for (std::pair<uint, float> p: _weights)
-        _weights[p.first] = p.second / mag;
-}
-
 glm::mat4 Bone::transformation() const {
-    //~ DEBUG(Debug::Info, "-- Update bone id %d\n", _boneid);
-    return _node->world_transformation() * _offset;
+    //~ DEBUG(Debug::Info, "-- Update bone id %d from node %s\n", _boneid, _node->name().c_str());
+    //~ return _node->world_transformation() * _offset;
+    return _node->world_transformation();
 }
 
 VertexArray::VertexArray():
-    _len_points(0)
+    _len_points(0), _indice(0)
 {    
     glGenVertexArrays(1, &_vertex_array_id);
                 
     glGenBuffers(1, &_vertexbuffer);
     glGenBuffers(1, &_uvbuffer);
     glGenBuffers(1, &_normal);
-    glGenBuffers(1, &_indice);
     glGenBuffers(1, &_bones_id);
     glGenBuffers(1, &_weight);
     
@@ -74,7 +60,7 @@ VertexArray::VertexArray():
 void VertexArray::setVertex(std::vector<GLfloat> vertex)
 {            
     glBindVertexArray(_vertex_array_id);
-    DEBUG(Debug::Info, "VertexArray has %d vertices\n", vertex.size());
+    DEBUG(Debug::Info, "VertexArray has %d vertices\n", vertex.size() / 3);
     
     glEnableVertexAttribArray(GL_LAYOUT_VERTEXARRAY);
     glBindBuffer(GL_ARRAY_BUFFER, _vertexbuffer);
@@ -85,7 +71,7 @@ void VertexArray::setVertex(std::vector<GLfloat> vertex)
         0,                  // stride
         (void*)0            // array buffer offset
     );
-    _len_points = vertex.size();
+    _len_points = vertex.size() / 3;
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
@@ -108,7 +94,7 @@ void VertexArray::setUV(std::vector<GLfloat> uv)
 void VertexArray::setNormal(std::vector<GLfloat> normal)
 {    
     glBindVertexArray(_vertex_array_id);
-    DEBUG(Debug::Info, "VertexArray has %d normal\n", normal.size());
+    DEBUG(Debug::Info, "VertexArray has %d normal\n", normal.size() / 3);
     
     glEnableVertexAttribArray(GL_LAYOUT_NORMAL);
     glBindBuffer(GL_ARRAY_BUFFER, _normal);
@@ -120,8 +106,9 @@ void VertexArray::setNormal(std::vector<GLfloat> normal)
 
 void VertexArray::setIndice(std::vector<unsigned short> indices)
 {    
-    glBindVertexArray(_vertex_array_id);            
-    DEBUG(Debug::Info, "VertexArray has %d indice\n", indices.size());
+    glBindVertexArray(_vertex_array_id);   
+    glGenBuffers(1, &_indice); 
+    DEBUG(Debug::Info, "VertexArray has %d faces\n", indices.size() / 3);
        
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _indice);      
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLushort), &indices[0], GL_STATIC_DRAW);  
@@ -141,20 +128,26 @@ VertexArray::~VertexArray()
     glDeleteBuffers(1, &_vertexbuffer);
     glDeleteBuffers(1, &_uvbuffer);
     glDeleteBuffers(1, &_normal);
-    glDeleteBuffers(1, &_indice);
     glDeleteBuffers(1, &_bones_id);
     glDeleteBuffers(1, &_weight);
     glDeleteBuffers(1, &_tangent);
     glDeleteBuffers(1, &_bitangent);
+    if (_indice)
+        glDeleteBuffers(1, &_indice);
     glDeleteVertexArrays(1, &_vertex_array_id);
 }
 
 void VertexArray::draw(GLint primitive){
     glBindVertexArray(_vertex_array_id);
-    glDrawArrays(primitive, 0, _len_points);
-    //~ glDrawElements(primitive, _len_points / 3, GL_UNSIGNED_SHORT, nullptr);
-    //~ int size;  glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
-    //~ glDrawElements(GL_TRIANGLES, size/sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
+    
+    if (_indice){
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _indice);     
+        int size;  glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
+        glDrawElements(primitive, size/sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); 
+    } else
+        glDrawArrays(primitive, 0, _len_points);
+        
     glBindVertexArray(0);
 }
 
@@ -175,8 +168,8 @@ void VertexArray::setBones(std::vector<Bone*> bones, Shader* s)
         //~ if (total_weight != 1.f)
             //~ printf("w of %d:%f\n", v, total_weight);
     //~ }
-    for (int b = 0; b < 4; b++)
-        DEBUG(Debug::Info, " - BoneID: %d VID: %d, weight: %f, offset: %d\n", bones_buffer[2000 * 4 + b], 2000, weight_buffer[2000 * 4 + b], b);
+    //~ for (int b = 0; b < 4 * _len_points; b++)
+        //~ DEBUG(Debug::Info, " - BoneID: %d VID: %d, weight: %f, offset: %d\n", bones_buffer[b], b/4, weight_buffer[b], b % 4);
     
     // Uploading to GPU    
     glBindVertexArray(_vertex_array_id);
@@ -184,17 +177,16 @@ void VertexArray::setBones(std::vector<Bone*> bones, Shader* s)
     
     glEnableVertexAttribArray(GL_LAYOUT_BONES);
     glBindBuffer(GL_ARRAY_BUFFER, _bones_id);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(GLint) * bones_buffer.size(), &bones_buffer[0], GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, bones_buffer.size() * sizeof(GLint), &bones_buffer[0], GL_STATIC_DRAW);
     glVertexAttribPointer(GL_LAYOUT_BONES, 4, GL_INT, GL_FALSE, 0, nullptr);
     
     
     glEnableVertexAttribArray(GL_LAYOUT_WEIGHT);
     glBindBuffer(GL_ARRAY_BUFFER, _weight);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * weight_buffer.size(), &weight_buffer[0], GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, weight_buffer.size() * sizeof(GLfloat), &weight_buffer[0], GL_STATIC_DRAW);
     glVertexAttribPointer(GL_LAYOUT_WEIGHT, 4, GL_FLOAT, GL_FALSE, 0, nullptr);
     
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);    
+    glBindBuffer(GL_ARRAY_BUFFER, 0);   
     glBindVertexArray(0);
 }
 
@@ -295,20 +287,22 @@ void Mesh::draw(glm::mat4 projection, glm::mat4 view, glm::mat4 model){
     // setup camera geometry parameters
     _shader->setMat4("projection", projection);
     _shader->setMat4("view", view);
-    _shader->setMat4("model", model);
+    _shader->setMat4("model", model, GL_TRUE);
     
     // bone world transform matrices need to be passed for skinning
     for (Bone* b: _bones){
-        _shader->setMat4("gBones[" + std::to_string(b->id()) + "]", b->transformation());
-        //~ std::cout << "gBones[" + std::to_string(b->id()) + "]" << b->transformation();
+        _shader->setMat4("gBones[" + std::to_string(b->id()) + "]", b->transformation(), GL_TRUE);
+        //~ std::cout << "gBones[" + std::to_string(b->id()) + "]" << std::endl << b->transformation();
     }
-        //~ _shader->setMat4("gBones[" + std::to_string(b->id()) + "]", glm::mat4(1.f));
 
     if (_material)
         _material->apply(_shader);
         
     // draw mesh vertex array
     _vao->draw(VA_PRIMITIVE);
+    
+    //~ if (_material)
+        //~ _material->deapply(_shader);
 
     // leave with clean OpenGL state, to make it easier to detect problems
     _shader->deuse();

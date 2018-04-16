@@ -52,8 +52,6 @@ class Bone {
         
         Node* _node;
         
-        void normalize();
-        
 };
 
 
@@ -85,16 +83,17 @@ class VertexArray {
 
 class Mesh : public Drawable {
     public:
-        Mesh(Shader* s, VertexArray* va, std::vector<Bone*> bones):_shader(s), _vao(va), _bones(bones), _material(nullptr) {}
+        Mesh(Shader* s, VertexArray* va, std::vector<Bone*> bones = std::vector<Bone*>()):_shader(s), _vao(va), _bones(bones), _material(nullptr) {}
         ~Mesh();
         
         void draw(glm::mat4 projection, glm::mat4 view, glm::mat4 model);
         
         void dump(int level){
-            std::cout << std::setw(level * 2) << "Mesh with " << _bones.size() << " bones." << std::endl;
+            std::cout << "Mesh with " << _bones.size() << " bones." << std::endl;
         }
         
-        inline void setMaterial(Material* m) { _material = m; }  
+        inline void setMaterial(Material* m) { _material = m; }
+        inline Material*getMaterial() {return _material;} 
           
         inline VertexArray* VAO() const { return _vao; }    
         inline void setVAO(VertexArray* va) { _vao = va; }   
@@ -107,8 +106,10 @@ class Mesh : public Drawable {
         Material* _material;
         
         std::vector<Bone*> _bones;
-        Shader* _shader;
         VertexArray* _vao;
+        
+    protected:
+        Shader* _shader;
 };
 
 class Skybox : public Mesh {

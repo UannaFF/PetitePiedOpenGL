@@ -42,16 +42,18 @@ class Texture {
         inline GLuint texId() const {return _id;}
         inline Type type() const { return _type; }
         inline void type(Type t) { _type = t; }
-        
         inline void bind() { glBindTexture((_type == Cube ? GL_TEXTURE_CUBE_MAP : GL_TEXTURE_2D), _texture_id); }
         inline void unbind() { glBindTexture((_type == Cube ? GL_TEXTURE_CUBE_MAP : GL_TEXTURE_2D), 0); }
         
         inline void activate() {  glActiveTexture(GL_TEXTURE0 + _id); }
+        inline void deactivate() {  glActiveTexture(GL_TEXTURE0); }
         //~ inline void unbind() { glBindTexture((_type == Cube ? GL_TEXTURE_CUBE_MAP : GL_TEXTURE_2D), 0); }
         
         //~ static Texture* fromBitmap(std::string);
         //~ static Texture* fromDDS(std::string);
         void apply(GLuint framgment_id);
+        void apply(GLuint framgment_id, GLuint framgment_conf_id);
+        void deapply(GLuint framgment_id);
         
         static Texture* getCubemapTexture(std::string directory, bool gamma);
         static Texture* fromFile(std::string filename, std::string directory = "", bool gamma = false);

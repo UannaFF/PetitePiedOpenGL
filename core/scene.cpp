@@ -45,7 +45,8 @@ Scene* Scene::import(std::string path, Shader* shader){
 
     Assimp::Importer importer;
 
-    const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs |  aiProcess_CalcTangentSpace);
+    //~ const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_LimitBoneWeights);
+    const aiScene* scene = importer.ReadFile(path, aiProcess_JoinIdenticalVertices);
     if( !scene) {
         DEBUG(Level::ERROR, "[Assimp] Errror while reading: %s\n", importer.GetErrorString());
         return nullptr;
@@ -119,12 +120,12 @@ Scene* Scene::import(std::string path, Shader* shader){
 
         // Fill vertices positions
         std::vector<GLfloat> vertices;
-        vertices.reserve(mesh->mNumVertices);
+        vertices.reserve(mesh->mNumVertices * 3);
         for(unsigned int i=0; i<mesh->mNumVertices; i++){
             aiVector3D pos = mesh->mVertices[i];
             vertices.push_back(pos.x);
+            vertices.push_back(-pos.z);
             vertices.push_back(pos.y);
-            vertices.push_back(pos.z);
         }
         v->setVertex(vertices);
 
@@ -132,7 +133,7 @@ Scene* Scene::import(std::string path, Shader* shader){
         std::vector<GLfloat> uvsd;
         for (int channel = 0; channel < mesh->GetNumUVChannels(); channel++) {
             std::vector<GLfloat> uvs;
-            uvs.reserve(mesh->mNumVertices);
+            uvs.reserve(mesh->mNumVertices * 3);
             for(unsigned int i=0; i<mesh->mNumVertices; i++){
                 aiVector3D UVW = mesh->mTextureCoords[channel][i];
                 uvs.push_back(UVW.x);
@@ -146,12 +147,12 @@ Scene* Scene::import(std::string path, Shader* shader){
         // Fill vertices normals
         if (mesh->HasNormals()){
             std::vector<GLfloat> normals;
-            normals.reserve(mesh->mNumVertices);
+            normals.reserve(mesh->mNumVertices * 3);
             for(unsigned int i=0; i<mesh->mNumVertices; i++){
                 aiVector3D n = mesh->mNormals[i];
                 normals.push_back(n.x);
+                normals.push_back(-n.z);
                 normals.push_back(n.y);
-                normals.push_back(n.z);
             }
             v->setNormal(normals);
             
@@ -183,19 +184,26 @@ Scene* Scene::import(std::string path, Shader* shader){
         // Fill face indices
         if (mesh->HasFaces()){
             std::vector<unsigned short> indices;
-            indices.reserve(3*mesh->mNumFaces);
-            for (unsigned int i=0; i<mesh->mNumFaces; i++){
-                // Assume the model has only triangles.
+            indices.reserve(3 * mesh->mNumFaces);
+            // Assume the model has only triangles.
+            if (mesh->mFaces->mNumIndices != 3)
+                throw new SceneException("wierd number of indices to a face: " + std::to_string(mesh->mFaces->mNumIndices));
+                
+            for (unsigned int i=0; i<mesh->mNumFaces; i++){  
+                //~ DEBUG(Debug::Info, "%d %d %d\n", mesh->mFaces[i].mIndices[0], mesh->mFaces[i].mIndices[1], mesh->mFaces[i].mIndices[2]);
+
                 indices.push_back(mesh->mFaces[i].mIndices[0]);
                 indices.push_back(mesh->mFaces[i].mIndices[1]);
                 indices.push_back(mesh->mFaces[i].mIndices[2]);
             }
             DEBUG(Debug::Info, "Mesh has %d primitive\n", mesh->mPrimitiveTypes); 
             v->setIndice(indices);
+            
         }
        
         // Fill bones n
         std::vector<Bone*> bones; 
+        bones.reserve(mesh->mNumBones);
         if (mesh->HasBones()){      
             DEBUG(Debug::Info, "Mesh has %d bones\n", mesh->mNumBones);      
             for (unsigned int i=0; i<mesh->mNumBones; i++){
@@ -207,8 +215,8 @@ Scene* Scene::import(std::string path, Shader* shader){
                 
                 bones.push_back(b);
             }
-            v->setBones(bones, shader);
         }
+        v->setBones(bones, shader);
         
         Mesh* _m = new Mesh(shader, v, bones);
         if(mesh->mMaterialIndex >= 0)
@@ -270,8 +278,8 @@ Scene* Scene::import(std::string path, Shader* shader){
             
                               
             if (relatedBones.empty())
-                //~ throw new SceneException(std::string(channel->mNodeName.data) + " has no bones");
                 continue;
+                //~ throw new SceneException(std::string(channel->mNodeName.data) + " has no bones");
                 
                 
             Channel* c = new Channel(relatedNode, relatedBones);
@@ -279,8 +287,10 @@ Scene* Scene::import(std::string path, Shader* shader){
             for (int j = 0; j < channel->mNumPositionKeys; j++)                    
                 c->addKey(channel->mPositionKeys[j].mTime, new PositionKey(aiVector3DtoglmVec3(channel->mPositionKeys[j].mValue)));
 
-            for (int j = 0; j < channel->mNumRotationKeys; j++)               
+            for (int j = 0; j < channel->mNumRotationKeys; j++){             
+                std::cout << relatedNode->name() << channel->mPositionKeys[j].mTime;
                 c->addKey(channel->mRotationKeys[j].mTime, new RotationKey(Quaternion::fromAi(channel->mRotationKeys[j].mValue)));  
+            }
             
             // Not used yet
             //~ for (int j = 0; j < keyframe->mNumScalingKeys; j++)
@@ -291,6 +301,10 @@ Scene* Scene::import(std::string path, Shader* shader){
         animations.push_back(anim);            
     }
     s->setAnimations(animations);
+    
+    
+    //~ for (int b = 0; b < 100; b++)
+        //~ shader->setMat4("gBones[" + std::to_string(b) + "]", glm::mat4(1.f));
     
     DEBUG(Debug::Info, "\nScene loaded\n");
     
@@ -308,8 +322,8 @@ void Scene::render(){
     
     //change light position
     //printf("time: %d", (int)glfwGetTime());
-    _lights[0]->setPos(glm::vec3(fmod(glfwGetTime(),10), 4, 4));
-    _lights[0]->bind(defaultShader(), glm::vec3(1.0, 1.0, 1.0)); 
+    //_lights[0]->setPos(glm::vec3(fmod(glfwGetTime(),10), 4, 4));
+    //_lights[0]->bind(defaultShader(), glm::vec3(1.0, 1.0, 1.0)); 
 
     //Draw skybox
     if(_skybox) {
@@ -325,9 +339,14 @@ void Scene::render(){
 }
 
 void Scene::playAnimation( int anim){
+    if (_animations.size() <= anim){
+        DEBUG(Debug::WARNING, "No animation found. Skipping\n");
+        return;
+    }
+    
     Animation* a = _animations[anim];
         
-    if (_current_animation.find(a) == _current_animation.end()){
+    if (a && _current_animation.find(a) == _current_animation.end()){
         DEBUG(Debug::Info, "Playing animation %s\n", a->name().c_str());
         _current_animation.insert(a);        
     }
@@ -360,7 +379,7 @@ void Scene::_parseNode(Node* current, aiNode ** children, unsigned int nb_child)
         Node* n = new Node(curr_child->mName.data, aiMatrix4x4toglmMat4(curr_child->mTransformation), this, current);
         DEBUG(Debug::Info, "Node '%s' has %d meshes\n", curr_child->mName.data, curr_child->mNumMeshes);
         for (int v = 0; v < curr_child->mNumMeshes; v++){
-            //~ DEBUG(Debug::Info, "Node '%s' contains %d\n", curr_child->mName.data, curr_child->mMeshes[v]);
+            //DEBUG(Debug::Info, "Node '%s' contains Mesh#%d\n", curr_child->mName.data, curr_child->mMeshes[v]);
             n->addChild("", getMesh(curr_child->mMeshes[v]));
         }
         _parseNode(n, curr_child->mChildren, curr_child->mNumChildren);   
@@ -372,13 +391,14 @@ void Scene::_parseNode(Node* current, aiNode ** children, unsigned int nb_child)
 Node::Node(std::string name, glm::mat4 transformation, Scene* scene, Node* parent):
     _name(name),
     _transformation(transformation),
+    _world_transformation(1.f),
     _parent(parent),
     _scene(scene)
 {
 }
 
 void Node::dump(int level){
-    std::cout << std::setw(level * 4) << _name << std::endl;
+    std::cout << _name << std::endl;
     for (auto child: _children){
         std::cout << std::setw(level * 4) << "|--";
         child.second->dump(level + 1);
@@ -446,20 +466,29 @@ glm::vec3 aiVector3DtoglmVec3(aiVector3D& ai_col){
 }
 
 void Node::draw(glm::mat4 projection, glm::mat4 view, glm::mat4 model){
-    _world_transformation = _transformation * model;
+    _world_transformation = model * _transformation;
+    
+    //~ std::cout << _name << _transformation;
+    
+    //~ if (_scene->defaultShader(Scene::BonesDebugShader)){
+        //~ VertexArray* va = new VertexArray;
+        //~ glm::vec4 p = (_world_transformation * glm::vec4(0.f, 2.f, 0.f, 0));
+        //~ va->setVertex({0., 0., 0., p.x, p.y, p.z});
+        //~ Mesh* m = new Mesh(_scene->defaultShader(Scene::BonesDebugShader), va);
+        //~ m->draw(projection, view, model);
+        //~ delete m;
+    //~ }
         
     for (auto child: _children)
-        child.second->draw(projection, view, model);
+        child.second->draw(projection, view, _world_transformation);
 }
 
 
 
 void Scene::process(float timeInSeconds){
     
-    defaultShader()->use();
+    //~ defaultShader()->use();
     for (Animation* a: _current_animation){
-        glm::mat4 t(1.f);
-
         a->applyBones(fmod(a->timeInTick(timeInSeconds), a->duration()), this);
     }
 }

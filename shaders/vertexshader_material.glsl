@@ -99,13 +99,13 @@ void main()
     
     
     
-    vec4 PosL      = BoneTransform * vec4(aPos, 1.0);
+    //vec4 PosL      = BoneTransform * vec4(aPos, 1.0);
     //~ vec4 PosL      = vec4(aPos, 1.0);
     
-    mat4 mvp = projection * view * model;
+    //mat4 mvp = projection * view * model;
     
     //The position of the vertex
-    gl_Position = mvp * PosL;
+    //gl_Position = mvp * PosL;
     
     if(type == 1.0) preBillPhong();
     else if(type == 2.0) fromCameraToTangent();
@@ -115,9 +115,14 @@ void main()
     //~ gl_Position = mvp * (BoneTransform * vec4(aPos,1));
     //~ gl_Position = projection * view * model * vec4(aPos,1);
     
+    //~ Normal = (BoneTransform * vec4(aNormal, 0.0)).xyz;  
+    //Normal = mat3(transpose(inverse(model))) * aNormal;
     
-    //~ gl_Position = projection * view * model * vec4(aPos,1);
-    //~ gl_Position = projection * view * model *vec4(aPos,1);
-
+    //~ vec4 PosL      = BoneTransform * vec4(aPos, 1.0);
+    //~ vec4 PosL      = BoneTransform * vec4(aPos, 1.0);
+    vec4 PosL      = vec4(aPos, 1.0);
+    mat4 mvp = projection * view * model;
+    
+    gl_Position = mvp * PosL;
     TexCoords = aTexCoords;    
 }
