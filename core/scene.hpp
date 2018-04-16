@@ -44,6 +44,8 @@ class Scene {
         void addMesh(Mesh* m);
         
         inline void addTexture(Texture* t){ _textures.push_back(t); }
+        inline void addAnimation(Animation* a){ _animations.push_back(a); }
+        
         inline void setCamera(Camera* c){ _active_camera = c; }
         inline void setRootNode(Node* n){ _main_node = n; }
         inline void setAnimations(std::vector<Animation*> a){ _animations = a; }
@@ -129,7 +131,7 @@ class Node: public Drawable {
         std::string _name;
         
         glm::mat4 _transformation;        
-        glm::mat4 _world_transformation;        
+        glm::mat4 _world_transformation;      
         
         Node* _parent;
         Scene* _scene;
@@ -138,5 +140,6 @@ class Node: public Drawable {
 glm::mat4 aiMatrix4x4toglmMat4(aiMatrix4x4t<float>& ai_mat);
 glm::vec3 aiColor3DtoglmVec3(aiColor3D& ai_col);
 glm::vec3 aiVector3DtoglmVec3(aiVector3D& ai_vec);
+glm::quat aiQuattoglmQuat(aiQuaternion& ai_q);
 
 #endif

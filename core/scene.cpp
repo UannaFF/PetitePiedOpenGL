@@ -248,7 +248,7 @@ Scene* Scene::import(std::string path, Shader* shader){
 
             for (int j = 0; j < channel->mNumRotationKeys; j++){             
                 std::cout << relatedNode->name() << channel->mPositionKeys[j].mTime;
-                c->addKey(channel->mRotationKeys[j].mTime, new RotationKey(Quaternion::fromAi(channel->mRotationKeys[j].mValue)));  
+                c->addKey(channel->mRotationKeys[j].mTime, new RotationKey(aiQuattoglmQuat(channel->mRotationKeys[j].mValue)));  
             }
             
             // Not used yet
@@ -413,8 +413,20 @@ glm::vec3 aiVector3DtoglmVec3(aiVector3D& ai_col){
     return col;
 }
 
+glm::quat aiQuattoglmQuat(aiQuaternion& ai_q){
+    
+    glm::quat q;
+    
+    q.x = ai_q.x;
+    q.y = ai_q.y;
+    q.z = ai_q.z;
+    q.w = ai_q.w;
+    
+    return q;
+}
+
 void Node::draw(glm::mat4 projection, glm::mat4 view, glm::mat4 model){
-    _world_transformation = model * _transformation;
+    _world_transformation = model * transformation();
     
     //~ std::cout << _name << _transformation;
     

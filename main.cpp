@@ -16,6 +16,7 @@
 #include "core/texture.hpp"
 #include "core/models.hpp"
 #include "core/scene.hpp"
+#include "core/animations.hpp"
 
 #include "assets/utils.hpp"
 #include "assets/world.hpp"
@@ -66,6 +67,44 @@ int main(int argc, char** argv){
             //~ Scene* scene = Scene::import(scene_file, Shader::fromFiles( "shaders/vertexshader_material.glsl", "shaders/fragment_material.glsl"));
             Scene* scene = DinoWorld::buildScene();
             
+            
+            Scene* arm_scene = Scene::import("res/Dinosaure/Bras Mécanique/armclean.dae", scene->defaultShader());
+            arm_scene->rootNode()->setTransformation(glm::mat4(1.f));
+            arm_scene->rootNode()->dump(0);
+            arm_scene->rootNode()->find("Base_low_001")->setTransformation(glm::mat4(1.f));
+            arm_scene->rootNode()->find("Arm_low_001")->setTransformation(glm::mat4(1.f) * translation(0, 0, 0.115));
+            arm_scene->rootNode()->find("Arm2_Low_001")->setTransformation(glm::mat4(1.f) * translation(0, 0, 0.295));
+            arm_scene->rootNode()->find("FingerL_low_001")->setTransformation(glm::mat4(1.f) * translation(-0.23, -0.02, 0));
+            arm_scene->rootNode()->find("FingerR_low_001")->setTransformation(glm::mat4(1.f) * translation(-0.23, 0.02, 0));
+            scene->rootNode()->addChild("rail", arm_scene->rootNode());
+            
+            Animation* opening_hand = new Animation("FingerClose", 4, 3);
+            Channel* c = new Channel(arm_scene->rootNode()->find("FingerL_low_001"));
+            //~ c->addKey(0, new RotationKey(glm::quat(1, 0, 0, 0)));
+            //~ c->addKey(25, new RotationKey(glm::quat(1, 0, 0, 0.2)));
+            //~ c->addKey(50, new RotationKey(glm::quat(1, 0, 0, 0)));
+            //~ c->addKey(100, new RotationKey(glm::quat(1, 0, 0, 0)));
+            c->addKey(0, new RotationKey(glm::quat(glm::vec3(0., 0., 0.))));
+            c->addKey(25, new RotationKey(glm::quat(glm::vec3(0., 0., glm::radians(180.)))));
+            c->addKey(50, new RotationKey(glm::quat(glm::vec3(0., 0., 0.))));
+            c->addKey(100, new RotationKey(glm::quat(glm::vec3(0., 0., 0.))));
+            c->addKey(0, new PositionKey(glm::vec3(-0.23, -0.02, 0)));
+            c->addKey(100, new PositionKey(glm::vec3(-0.23, -0.02, 0)));
+            opening_hand->addChannel(c);
+            c = new Channel(arm_scene->rootNode()->find("FingerR_low_001"));
+            c->addKey(0, new RotationKey(glm::quat(1, 0, 0, 0)));
+            c->addKey(25, new RotationKey(glm::quat(1, 0, 0, -0.2)));
+            c->addKey(50, new RotationKey(glm::quat(1, 0, 0, 0)));
+            c->addKey(100, new RotationKey(glm::quat(1, 0, 0, 0)));
+            c->addKey(0, new PositionKey(glm::vec3(0.f)));
+            c->addKey(100, new PositionKey(glm::vec3(0.f)));
+            opening_hand->addChannel(c);
+
+            scene->addAnimation(opening_hand);
+            
+            
+            glm::mat4 trans = translation(5.7, 1.8, 0);
+            
             //~ Camera mainCamera;
             scene->setCamera(&mainCamera);
             
@@ -103,21 +142,21 @@ int main(int argc, char** argv){
                 
                 scene->defaultShader()->use();
                 
-                //~ if (glfwGetKey( window.internal(), GLFW_KEY_X ) == GLFW_PRESS)
-                    //~ trans[0][3] += 0.05;
-                //~ if (glfwGetKey( window.internal(), GLFW_KEY_W ) == GLFW_PRESS)
-                    //~ trans[0][3] -= 0.05;
-                //~ if (glfwGetKey( window.internal(), GLFW_KEY_Q ) == GLFW_PRESS)
-                    //~ trans[1][3] += 0.05;
-                //~ if (glfwGetKey( window.internal(), GLFW_KEY_D ) == GLFW_PRESS)
-                    //~ trans[1][3] -= 0.05;
-                //~ if (glfwGetKey( window.internal(), GLFW_KEY_U ) == GLFW_PRESS)
-                    //~ trans[2][3] += 0.05;
-                //~ if (glfwGetKey( window.internal(), GLFW_KEY_I ) == GLFW_PRESS)
-                    //~ trans[2][3] -= 0.05;
+                if (glfwGetKey( window.internal(), GLFW_KEY_X ) == GLFW_PRESS)
+                    trans[0][3] += 0.05;
+                if (glfwGetKey( window.internal(), GLFW_KEY_W ) == GLFW_PRESS)
+                    trans[0][3] -= 0.05;
+                if (glfwGetKey( window.internal(), GLFW_KEY_Q ) == GLFW_PRESS)
+                    trans[1][3] += 0.05;
+                if (glfwGetKey( window.internal(), GLFW_KEY_D ) == GLFW_PRESS)
+                    trans[1][3] -= 0.05;
+                if (glfwGetKey( window.internal(), GLFW_KEY_U ) == GLFW_PRESS)
+                    trans[2][3] += 0.05;
+                if (glfwGetKey( window.internal(), GLFW_KEY_I ) == GLFW_PRESS)
+                    trans[2][3] -= 0.05;
                     
-                //~ std::cout << trans[0][3] <<", " << trans[1][3] << ", " << trans[2][3] << std::endl;
-                //~ boat_scene->rootNode()->setTransformation(boat_rotate_scale * trans);
+                std::cout << trans[0][3] <<", " << trans[1][3] << ", " << trans[2][3] << std::endl;
+                arm_scene->rootNode()->setTransformation(glm::scale(glm::mat4(1.f), glm::vec3(0.25))* trans);
                 scene->defaultShader()->setVec3("light.position", lightPos);
                     
                 //~ glm::vec3 lightColor;

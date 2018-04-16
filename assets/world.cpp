@@ -35,9 +35,6 @@ Scene* DinoWorld::buildScene(){
     main_scene->rootNode()->addChild("diplo2", diplo2);
     
     Scene* boat_scene = Scene::import("res/Dinosaure/Boat/boat.dae", shader);
-    Scene* arm_scene = Scene::import("res/arm/brasmécanique.dae", shader);
-    arm_scene->rootNode()->setTransformation(glm::mat4(1.f));
-    boat_scene->rootNode()->addChild("rail", arm_scene->rootNode());
     
     glm::mat4 boat_rotate_scale = glm::rotate(glm::rotate(glm::scale(boat_scene->rootNode()->transformation(), glm::vec3(0.1f)), glm::radians(-90.f), glm::vec3(1.0f, 0.0f, 0.0f)), glm::radians(90.f), glm::vec3(0.0f, 0.0f, 1.0f));
     
