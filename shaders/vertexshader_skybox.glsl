@@ -1,9 +1,16 @@
 #version 330
 
-in vec3 texcoords;
-uniform samplerCube texture_cube;
-out vec4 frag_colour;
+layout (location = 0) in vec3 aPos;
+layout (location = 1) in vec2 aTexCoords;
+
+out vec3 texcoords;
+
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
 
 void main() {
-  frag_colour = texture(texture_cube, texcoords);
+  texcoords = vec3(aPos.x, aPos.y, aPos.z);
+  mat4 MVP = projection * view * model;
+  gl_Position = MVP * vec4(aPos, 1.0);
 }
