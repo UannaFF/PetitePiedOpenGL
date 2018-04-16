@@ -49,32 +49,24 @@ class RotationKey : public Key {
 
 class Channel {
     public:
-        Channel(Node* n, std::vector<Bone*> b = std::vector<Bone*>()): _node(n), _bones(b) {}
+        Channel(Node* n, std::vector<Bone*> b = std::vector<Bone*>()): _node(n), _bones(b), _positions_keys(), _rotations_keys() {}
         
-        void addKey(float t, Key* k) {
-            auto it = _keys.find(t);
-            if (it != _keys.end()){
-                it->second.push_back(k);
-            } else {
-                std::vector<Key*> v;
-                v.push_back(k);
-                _keys.insert(std::pair<float, std::vector<Key*>>(t, v));
-            }
-                
+        void addKey(float t, PositionKey* k) {
+            _positions_keys.insert(std::make_pair(t, k));                
+        }
+        void addKey(float t, RotationKey* k) {
+            _rotations_keys.insert(std::make_pair(t, k));                
         }
         
         void applyBones(float AnimationTime, glm::mat4& currentTransformation, const glm::mat4& GlobalInverseTransform);
         
-        std::map<float, std::vector<Key*>>::const_iterator getPosKeys(float AnimationTime) const {
-            for (auto it = _keys.begin(); it != _keys.end();)
-                if ((++it)->first > AnimationTime)
-                    return --it;
-            return _keys.begin();
-        }
+        std::pair<std::pair<float, PositionKey*>, std::pair<float, PositionKey*>> getPosKeys(float AnimationTime) const;
+        std::pair<std::pair<float, RotationKey*>, std::pair<float, RotationKey*>> getRotKeys(float AnimationTime) const;
     
         inline Node* node() const { return _node; }
     private:
-        std::map<float, std::vector<Key*>> _keys;
+        std::map<float, PositionKey*> _positions_keys;
+        std::map<float, RotationKey*> _rotations_keys;
         std::vector<Bone*> _bones;
         Node* _node;
 };

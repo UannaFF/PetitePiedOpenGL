@@ -19,11 +19,11 @@ Scene* DinoWorld::buildScene(){
     main_scene->rootNode()->addChild("pmnode", pmNode);
       
     Scene* diplo_scene = Scene::import("res/Dinosaure/diplodocus/diplo.dae", shader);
-    Node * diplo1 = new Node(*diplo_scene->rootNode());
-    Node * diplo2 = new Node(*diplo_scene->rootNode());
+    Node * diplo1 = new Node(*diplo_scene->rootNode()->find("diplo_node"));
+    Node * diplo2 = new Node(*diplo_scene->rootNode()->find("diplo_node"));
     
     glm::mat4 diplo_rotate_scale = glm::scale(
-        glm::rotate(diplo1->transformation(), glm::radians(180.f), glm::vec3(1.0f, 0.0f, 0.0f)),
+        glm::rotate(diplo1->transformation(), glm::radians(-90.f), glm::vec3(1.0f, 0.0f, 0.0f)),
         glm::vec3(0.1f)
     );
     
@@ -40,9 +40,9 @@ Scene* DinoWorld::buildScene(){
     
     glm::mat4 boat_rotate_scale = glm::rotate(glm::rotate(glm::scale(boat_scene->rootNode()->transformation(), glm::vec3(0.1f)), glm::radians(-90.f), glm::vec3(1.0f, 0.0f, 0.0f)), glm::radians(90.f), glm::vec3(0.0f, 0.0f, 1.0f));
     
-    boat_scene->rootNode()->setTransformation(boat_rotate_scale * translation(6, -0.3, -0.45));
-    boat_scene->rootNode()->parent(main_scene->rootNode());
-    main_scene->rootNode()->addChild("boat", boat_scene->rootNode());
+    boat_scene->rootNode()->find("Main")->setTransformation(boat_rotate_scale * translation(4, -0.3, 0.05));
+    boat_scene->rootNode()->find("Main")->parent(main_scene->rootNode());
+    main_scene->rootNode()->addChild("boat", boat_scene->rootNode()->find("Main"));
     
     return main_scene;
 }

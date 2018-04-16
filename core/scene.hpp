@@ -129,7 +129,7 @@ class Node: public Drawable {
         inline Node* parent() const     { return _parent; }
         inline void parent(Node* p) { _parent = p; }
         
-        inline glm::mat4 inverseTransformation() const { return (_parent ? _transformation * _parent->inverseTransformation() : _transformation * glm::mat4(1.f));}
+        inline glm::mat4 inverseTransformation() const { return (_parent ? _parent->inverseTransformation() * _transformation: glm::mat4(1.f) * _transformation);}
     private:
         std::multimap<std::string, Drawable*> _children;
         

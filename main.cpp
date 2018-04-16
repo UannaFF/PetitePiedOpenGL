@@ -72,62 +72,42 @@ int main(int argc, char** argv){
             arm_scene->rootNode()->setTransformation(glm::mat4(1.f));
             arm_scene->rootNode()->dump(0);
             arm_scene->rootNode()->find("Base_low_001")->setTransformation(glm::mat4(1.f));
-            arm_scene->rootNode()->find("Arm_low_001")->setTransformation(glm::mat4(1.f) * translation(0, 0, 0.115));
-            arm_scene->rootNode()->find("Arm2_Low_001")->setTransformation(glm::mat4(1.f) * translation(0, 0, 0.295));
-            arm_scene->rootNode()->find("FingerL_low_001")->setTransformation(glm::mat4(1.f) * translation(-0.23, -0.02, 0));
-            arm_scene->rootNode()->find("FingerR_low_001")->setTransformation(glm::mat4(1.f) * translation(-0.23, 0.02, 0));
-            arm_scene->rootNode()->parent(scene->rootNode());
-            scene->rootNode()->addChild("rail", arm_scene->rootNode());
+            
+            arm_scene->rootNode()->find("Arm_low_001")->parent(arm_scene->rootNode()->find("Base_low_001"));
+            arm_scene->rootNode()->find("Arm_low_001")->setTransformation(glm::mat4(1.f));
+            
+            arm_scene->rootNode()->find("Arm2_Low_001")->parent(arm_scene->rootNode()->find("Arm_low_001"));
+            arm_scene->rootNode()->find("Arm2_Low_001")->setTransformation(glm::mat4(1.f) * translation(0, 0, 0.12));
+            
+            arm_scene->rootNode()->find("FingerL_low_001")->parent(arm_scene->rootNode()->find("Arm2_Low_001"));
+            arm_scene->rootNode()->find("FingerL_low_001")->setTransformation(glm::mat4(1.f) * translation(-0.10, -0.01, 0));
+            
+            arm_scene->rootNode()->find("FingerR_low_001")->parent(arm_scene->rootNode()->find("Arm2_Low_001"));
+            arm_scene->rootNode()->find("FingerR_low_001")->setTransformation(glm::mat4(1.f) * translation(-0.10, 0.01, 0));
+            
+            arm_scene->rootNode()->find("Rail_low_001")->parent(scene->rootNode()->find("Main"));
+            arm_scene->rootNode()->find("Rail_low_001")->setTransformation(glm::rotate(translation(-3, -3.45, -0.05), glm::radians(-90.f), glm::vec3(0.0f, 0.0f, 1.0f)));
+            scene->rootNode()->find("Main")->addChild("rail", arm_scene->rootNode()->find("Rail_low_001"));
+            
+            scene->displayNodeTree();
             
             Animation* opening_hand = new Animation("FingerClose", 80, 20);
-            Channel* c = new Channel(arm_scene->rootNode()->find("FingerL_low_001"));
-             c->addKey(0, new RotationKey(glm::quat(glm::vec3(0, glm::radians(45.), 0))));
-             c->addKey(10, new RotationKey(glm::quat(glm::vec3(0, glm::radians(90.), 0))));
-             c->addKey(20, new RotationKey(glm::quat(glm::vec3(0, glm::radians(135.), 0))));
-             c->addKey(30, new RotationKey(glm::quat(glm::vec3(0, glm::radians(180.), 0))));
-             c->addKey(40, new RotationKey(glm::quat(glm::vec3(0, glm::radians(225.), 0))));
-             c->addKey(50, new RotationKey(glm::quat(glm::vec3(0, glm::radians(270.), 0))));
-             c->addKey(60, new RotationKey(glm::quat(glm::vec3(0, glm::radians(315.), 0))));
-             c->addKey(70, new RotationKey(glm::quat(glm::vec3(0, glm::radians(360.), 0))));
-             c->addKey(80, new RotationKey(glm::quat(glm::vec3(0, glm::radians(360.), 0))));
-            //~ c->addKey(10, new RotationKey(glm::quat(1, 0, 0, 0)));
-             //~ c->addKey(20, new RotationKey(glm::quat(glm::vec3(0, glm::radians(45.), 0))));
-            //~ c->addKey(30, new RotationKey(glm::quat(1, 0, 0, 0)));
-            //~ c->addKey(0, new PositionKey(glm::vec3(1.f)));
-            //~ c->addKey(20, new PositionKey(glm::vec3(0, 0.02, 0)));
+            Channel* c = new Channel(scene->rootNode()->find("FingerL_low_001"));
+            c->addKey(0, new RotationKey(glm::quat(glm::vec3(0, glm::radians(0.), 0))));
+            c->addKey(40, new RotationKey(glm::quat(glm::vec3(0, glm::radians(60.), 0))));
+            c->addKey(80, new RotationKey(glm::quat(glm::vec3(0, glm::radians(0.), 0))));
+            c->addKey(0, new PositionKey(glm::vec3(-0.90, 0.01, 0)));
+            c->addKey(80, new PositionKey(glm::vec3(-0.90, 0.01, 0)));
             opening_hand->addChannel(c);
-            //~ c = new Channel(arm_scene->rootNode()->find("FingerR_low_001"));
-            //~ c->addKey(0, new RotationKey(glm::quat(vec3(0, glm::radians(-45.), 0))));
-            //~ c->addKey(10, new RotationKey(glm::quat(1, 0, glm::radians(45.), -0.2)));
-            //~ c->addKey(20, new RotationKey(glm::quat(1, 0, 0, 0)));
-            //~ c->addKey(100, new RotationKey(glm::quat(1, 0, glm::radians(-45.), 0)));
-            //~ c->addKey(0, new PositionKey(glm::vec3(2.0, 0.0, 0)));
-            //~ c->addKey(20, new PositionKey(glm::vec3(2.0, 0.0, 0)));
-            //~ opening_hand->addChannel(c);
-
+            c = new Channel(scene->rootNode()->find("FingerR_low_001"));
+            c->addKey(0, new RotationKey(glm::quat(glm::vec3(0, glm::radians(0.), 0))));
+            c->addKey(40, new RotationKey(glm::quat(glm::vec3(0, glm::radians(-60.), 0))));
+            c->addKey(80, new RotationKey(glm::quat(glm::vec3(0, glm::radians(0.), 0))));
+            c->addKey(0, new PositionKey(glm::vec3(-0.90, -0.01, 0)));
+            c->addKey(80, new PositionKey(glm::vec3(-0.90, -0.01, 0)));
+            opening_hand->addChannel(c);
+            
             scene->addAnimation(opening_hand);
-            
-            //~ Animation* moving_base = new Animation("Base", 100, 25);
-            //~ c = new Channel(arm_scene->rootNode()->find("Rail_low_001"));
-            //c->addKey(50, new RotationKey(glm::quat(glm::vec3(0., 0., 0.))));
-            //~ c->addKey(0, new PositionKey(glm::vec3(0.0, 1.2, 0)));
-            //~ c->addKey(50, new PositionKey(glm::vec3(0.0, -1.2, 0)));
-            //~ c->addKey(100, new PositionKey(glm::vec3(0.0, 1.2, 0)));
-            //~ moving_base->addChannel(c);
-
-            //~ //scene->addAnimation(moving_base);
-            
-            //Animation* moving_arm = new Animation("Arm2", 20, 4);
-            //~ Channel* c2 = new Channel(arm_scene->rootNode()->find("Arm2_low_001"));
-            //~ c2->addKey(0, new RotationKey(glm::angleAxis(glm::radians(0.f), glm::vec3(0.f, 0.f, 0.f))));
-            //~ c2->addKey(50, new RotationKey(glm::angleAxis(glm::radians(90.f), glm::vec3(0.f, 1.0, 0.f))));
-            //~ c2->addKey(100, new RotationKey(glm::angleAxis(glm::radians(90.f), glm::vec3(0.f, -1.f, 0.f))));
-            //~ c2->addKey(0, new PositionKey(glm::vec3(0.0, 0.0, 0)));
-            //~ c2->addKey(10, new PositionKey(glm::vec3(0.0, 0.0, 0)));
-            //~ c2->addKey(20, new PositionKey(glm::vec3(0.0, 0.0, 0)));
-            //~ moving_base->addChannel(c2);
-
-            //~ scene->addAnimation(moving_base);
             
             
             glm::mat4 trans = translation(5.7, 1.8, 0);
@@ -145,9 +125,10 @@ int main(int argc, char** argv){
                                    ));
 
             // Marker
-            Node* markerNode = new Node("MarkerNode", glm::mat4(1.f) * translation(0.f, 0.f, 1.f), scene, scene->rootNode());
+            Node* markerNode = new Node("MarkerNode", glm::mat4(1.f), scene, scene->rootNode());
             markerNode->addChild("markerMesh", new ReferenceMarker(Shader::fromFiles( "shaders/vertexshader_marker.glsl", "shaders/fragment_marker.glsl")));
-            scene->rootNode()->addChild("marker", markerNode);
+            markerNode->parent(arm_scene->rootNode()->find("Arm2_Low_001"));
+            arm_scene->rootNode()->find("Arm2_Low_001")->addChild("marker", markerNode);
             
             // Skybox
             scene->setSkybox("skybox_sky", "shaders/Skyboxshadingvertex.glsl","shaders/Skyboxshadingfragment.glsl" );
@@ -157,6 +138,7 @@ int main(int argc, char** argv){
             window.centerCursor();
             
             scene->playAnimation(0);
+            //~ scene->playAnimation(1);
             glm::vec3 lightPos = glm::vec3(0,-2.7, 4);   
             
             float time_last_frame = glfwGetTime();
@@ -182,8 +164,9 @@ int main(int argc, char** argv){
                 if (glfwGetKey( window.internal(), GLFW_KEY_I ) == GLFW_PRESS)
                     trans[2][3] -= 0.05;
                     
-                std::cout << trans[0][3] <<", " << trans[1][3] << ", " << trans[2][3] << std::endl;
-                arm_scene->rootNode()->setTransformation(glm::scale(glm::mat4(1.f), glm::vec3(0.25))* trans);
+                //~ std::cout << trans[0][3] <<", " << trans[1][3] << ", " << trans[2][3] << std::endl;
+                //~ arm_scene->rootNode()->setTransformation(glm::scale(glm::mat4(1.f), glm::vec3(0.25))* trans);
+                //~ scene->defaultShader()->setVec3("light.position", lightPos);
                 scene->defaultShader()->setVec3("light.position", lightPos);
                     
                 //~ glm::vec3 lightColor;

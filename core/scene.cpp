@@ -247,7 +247,6 @@ Scene* Scene::import(std::string path, Shader* shader){
                 c->addKey(channel->mPositionKeys[j].mTime, new PositionKey(aiVector3DtoglmVec3(channel->mPositionKeys[j].mValue)));
 
             for (int j = 0; j < channel->mNumRotationKeys; j++){             
-                std::cout << relatedNode->name() << channel->mPositionKeys[j].mTime;
                 c->addKey(channel->mRotationKeys[j].mTime, new RotationKey(aiQuattoglmQuat(channel->mRotationKeys[j].mValue)));  
             }
             
