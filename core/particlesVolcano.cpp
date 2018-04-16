@@ -112,7 +112,7 @@ int ParticuleManager::update(glm::mat4& view){
         p.r = (160)+ rand() % 56;
         p.g = rand() % 64;
         p.b = 0;
-        p.a = (rand() % 256) / 3;
+        p.a = 128 + (rand() % 128);
 
         p.size = (rand()%1000)/2000.0f + 0.1f;
         _particles_container.push_back(std::move(p));

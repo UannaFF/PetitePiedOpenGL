@@ -16,9 +16,9 @@
 #include "core/texture.hpp"
 #include "core/models.hpp"
 #include "core/scene.hpp"
-#include "core/particlesVolcano.h"
 
 #include "assets/utils.hpp"
+#include "assets/world.hpp"
 
 using namespace glm;
 
@@ -64,77 +64,7 @@ int main(int argc, char** argv){
 
             //~ std::vector<Mesh*> models = Mesh::fromOBJ("Environement.obj");
             //~ Scene* scene = Scene::import(scene_file, Shader::fromFiles( "shaders/vertexshader_material.glsl", "shaders/fragment_material.glsl"));
-            Shader* shader = Shader::fromFiles( "shaders/vertexshader_material.glsl", "shaders/fragment_material.glsl");
-            Scene* scene = Scene::import("res/Dinosaure/Environement/Sol+Eau/volcano_lowpoly.dae", shader);
-            
-            Scene* veg = Scene::import("res/Dinosaure/Environement/Végétation/végétation.dae", shader);
-            scene->rootNode()->addChild("vegetation", veg->rootNode());
-            
-            Node* pmNode = new Node("pmnode", glm::rotate(glm::scale(glm::mat4(1.f), glm::vec3(0.06f)), glm::radians(180.f), glm::vec3(1.f, 0., 0.)), scene, scene->rootNode());
-            pmNode->addChild("vegetation", new ParticuleManager(Shader::fromFiles( "shaders/vertexshader_particule.glsl", "shaders/fragment_particule.glsl")));
-            scene->rootNode()->addChild("pmnode", pmNode);
-            
-            Scene* diplo_scene = Scene::import("res/Dinosaure/diplodocus/diplo.dae", shader);
-            Node * diplo1 = new Node(*diplo_scene->rootNode());
-            Node * diplo2 = new Node(*diplo_scene->rootNode());
-            
-            glm::mat4 diplo_rotate_scale = glm::scale(
-                glm::rotate(diplo1->transformation(), glm::radians(180.f), glm::vec3(1.0f, 0.0f, 0.0f)),
-                glm::vec3(0.1f)
-            );
-            glm::mat4 trans(1.f);
-            trans[0][3] = 2.54998;
-            trans[1][3] = -2.2;
-            trans[2][3] = 0.05;
-            std::cout << trans;
-            diplo1->setTransformation(diplo_rotate_scale);
-            diplo_rotate_scale = glm::rotate(diplo_rotate_scale, glm::radians(90.f), glm::vec3(0.0f, 0.0f, -1.0f));
-            diplo2->setTransformation(diplo_rotate_scale * trans);
-
-            scene->rootNode()->addChild("diplo", diplo1);
-            scene->rootNode()->addChild("diplo", diplo2);
-            
-            //~ Scene* boat_scene = Scene::import("res/Dinosaure/Boat/boat.dae", shader);
-            //~ glm::mat4 boat_rotate_scale = 
-                //~ glm::rotate(glm::scale(glm::inverse(glm::translate(boat_scene->rootNode()->transformation(), glm::vec3(0.1,0,0.f))),
-                //~ glm::vec3(0.1f)
-            //~ ), glm::radians(-90.f), glm::vec3(1.0f, 0.0f, 0.0f));
-            
-            //~ std::cout << boat_rotate_scale;
-            
-            //~ boat_scene->rootNode()->setTransformation(boat_rotate_scale);
-            //~ scene->rootNode()->addChild("boat", boat_scene->rootNode());
-            
-            //~ Scene* scene = new Scene;
-            //~ scene->setShader(Shader::fromFiles( "shaders/vertexshader_marker.glsl", "shaders/fragment_marker.glsl"), Scene::BonesDebugShader);
-            //~ scene->setShader(Shader::fromFiles( "shaders/vertexshader_material.glsl", "shaders/fragment_material.glsl"));
-            //~ scene->setRootNode(new Node("main", glm::mat4(1.f), scene));
-            //~ scene->displayNodeTree();
-            
-            // Cube test
-            //~ VertexArray* cube = new VertexArray;
-            //~ cube->setVertex({1,  1,  -1,
-                             //~ 1, -1,  -1,
-                             //~ -1, -1, -1,
-                             //~ -1,  1, -1,
-                             //~ 1,  1,  1,
-                             //~ 1, -1,  1,
-                             //~ -1, -1, 1,
-                             //~ -1, 1,  1});
-            //~ cube->setIndice({0, 2, 3,  
-                             //~ 7, 5, 4,  
-                             //~ 4, 1, 0,  
-                             //~ 5, 2, 1,  
-                             //~ 2, 7, 3,  
-                             //~ 0, 7, 4,  
-                             //~ 0, 1, 2,  
-                             //~ 7, 6, 5,  
-                             //~ 4, 5, 1,  
-                             //~ 5, 6, 2,  
-                             //~ 2, 6, 7,  
-                             //~ 0, 3, 7});
-            //~ scene->rootNode()->addChild("cube", new Mesh(Shader::fromFiles( "shaders/vertexshader_marker.glsl", "shaders/fragment_marker.glsl"), cube, std::vector<Bone*>()));
-
+            Scene* scene = DinoWorld::buildScene();
             
             //~ Camera mainCamera;
             scene->setCamera(&mainCamera);
@@ -149,13 +79,14 @@ int main(int argc, char** argv){
                                    ));
 
             // Marker
-            scene->rootNode()->addChild("marker", new ReferenceMarker(Shader::fromFiles( "shaders/vertexshader_marker.glsl", "shaders/fragment_marker.glsl")));
+            Node* markerNode = new Node("MarkerNode", glm::mat4(1.f) * translation(0.f, 0.f, 1.f), scene, scene->rootNode());
+            markerNode->addChild("markerMesh", new ReferenceMarker(Shader::fromFiles( "shaders/vertexshader_marker.glsl", "shaders/fragment_marker.glsl")));
+            scene->rootNode()->addChild("marker", markerNode);
             
             // Skybox
             scene->setSkybox("skybox_sky", "shaders/Skyboxshadingvertex.glsl","shaders/Skyboxshadingfragment.glsl" );
             
-            
-            
+
             window.hideCursor();
             window.centerCursor();
             
@@ -172,21 +103,21 @@ int main(int argc, char** argv){
                 
                 scene->defaultShader()->use();
                 
-                if (glfwGetKey( window.internal(), GLFW_KEY_X ) == GLFW_PRESS)
-                    trans[0][3] += 0.05;
-                if (glfwGetKey( window.internal(), GLFW_KEY_W ) == GLFW_PRESS)
-                    trans[0][3] -= 0.05;
-                if (glfwGetKey( window.internal(), GLFW_KEY_Q ) == GLFW_PRESS)
-                    trans[1][3] += 0.05;
-                if (glfwGetKey( window.internal(), GLFW_KEY_D ) == GLFW_PRESS)
-                    trans[1][3] -= 0.05;
-                if (glfwGetKey( window.internal(), GLFW_KEY_U ) == GLFW_PRESS)
-                    trans[2][3] += 0.05;
-                if (glfwGetKey( window.internal(), GLFW_KEY_P ) == GLFW_PRESS)
-                    trans[2][3] -= 0.05;
+                //~ if (glfwGetKey( window.internal(), GLFW_KEY_X ) == GLFW_PRESS)
+                    //~ trans[0][3] += 0.05;
+                //~ if (glfwGetKey( window.internal(), GLFW_KEY_W ) == GLFW_PRESS)
+                    //~ trans[0][3] -= 0.05;
+                //~ if (glfwGetKey( window.internal(), GLFW_KEY_Q ) == GLFW_PRESS)
+                    //~ trans[1][3] += 0.05;
+                //~ if (glfwGetKey( window.internal(), GLFW_KEY_D ) == GLFW_PRESS)
+                    //~ trans[1][3] -= 0.05;
+                //~ if (glfwGetKey( window.internal(), GLFW_KEY_U ) == GLFW_PRESS)
+                    //~ trans[2][3] += 0.05;
+                //~ if (glfwGetKey( window.internal(), GLFW_KEY_I ) == GLFW_PRESS)
+                    //~ trans[2][3] -= 0.05;
                     
-                std::cout << trans[0][3] <<", " << trans[1][3] << ", " << trans[2][3] << std::endl;
-                diplo2->setTransformation(diplo_rotate_scale * trans);
+                //~ std::cout << trans[0][3] <<", " << trans[1][3] << ", " << trans[2][3] << std::endl;
+                //~ boat_scene->rootNode()->setTransformation(boat_rotate_scale * trans);
                 scene->defaultShader()->setVec3("light.position", lightPos);
                     
                 //~ glm::vec3 lightColor;
