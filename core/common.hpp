@@ -35,6 +35,7 @@ class Drawable {
 };
 
 std::ostream& operator<<(std::ostream& cout, const glm::mat4& m);
+std::ostream& operator<<(std::ostream& cout, const glm::mat4& m);
 
 namespace Debug {
     enum Level {VERBOSE, INFO, WARNING, ERROR};

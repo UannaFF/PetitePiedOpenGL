@@ -39,7 +39,7 @@ void Bone::dumpToBuffer(std::vector<int>& vertex_buff, std::vector<float>& weigh
 glm::mat4 Bone::transformation() const {
     //~ DEBUG(Debug::Info, "-- Update bone id %d from node %s\n", _boneid, _node->name().c_str());
     //~ return _node->world_transformation() * _offset;
-    return _node->world_transformation();
+    return _node->transformation() * _offset;
 }
 
 VertexArray::VertexArray():
