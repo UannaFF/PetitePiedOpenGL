@@ -17,7 +17,7 @@ Scene* DinoWorld::buildScene(){
     pmNode->addChild("vegetation", new ParticuleManager(Shader::fromFiles( "shaders/vertexshader_particule.glsl", "shaders/fragment_particule.glsl")));
     //~ pmNode->setTransformation(glm::mat4(1.f) * translation(-1, -0.3, -0.2));
     main_scene->rootNode()->addChild("pmnode", pmNode);
-    
+      
     Scene* diplo_scene = Scene::import("res/Dinosaure/diplodocus/diplo.dae", shader);
     Node * diplo1 = new Node(*diplo_scene->rootNode());
     Node * diplo2 = new Node(*diplo_scene->rootNode());

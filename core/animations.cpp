@@ -40,7 +40,8 @@ void Channel::applyBones(float AnimationTime, glm::mat4& currentTransformation, 
                     RotationKey& end = *dynamic_cast<RotationKey*>(k);
                     float DeltaTime = key->first - beginTime[1];
                     float Factor = (AnimationTime - beginTime[1]) / DeltaTime;
-                    rot = new glm::quat(glm::mix(beginrot, end.rotation(), Factor));
+                    rot = new glm::quat(normalize(glm::mix(beginrot, end.rotation(), Factor)));
+                    //
                 }
             }
             if (pos && rot)
@@ -57,7 +58,8 @@ void Channel::applyBones(float AnimationTime, glm::mat4& currentTransformation, 
     trans[1][3] = pos->y;
     trans[2][3] = pos->z;
     
-    _node->setTransformation(trans * glm::toMat4(*rot));
+    //_node->setTransformation(trans * glm::toMat4(*rot));
+    _node->setTransformation(glm::toMat4(*rot)*trans);
     //~ _node->setTransformation(trans);
     std::cout << "Time: " << AnimationTime << ", trans:" << _node->transformation() << std::endl;
 
@@ -164,6 +166,7 @@ void Channel::applyBones(float AnimationTime, glm::mat4& currentTransformation, 
 //~ }
 
 RotationKey::RotationKey(glm::quat value): _value(value){
+    _value = normalize(value);
 }
 
 void Animation::applyBones(float AnimationTime, Scene* s)
@@ -182,6 +185,6 @@ void Animation::_recusive_bones(Node* n, Scene* s, const glm::mat4& globalInvers
         
     for (std::pair<std::string, Drawable*> child: n->children())
         if (dynamic_cast<Node*>(child.second))
-            _recusive_bones((Node*)child.second, s, globalInverseTransform, localTransform, AnimationTime);
+            _recusive_bones((Node*)child.second, s, localTransform, globalInverseTransform,AnimationTime);
 }
 
