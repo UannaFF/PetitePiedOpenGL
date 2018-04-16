@@ -14,7 +14,7 @@
 #include <string>
 
 class Shader;
-
+class Material;
 class ReferenceMarker: public Mesh {
     public:
         ReferenceMarker(Shader* s);
@@ -25,7 +25,8 @@ class ReferenceMarker: public Mesh {
 class TextureLoader {
     private:
         std::vector<std::string> _texnames; 
-        std::map<std::string, Material*> _materials; 
+        std::map<std::string, Material*> _materials;
+        Material* def;
     public:
         TextureLoader();
         ~TextureLoader();

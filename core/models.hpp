@@ -92,9 +92,8 @@ class Mesh : public Drawable {
             std::cout << "Mesh with " << _bones.size() << " bones." << std::endl;
         }
         
-        inline void setMaterial(Material* m) { _material = m; }
-        inline Material*getMaterial() {return _material;} 
-          
+        inline void setMaterial(Material* m) { _material = m; }  
+            
         inline VertexArray* VAO() const { return _vao; }    
         inline void setVAO(VertexArray* va) { _vao = va; }   
           

@@ -69,6 +69,7 @@ void Texture::apply(GLuint framgment_id, GLuint framgment_conf_id) {
         glUniform1i(framgment_conf_id, 1);
 }
 
+
 void Texture::deapply(GLuint framgment_id) {
     deactivate();
     unbind();

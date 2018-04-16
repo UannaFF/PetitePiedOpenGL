@@ -34,7 +34,7 @@ in vec3 eyeDirection_tangentspace;
 uniform vec3 viewPos;
 uniform Material material;
 uniform Light light;
-uniform float type;
+uniform int type;
 
 vec4 basicTextured() {
     vec3 ambient = light.ambient * material.ambient;
@@ -127,15 +127,15 @@ void main()
     //FragColor = phongShading(texture(texture_diffuse1, TexCoords));
     
     //Without bumpmapping
-    vec3 Normal = normalize(Normal);
-    vec3 L = normalize(light.position.xyz - PosEyeSpace); //light vector 
-    vec3 E = normalize(-PosEyeSpace); // we are in Eye Coordinates, so EyePos is (0,0,0)
+    //~ vec3 Normal = normalize(Normal);
+    //~ vec3 L = normalize(light.position.xyz - PosEyeSpace); //light vector 
+    //~ vec3 E = normalize(-PosEyeSpace); // we are in Eye Coordinates, so EyePos is (0,0,0)
     
-    //Bump mapping
-    vec3 normal_tangentspace = normalize((texture( texture_height1, TexCoords ).rgb-0.5) * 2.0);
-    //FragColor = phongShadingBumpMapping(texture(texture_diffuse1, TexCoords), L, E, normal_tangentspace);
-    if(texture_height1_passed == 0) FragColor = phongShading(texture(texture_diffuse1, TexCoords));
-    else FragColor = phongShadingBumpMapping(texture(texture_diffuse1, TexCoords), lightDirection_tangentspace, eyeDirection_tangentspace, normal_tangentspace, Normal);
+    //~ //Bump mapping
+    //~ vec3 normal_tangentspace = normalize((texture( texture_height1, TexCoords ).rgb-0.5) * 2.0);
+    //~ //FragColor = phongShadingBumpMapping(texture(texture_diffuse1, TexCoords), L, E, normal_tangentspace);
+    //~ if(texture_height1_passed == 0) FragColor = phongShading(texture(texture_diffuse1, TexCoords));
+    //~ else FragColor = phongShadingBumpMapping(texture(texture_diffuse1, TexCoords), lightDirection_tangentspace, eyeDirection_tangentspace, normal_tangentspace, Normal);
     //FragColor = basicLight();
     //FragColor = basicTextured();
     //////////////////////////////
@@ -158,6 +158,17 @@ void main()
     vec3 result = ambient + diffuse + specular;
     //FragColor = vec4(result, 1.0);
     FragColor = texture(texture_diffuse1, TexCoords) + texture(texture_specular1, TexCoords);*/
+    FragColor = vec4(0.0);
+    if(type == 0) FragColor = vec4(1.0);
+    else if(type == 1) //only texture or diffuse
+        if(texture_diffuse1_passed == 1)
+            FragColor = FragColor = texture(texture_diffuse1, TexCoords);
+        else
+            FragColor = vec4(material.diffuse, 1.0);
+    else if(type == 2)
+        FragColor = basicLight();
+            
+    
 
 } 
 

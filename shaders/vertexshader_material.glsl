@@ -33,7 +33,7 @@ vec3 aTangent_cameraspace;
 vec3 aBitangent_cameraspace;
 mat3 TBN;
 
-uniform float type;
+uniform int type;
 
 struct Light {
     vec3 position;
@@ -107,8 +107,7 @@ void main()
     //The position of the vertex
     //gl_Position = mvp * PosL;
     
-    if(type == 1.0) preBillPhong();
-    else if(type == 2.0) fromCameraToTangent();
+    
     
     
     //~ gl_Position = mvp * vec4(aPos, 1.0);
@@ -116,12 +115,15 @@ void main()
     //~ gl_Position = projection * view * model * vec4(aPos,1);
     
     //~ Normal = (BoneTransform * vec4(aNormal, 0.0)).xyz;  
-    //Normal = mat3(transpose(inverse(model))) * aNormal;
+    Normal = mat3(transpose(inverse(model))) * aNormal;
     
     //~ vec4 PosL      = BoneTransform * vec4(aPos, 1.0);
     //~ vec4 PosL      = BoneTransform * vec4(aPos, 1.0);
     vec4 PosL      = vec4(aPos, 1.0);
     mat4 mvp = projection * view * model;
+    
+    preBillPhong();
+    //fromCameraToTangent();
     
     gl_Position = mvp * PosL;
     TexCoords = aTexCoords;    

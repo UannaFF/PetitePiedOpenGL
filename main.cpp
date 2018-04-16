@@ -18,8 +18,10 @@
 #include "core/scene.hpp"
 
 #include "assets/utils.hpp"
+#include "assets/world.hpp"
 
 using namespace glm;
+static int oldState = GLFW_RELEASE;
 
 int main(int argc, char** argv){
 
@@ -63,56 +65,7 @@ int main(int argc, char** argv){
 
             //~ std::vector<Mesh*> models = Mesh::fromOBJ("Environement.obj");
             //~ Scene* scene = Scene::import(scene_file, Shader::fromFiles( "shaders/vertexshader_material.glsl", "shaders/fragment_material.glsl"));
-            Shader* shader = Shader::fromFiles( "shaders/vertexshader_material.glsl", "shaders/fragment_material.glsl");
-            Scene* scene = Scene::import("res/Dinosaure/Environement/Sol+Eau/volcano_lowpoly.dae", shader);
-            
-            Scene* veg = Scene::import("res/Dinosaure/Environement/Végétation/végétation.dae", shader);
-            scene->rootNode()->addChild("vegetation", veg->rootNode());
-            
-            Scene* diplo = Scene::import("res/Dinosaure/diplodocus/diplo.dae", shader);
-            
-            glm::mat4 diplo_rotate_scale = glm::scale(
-                glm::rotate(diplo->rootNode()->transformation(), glm::radians(180.f), glm::vec3(1.0f, 0.0f, 0.0f)),
-                glm::vec3(0.1f)
-            );
-            diplo->rootNode()->setTransformation(diplo_rotate_scale);
-            diplo->rootNode()->dump(0);
-            //~ Node* diplo2 = new Node("diplo2", ,scene, scene->rootNode())
-            scene->rootNode()->addChild("diplo", diplo->rootNode());
-            
-            //~ Scene* scene = new Scene;
-            scene->setShader(Shader::fromFiles( "shaders/vertexshader_marker.glsl", "shaders/fragment_marker.glsl"), Scene::BonesDebugShader);
-            //~ scene->setShader(Shader::fromFiles( "shaders/vertexshader_material.glsl", "shaders/fragment_material.glsl"));
-            //~ scene->setRootNode(new Node("main", glm::mat4(1.f), scene));
-            //~ scene->displayNodeTree();
-            
-            // Cube test
-            //~ VertexArray* cube = new VertexArray;
-            //~ cube->setVertex({1,  1,  -1,
-                             //~ 1, -1,  -1,
-                             //~ -1, -1, -1,
-                             //~ -1,  1, -1,
-                             //~ 1,  1,  1,
-                             //~ 1, -1,  1,
-                             //~ -1, -1, 1,
-                             //~ -1, 1,  1});
-            //~ cube->setIndice({0, 2, 3,  
-                             //~ 7, 5, 4,  
-                             //~ 4, 1, 0,  
-                             //~ 5, 2, 1,  
-                             //~ 2, 7, 3,  
-                             //~ 0, 7, 4,  
-                             //~ 0, 1, 2,  
-                             //~ 7, 6, 5,  
-                             //~ 4, 5, 1,  
-                             //~ 5, 6, 2,  
-                             //~ 2, 6, 7,  
-                             //~ 0, 3, 7});
-            //~ scene->rootNode()->addChild("cube", new Mesh(Shader::fromFiles( "shaders/vertexshader_marker.glsl", "shaders/fragment_marker.glsl"), cube, std::vector<Bone*>()));
-
-            scene->setSkybox("textures/Nalovardo", "shaders/Skyboxshadingvertex.glsl","shaders/Skyboxshadingfragment.glsl" );
- 
-            //~ scene->defaultShader()->use();
+            Scene* scene = DinoWorld::buildScene();
             
             //~ Camera mainCamera;
             scene->setCamera(&mainCamera);
@@ -127,13 +80,14 @@ int main(int argc, char** argv){
                                    ));
 
             // Marker
-            scene->rootNode()->addChild("marker", new ReferenceMarker(Shader::fromFiles( "shaders/vertexshader_marker.glsl", "shaders/fragment_marker.glsl")));
+            Node* markerNode = new Node("MarkerNode", glm::mat4(1.f) * translation(0.f, 0.f, 1.f), scene, scene->rootNode());
+            markerNode->addChild("markerMesh", new ReferenceMarker(Shader::fromFiles( "shaders/vertexshader_marker.glsl", "shaders/fragment_marker.glsl")));
+            scene->rootNode()->addChild("marker", markerNode);
             
             // Skybox
-            //~ scene->setSkybox("skybox_sky", "shaders/Skyboxshadingvertex.glsl","shaders/Skyboxshadingfragment.glsl" );
+            scene->setSkybox("skybox_sky", "shaders/Skyboxshadingvertex.glsl","shaders/Skyboxshadingfragment.glsl" );
             
-            
-            
+
             window.hideCursor();
             window.centerCursor();
             
@@ -143,9 +97,11 @@ int main(int argc, char** argv){
             float time_last_frame = glfwGetTime();
             DEBUG(Debug::Info, "\n");
             
-            //test the loading textures
+            //test the loading textures<
             TextureLoader *tl = new TextureLoader();
             tl->loadTextures(scene->rootNode());
+            
+            delete(tl);
             
             do{ 
                 // Clear the screen
@@ -154,25 +110,22 @@ int main(int argc, char** argv){
                 
                 scene->defaultShader()->use();
                 
-                if (glfwGetKey( window.internal(), GLFW_KEY_E ) == GLFW_PRESS)
-                    lightPos.z += 0.1;
-                if (glfwGetKey( window.internal(), GLFW_KEY_S ) == GLFW_PRESS)
-                    lightPos.z -= 0.1;
-                
-                if (glfwGetKey( window.internal(), GLFW_KEY_Z ) == GLFW_PRESS)
-                    lightPos.y += 0.1;
-                if (glfwGetKey( window.internal(), GLFW_KEY_X ) == GLFW_PRESS)
-                    lightPos.y -= 0.1;
-                
-                if (glfwGetKey( window.internal(), GLFW_KEY_Q ) == GLFW_PRESS)
-                    lightPos.x += 0.1;
-                if (glfwGetKey( window.internal(), GLFW_KEY_D ) == GLFW_PRESS)
-                    lightPos.x -= 0.1;
-                /*if (glfwGetKey( window.internal(), GLFW_KEY_K ) == GLFW_PRESS)
-                    scene->defaultShader()->setFloat("type", 1.0);
-                if (glfwGetKey( window.internal(), GLFW_KEY_J ) == GLFW_PRESS)
-                    scene->defaultShader()->setFloat("type", 1.0);*/
-                scene->defaultShader()->setVec3("light.position", lightPos);
+                //~ if (glfwGetKey( window.internal(), GLFW_KEY_X ) == GLFW_PRESS)
+                    //~ trans[0][3] += 0.05;
+                //~ if (glfwGetKey( window.internal(), GLFW_KEY_W ) == GLFW_PRESS)
+                    //~ trans[0][3] -= 0.05;
+                //~ if (glfwGetKey( window.internal(), GLFW_KEY_Q ) == GLFW_PRESS)
+                    //~ trans[1][3] += 0.05;
+                //~ if (glfwGetKey( window.internal(), GLFW_KEY_D ) == GLFW_PRESS)
+                    //~ trans[1][3] -= 0.05;
+                //~ if (glfwGetKey( window.internal(), GLFW_KEY_U ) == GLFW_PRESS)
+                    //~ trans[2][3] += 0.05;
+                //~ if (glfwGetKey( window.internal(), GLFW_KEY_I ) == GLFW_PRESS)
+                    //~ trans[2][3] -= 0.05;
+                    
+                //~ std::cout << trans[0][3] <<", " << trans[1][3] << ", " << trans[2][3] << std::endl;
+                //~ boat_scene->rootNode()->setTransformation(boat_rotate_scale * trans);
+                //~ scene->defaultShader()->setVec3("light.position", lightPos);
                     
                 //~ glm::vec3 lightColor;
                 //~ lightColor.x = sin(glfwGetTime() * 2.0f);
@@ -203,6 +156,14 @@ int main(int argc, char** argv){
                     //~ 1, GL_FALSE, &projection[0][0]);
                 //~ glUniformMatrix4fv(scene->skyboxShader()->getUniformLocation("view"), 
                     //~ 1, GL_FALSE, &view[0][0]);
+                    
+                
+                int newState = glfwGetKey( window.internal(), GLFW_KEY_K );
+                if (newState == GLFW_RELEASE && oldState == GLFW_PRESS) {
+                       scene->light()->changeType();
+                    oldState = newState;
+                }
+            
                 
                 scene->render();
 
@@ -212,7 +173,7 @@ int main(int argc, char** argv){
 
                 // Swap buffers
                 window.postDrawingEvent();
-                DEBUG(Debug::Info, "\rFPS: %f", 1.f / (glfwGetTime() - time_last_frame));
+                //~ DEBUG(Debug::Info, "\rFPS: %f", 1.f / (glfwGetTime() - time_last_frame));
                 time_last_frame = glfwGetTime();
             }
 

@@ -31,21 +31,23 @@ void ReferenceMarker::draw(glm::mat4 projection, glm::mat4 view, glm::mat4 model
 }
 
 TextureLoader::TextureLoader():
-    _texnames({"island", "boat_barriere", "rock", "tree", "water", "group16681" })
+    _texnames({"island", "boat_barriere", "rock", "tree", "water", "group16681", "plane", "fingerl_low_001", "fingerr_low_001","diplo_node"})
 {
     _materials = std::map<std::string, Material*>();
+    def = new Material(glm::vec3(0.0, 1.0, 0.0), glm::vec3(0.0, 1.0, 0.0), glm::vec3(0.0, 1.0, 0.0), 0.5);
     
     
     for(std::string texname : _texnames) {
         Material *m;
         std::vector<Texture*> texs;
-        
-        if(texname.c_str() == "tree") {
+        printf("texnq,e: %s\n",texname.c_str());
+        if (texname.compare("tree") == 0) {
+            
             m = new Material(glm::vec3(0.0, 1.0, 0.0), glm::vec3(0.0, 1.0, 0.0), glm::vec3(0.0, 1.0, 0.0), 0.5);
-        } else if(texname.c_str() == "rock") {
-            m = new Material(glm::vec3(0.0), glm::vec3(0.0), glm::vec3(1.0), 0.5);
-        }else if(texname.c_str() == "water"){
-            m = new Material(glm::vec3(0.0,1.0, 1.0), glm::vec3(1.0), glm::vec3(1.0), 0.8);
+        } else if(texname.compare("rock") == 0) {
+            m = new Material(glm::vec3(1.0), glm::vec3(0.0), glm::vec3(1.0), 0.5);
+        }else if(texname.compare("water") == 0){
+            m = new Material(glm::vec3(0.0,0.0, 1.0), glm::vec3(0.0,0.0, 1.0), glm::vec3(1.0), 0.1);
         } else {
         
             m = new Material(glm::vec3(1.0), glm::vec3(1.0), glm::vec3(1.0), 0.1);
@@ -68,14 +70,21 @@ TextureLoader::TextureLoader():
                 texs.push_back(texture);
             }
             
+            //Load Normals texture
+            /*texture = Texture::fromFile((texname+"_height.png"), "res/textures");
+            if(texture) {
+                texture->type(Texture::Normal);
+                texs.push_back(texture);
+            }*/
             
-            
-            
+            m->setTextures(texs);
         }
-        m->setTextures(texs);
+        
         _materials.insert(std::pair<std::string, Material*>(texname.c_str(), m));
         
     }
+    
+    
 }
 
 TextureLoader::~TextureLoader() {
@@ -85,8 +94,6 @@ TextureLoader::~TextureLoader() {
 void TextureLoader::loadTextures(Node *root) {
     
     //Get root node
-    //Node *root = s->rootNode();
-    //printf("PRINTING ROOT NODE NAME %s\n", root->name().c_str());
     std::multimap<std::string, Drawable*> children = root->children();
     
     for (auto child: children){
@@ -98,18 +105,16 @@ void TextureLoader::loadTextures(Node *root) {
             std::transform(cval.begin(), cval.end(), cval.begin(), ::tolower);
             auto m = std::find_if(_materials.begin(), _materials.end(), 
                [cval](const std::pair<std::string, Material*> & t) -> bool {
-                   //printf(cval.c_str());
-                   return cval.find(t.first) != std::string::npos;
+                   return cval.find(t.first.c_str()) != std::string::npos;
                }
             );
             
             if(m != _materials.end()) { //add texture to scene
-                //Scene *s = (Scene*)child.second;
-                //std::vector<Texture*> v = m->second->getTextures();
-                //c->getMaterial()->setTextures(v);
                 c->setMaterial(m->second);
-                //printf("LE MESH %s\n", root->name().c_str());
-            }
+                printf("FOUND node zith name: %s\n", cval.c_str());
+            } else {
+                printf("Didnt find node zith name: %s\n", cval.c_str());
+                c->setMaterial(def);}
         } else if(dynamic_cast<Node*>(child.second)) {
             Node* n = (Node*)child.second;
             loadTextures(n);

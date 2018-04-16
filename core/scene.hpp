@@ -59,10 +59,6 @@ class Scene {
         
         inline void setShader(Shader* s, ShaderType t = MaterialShader) {
             _shaders.insert(std::pair<ShaderType, Shader*>(t, s));
-            //bind the shader to the lights; for now its only one
-            for(Light *l : _lights) {
-                l->bind(s, glm::vec3(1.0,1.0, 1.0));
-            }
         }
         inline Shader* defaultShader(ShaderType t = MaterialShader) const {
             auto it = _shaders.find(t);
@@ -76,8 +72,10 @@ class Scene {
         void process(float timestamp);
         void render();
         void displayNodeTree();
+        void addLight(Light*l) {_light = l;};
+        Light*light(){return _light;};
         
-        static Scene* import(std::string path, Shader* s);
+        static Scene* import(std::string path, Shader* s, Light*l);
         
         void playAnimation( int anim);
 
@@ -92,7 +90,7 @@ class Scene {
         std::set<Animation*> _current_animation;
         std::set<Camera*> _cameras;
 
-        std::vector<Light*> _lights;
+        Light* _light;
 
         Skybox *_skybox;
         //~ Texture *_skybox_texture;
