@@ -21,8 +21,8 @@ void Camera::setProjectionMatrix(glm::mat4 p){
 
 ControlableCamera::ControlableCamera(Window*p):
     Camera::Camera(p),
-    _position(7.0, 4.6, 2.29), _horizontalAngle(glm::radians(214.)), _verticalAngle(glm::radians(-260.)), _initialFoV(45.0f),
-    _speed(3.0f), _mouseSpeed(0.005f){
+    _position(-3.61, 2, 0.23), _horizontalAngle(glm::radians(-180.)), _verticalAngle(glm::radians(-90.)), _initialFoV(45.0f),
+    _speed(1.0f), _mouseSpeed(0.005f){
 }
 
 void ControlableCamera::updateFromMouse(){
@@ -44,7 +44,11 @@ void ControlableCamera::updateFromMouse(){
 	glfwSetCursorPos(parent()->internal(), parent()->width()/2, parent()->height()/2);
 
 	// Compute new orientation
-	_horizontalAngle += _mouseSpeed * float(parent()->width()/2 - xpos ); // Theta
+    double incr = _horizontalAngle + _mouseSpeed * float(parent()->width()/2 - xpos );
+    _horizontalAngle = incr;
+	//_horizontalAngle += _mouseSpeed * float(parent()->width()/2 - xpos ); // Theta
+    //if(_horizontalAngle < -90) _horizontalAngle = -90;
+    //if(_horizontalAngle < 90) _horizontalAngle = 90;
 	_verticalAngle   -= _mouseSpeed * float(parent()->height()/2 - ypos ); // Phy
 	
     // Reset cam
@@ -92,7 +96,42 @@ void ControlableCamera::updateFromMouse(){
 	if (glfwGetKey( parent()->internal(), GLFW_KEY_LEFT ) == GLFW_PRESS){
 		_position -= right * deltaTime * speed;
 	}
+    
+    if(_position.x <= 3.6) {
+            _position.x = 3.6;
+    }
+    
+    if(_position.x >= 3.67) {
+            _position.x = 3.67;
+    }
+    
+    /*if(_position.x >= -3.5) {
+            _position.x = -3.5;
+    }*/
+    
+    if(_position.y <= 3.0) {
+        _position.y = 3.0;
+    }
+    
+    if(_position.y >= 3.8) {
+        _position.y = 3.8;
+    }
+    
+   /* if(_position.y >= 0.2) {
+        _position.y = 0.2;
+    }*/
 
+    if(_position.z >= 0.25) {
+        _position.z = 0.25;
+    }
+    if(_position.z <= 0.15) {
+        _position.z = 0.15;
+    }
+
+    
+    /*if(_position.z >= 1) {
+        _position.z = 1;
+    }*/
 	float FoV = _initialFoV;// - 5 * glfwGetMouseWheel(); 
     
     //~ DEBUG(Debug::Info, "pos: %f %f %f, ha: %f, va: %f\n", _position.x, _position.y, _position.z, _horizontalAngle, _verticalAngle);
