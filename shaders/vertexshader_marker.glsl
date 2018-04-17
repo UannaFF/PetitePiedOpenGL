@@ -8,5 +8,5 @@ out vec3 fragColor;
 
 void main() {
     gl_Position = projection * view * model * vec4(position, 1);
-    fragColor = position;
+    fragColor = vec3(abs(position.x), abs(position.y), abs(position.z));
 }

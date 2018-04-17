@@ -103,8 +103,8 @@ void ControlableCamera::updateFromMouse(){
             _position.y = 1.8;
         if(_position.y >= 2.85)
             _position.y = 2.8;
-        if(_position.z >= 0.185)
-            _position.z = 0.185;
+        if(_position.z >= 0.2)
+            _position.z = 0.2;
         if(_position.z <= 0.13)
             _position.z = 0.13;
     }

@@ -9,7 +9,7 @@ ReferenceMarker::ReferenceMarker(Shader* s):
     std::vector<float> pos_color({0, 0, 0,
                                   3, 0, 0,
                                   0, 0, 0,
-                                  0, 3, 0,
+                                  0, -3, 0,
                                   0, 0, 0,
                                   0, 0, 3});
                                   
