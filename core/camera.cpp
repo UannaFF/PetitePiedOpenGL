@@ -21,8 +21,8 @@ void Camera::setProjectionMatrix(glm::mat4 p){
 
 ControlableCamera::ControlableCamera(Window*p):
     Camera::Camera(p),
-    _position(-3.61, 2, 0.23), _horizontalAngle(glm::radians(-180.)), _verticalAngle(glm::radians(-90.)), _initialFoV(45.0f),
-    _speed(1.0f), _mouseSpeed(0.005f){
+    _position(-3.61, 2, 0.23), _horizontalAngle(glm::radians(214.)), _verticalAngle(glm::radians(-260.)), _initialFoV(45.0f),
+    _speed(1.0f), _mouseSpeed(0.005f), _restricted_box(true){
 }
 
 void ControlableCamera::updateFromMouse(){
@@ -55,7 +55,7 @@ void ControlableCamera::updateFromMouse(){
 	if (glfwGetKey( parent()->internal(), GLFW_KEY_P ) == GLFW_PRESS){
         _horizontalAngle = glm::radians(214.); // Theta
         _verticalAngle   = glm::radians(-260.); // Phy
-        _position = glm::vec3(7.0, 4.6, 2.29);
+       // _position = glm::vec3(7.0, 4.6, 2.29);
 	}
 
 	// Direction : Spherical coordinates to Cartesian coordinates conversion
@@ -114,7 +114,7 @@ void ControlableCamera::updateFromMouse(){
     
 	float FoV = _initialFoV;// - 5 * glfwGetMouseWheel(); 
     
-    DEBUG(Debug::Info, "pos: %f %f %f, ha: %f, va: %f\n", _position.x, _position.y, _position.z, _horizontalAngle, _verticalAngle);
+    //DEBUG(Debug::Info, "pos: %f %f %f, ha: %f, va: %f\n", _position.x, _position.y, _position.z, _horizontalAngle, _verticalAngle);
 
 	// Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
 	setProjectionMatrix(glm::perspective(glm::radians(FoV), 4.0f / 3.0f, 0.1f, 100.0f));

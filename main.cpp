@@ -76,9 +76,9 @@ int main(int argc, char** argv){
                                    ));
 
             // Marker
-            Node* markerNode = new Node("MarkerNode", glm::mat4(1.f) * translation(0.f, 0.f, 1.f), scene, scene->rootNode());
+            /*Node* markerNode = new Node("MarkerNode", glm::mat4(1.f) * translation(0.f, 0.f, 1.f), scene, scene->rootNode());
             markerNode->addChild("markerMesh", new ReferenceMarker(Shader::fromFiles( "shaders/vertexshader_marker.glsl", "shaders/fragment_marker.glsl")));
-            scene->rootNode()->addChild("marker", markerNode);
+            scene->rootNode()->addChild("marker", markerNode);*/
             
             // Skybox
             scene->setSkybox("skybox_sky", "shaders/Skyboxshadingvertex.glsl","shaders/Skyboxshadingfragment.glsl" );

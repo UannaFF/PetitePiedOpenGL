@@ -75,6 +75,7 @@ class ControlableCamera: public Camera {
 
         float _speed; // 3 units / second
         float _mouseSpeed;
+        bool _restricted_box;
 };
 
 #endif
