@@ -7,10 +7,6 @@
 #include "shader.hpp"
 #include "models.hpp"
 
-//using namespace glm;
-
-//class Shader;
-
 class Light {    
     public:
         enum Type { Phong, PhongWithNormal};

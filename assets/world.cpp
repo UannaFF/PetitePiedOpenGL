@@ -106,7 +106,7 @@ Scene* DinoWorld::buildScene(){
     
     // Adding light    
     Light* light = new Light();
-    light->setPos(glm::vec3(4.0, 10.0, 1.0));
+    light->setPos( glm::vec3(-3.61, -4, 0.23));
     light->setColor(glm::vec3(1.0, 1.0, 1.0));    
     main_scene->addLight(light);
     

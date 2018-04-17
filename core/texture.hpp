@@ -47,10 +47,6 @@ class Texture {
         
         inline void activate() {  glActiveTexture(GL_TEXTURE0 + _id); }
         inline void deactivate() {  glActiveTexture(GL_TEXTURE0); }
-        //~ inline void unbind() { glBindTexture((_type == Cube ? GL_TEXTURE_CUBE_MAP : GL_TEXTURE_2D), 0); }
-        
-        //~ static Texture* fromBitmap(std::string);
-        //~ static Texture* fromDDS(std::string);
         void apply(GLuint framgment_id);
         void deapply(GLuint framgment_id);
         

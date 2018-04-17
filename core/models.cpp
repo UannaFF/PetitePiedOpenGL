@@ -34,8 +34,6 @@ void Bone::dumpToBuffer(std::vector<int>& vertex_buff, std::vector<float>& weigh
     }
 }
 glm::mat4 Bone::transformation() const {
-    //~ DEBUG(Debug::Info, "-- Update bone id %d from node %s\n", _boneid, _node->name().c_str());
-    //~ return _node->world_transformation() * _offset;
     return _node->transformation() * _offset;
 }
 
@@ -159,15 +157,7 @@ void VertexArray::setBones(std::vector<Bone*> bones, Shader* s)
         b->id(bone_id++);
         b->dumpToBuffer(bones_buffer, weight_buffer);
     }        
-    //~ for (int v = 0; v < _len_points; v ++){
-        //~ float total_weight = 0; 
-            //~ total_weight += weight_buffer[v * 4 + w];
-        //~ if (total_weight != 1.f)
-            //~ printf("w of %d:%f\n", v, total_weight);
-    //~ }
-    //~ for (int b = 0; b < 4 * _len_points; b++)
-        //~ DEBUG(Debug::Info, " - BoneID: %d VID: %d, weight: %f, offset: %d\n", bones_buffer[b], b/4, weight_buffer[b], b % 4);
-    
+ 
     // Uploading to GPU    
     glBindVertexArray(_vertex_array_id);
     DEBUG(Debug::Info, "VertexArray has %d bone info\n", _len_points);
@@ -211,73 +201,6 @@ void VertexArray::setBitangents(std::vector<GLfloat> bitangents) {
     glBindVertexArray(0);
 }
 
-void VertexArray::computeTangentBasis(std::vector<GLfloat>& v, std::vector<GLfloat>& u, std::vector<GLfloat>& n) {
-    
-    std::vector<GLfloat> tangents;
-    std::vector<GLfloat> bitangents;
-    
-    int j = 0;
-    
-    for ( int i=0; i<v.size() - 9; i+=9){
-
-        // Shortcuts for vertices
-        glm::vec3 v0 = glm::vec3(v[i+0], v[i+2], v[i+3]);
-        glm::vec3 v1 = glm::vec3(v[i+4], v[i+5], v[i+6]);
-        glm::vec3 v2 = glm::vec3(v[i+7], v[i+8], v[i+9]);
-
-        // Shortcuts for UVs
-        glm::vec2 uv0 = glm::vec2(u[j+0], u[j+1]);
-        glm::vec2 uv1 = glm::vec2(u[j+2], u[j+3]);
-        glm::vec2 uv2 = glm::vec2(u[j+4], u[j+5]);
-
-        // Edges of the triangle : position delta
-        glm::vec3 deltaPos1 = v1-v0;
-        glm::vec3 deltaPos2 = v2-v0;
-
-        // UV delta
-        glm::vec2 deltaUV1 = uv1-uv0;
-        glm::vec2 deltaUV2 = uv2-uv0;
-        
-        float r = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV1.y * deltaUV2.x);
-        glm::vec3 tangent = (deltaPos1 * deltaUV2.y   - deltaPos2 * deltaUV1.y)*r;
-        glm::vec3 bitangent = (deltaPos2 * deltaUV1.x   - deltaPos1 * deltaUV2.x)*r;
-        
-        
-        //repeat the information to be passed to every vertex
-        tangents.push_back(tangent.x);
-        tangents.push_back(tangent.y);
-        tangents.push_back(tangent.z);
-        
-        tangents.push_back(tangent.x);
-        tangents.push_back(tangent.y);
-        tangents.push_back(tangent.z);
-        
-        tangents.push_back(tangent.x);
-        tangents.push_back(tangent.y);
-        tangents.push_back(tangent.z);
-        
-        bitangents.push_back(bitangent.x);
-        bitangents.push_back(bitangent.y);
-        bitangents.push_back(bitangent.z);
-        
-        bitangents.push_back(bitangent.x);
-        bitangents.push_back(bitangent.y);
-        bitangents.push_back(bitangent.z);
-        
-        bitangents.push_back(bitangent.x);
-        bitangents.push_back(bitangent.y);
-        bitangents.push_back(bitangent.z);
-    
-        //printf("Some tangents: %f, %f, %f", tangent.x, tangent.y, tangent.z);
-        
-        j+=6;
-        
-    }
-    
-    setTangents(tangents);
-    //setBiTangents(bitangents);
-}
-
 void Mesh::draw(glm::mat4 projection, glm::mat4 view, glm::mat4 model){
     _shader->use();    
 
@@ -289,7 +212,6 @@ void Mesh::draw(glm::mat4 projection, glm::mat4 view, glm::mat4 model){
     // bone world transform matrices need to be passed for skinning
     for (Bone* b: _bones){
         _shader->setMat4("gBones[" + std::to_string(b->id()) + "]", b->transformation(), GL_TRUE);
-        //~ std::cout << "gBones[" + std::to_string(b->id()) + "]" << std::endl << b->transformation();
     }
 
     if (_material)
@@ -297,9 +219,6 @@ void Mesh::draw(glm::mat4 projection, glm::mat4 view, glm::mat4 model){
         
     // draw mesh vertex array
     _vao->draw(VA_PRIMITIVE);
-    
-    //~ if (_material)
-        //~ _material->deapply(_shader);
 
     // leave with clean OpenGL state, to make it easier to detect problems
     _shader->deuse();

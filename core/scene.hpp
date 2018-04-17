@@ -68,9 +68,6 @@ class Scene {
             return it->second;
         }
         
-        //~ inline Shader* skyboxShader() const{
-            //~ return _skybox_shader;
-        //~ }
         void process(float timestamp);
         void render();
         void displayNodeTree();
@@ -95,9 +92,6 @@ class Scene {
         Light* _light;
 
         Skybox *_skybox;
-        //~ Texture *_skybox_texture;
-        //~ bool _hasSkybox;
-        //~ Shader *_skybox_shader;
 
         Node* _main_node;
         Camera* _active_camera;

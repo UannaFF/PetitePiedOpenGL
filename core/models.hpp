@@ -67,8 +67,6 @@ class VertexArray {
         void setTangents(std::vector<GLfloat> tangents);
         void setBitangents(std::vector<GLfloat> bitangents);
         
-        void computeTangentBasis(std::vector<GLfloat>& v, std::vector<GLfloat>& u, std::vector<GLfloat>& n);
-        
         virtual void draw(GLint primitive);    
 
     private:
@@ -77,8 +75,6 @@ class VertexArray {
         GLuint _vertexbuffer, _uvbuffer, _normal, _indice, _bones_id, _weight, _tangent, _bitangent;
         
         int _len_points;
-        
-        //~ std::vector<Bone*> _bones;
 };
 
 class Mesh : public Drawable {

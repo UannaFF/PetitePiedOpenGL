@@ -106,7 +106,6 @@ class Animation {
         
         std::string _name;
         std::map<Node*, Channel*> _channel;
-        //~ std::vector<Channel*> _channel;
         double _tick_per_sec;
         double _duration;
 };

@@ -28,10 +28,6 @@ Shader::Shader(string VertexShaderCode, string FragmentShaderCode){
         
 	glCompileShader(VertexShaderID);
 
-	/*while ((err = glGetError()) != GL_NO_ERROR) {
-        std::cerr << "RIGHT after vertex init OpenGL error: " << err << std::endl;
-    }*/
-
 	// Check Vertex Shader
 	glGetShaderiv(VertexShaderID, GL_COMPILE_STATUS, &Result);
 	glGetShaderiv(VertexShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
@@ -140,8 +136,7 @@ GLuint Shader::getUniformLocation(const char* id){
 void Shader::use() {
     if (SHADER_IN_USE != _programe_id){
         SHADER_IN_USE = _programe_id;
-        glUseProgram(_programe_id); 
-        //Debug::CheckOpenGLError("error using");
+        glUseProgram(_programe_id);
     }
 }
 void Shader::deuse() { 
@@ -160,7 +155,6 @@ void Shader::setVec3(const std::string &name, const glm::vec3 &value) const {
     glUniform3fv(glGetUniformLocation(_programe_id, name.c_str()), 1, &value[0]); 
 }        
 void Shader::setVec3(const std::string &name, float x, float y, float z) const {
-	//Debug::CheckOpenGLError("Set vec3 2");
     if (SHADER_IN_USE != _programe_id) 
         throw new ShaderNotUseException(this);
     if (glGetUniformLocation(_programe_id, name.c_str()) < 0) 
@@ -168,7 +162,6 @@ void Shader::setVec3(const std::string &name, float x, float y, float z) const {
     glUniform3f(glGetUniformLocation(_programe_id, name.c_str()), x, y, z); 
 }
 void Shader::setMat4(const std::string &name, const glm::mat4 &mat, bool inverse) const {
-	//Debug::CheckOpenGLError("Set mat4");
     if (SHADER_IN_USE != _programe_id) 
         throw new ShaderNotUseException(this);
     if (glGetUniformLocation(_programe_id, name.c_str()) < 0) 

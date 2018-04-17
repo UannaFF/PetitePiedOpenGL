@@ -53,8 +53,6 @@ void Material::apply(Shader* shader, bool safemode){
     
     for(unsigned int i = 0; i < _textures.size(); i++){
         Texture* t = _textures[i];
-        //~ glActiveTexture(GL_TEXTURE0 + i); // active proper texture unit before binding
-        // retrieve texture number (the N in diffuse_textureN)
         
         std::string fragment_name;
         

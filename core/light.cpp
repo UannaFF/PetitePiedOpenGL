@@ -148,7 +148,6 @@ Light::Light():
 
 void Light::draw(glm::mat4 proj, glm::mat4 view){
     _shader->use();
-    
     _shader->setVec3("color", _color.x, _color.y, _color.z);
     _mesh->draw(proj ,view, glm::translate(glm::mat4(1.f), _pos));
     

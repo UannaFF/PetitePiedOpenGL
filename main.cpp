@@ -151,9 +151,6 @@ int main(int argc, char** argv){
                     !window.shouldClose());
 
             DEBUG(Debug::Info, "\n");
-            // Cleanup VBO and shader
-            //~ delete shader;
-            //~ delete texture;
             
     } catch (OpenGLException* e){
             std::cout << "OpenGL exception: " << e->what() << std::endl;

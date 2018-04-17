@@ -270,21 +270,13 @@ Scene* Scene::import(std::string path, Shader* shader){
             for (int j = 0; j < channel->mNumRotationKeys; j++){             
                 c->addKey(channel->mRotationKeys[j].mTime, new RotationKey(aiQuattoglmQuat(channel->mRotationKeys[j].mValue)));  
             }
-            
-            // Not used yet
-            //~ for (int j = 0; j < keyframe->mNumScalingKeys; j++)
-                //~ c->addFrame(channel->mScalingKeys[j].mTime, 
-                            //~ ScalingFrame(aiVector3DtoglmVec3(channel->mScalingKeys[j].mValue)));               
+                        
             anim->addChannel(c);
         }
         animations.push_back(anim);            
     }
     s->setAnimations(animations);
-    
-    
-    //~ for (int b = 0; b < 100; b++)
-        //~ shader->setMat4("gBones[" + std::to_string(b) + "]", glm::mat4(1.f));
-    
+
     DEBUG(Debug::Info, "\nScene loaded\n");
     
     return s;
@@ -344,9 +336,7 @@ void Scene::_parseNode(Node* current, aiNode ** children, unsigned int nb_child)
         aiNode* curr_child = children[c];        
             
         Node* n = new Node(curr_child->mName.data, aiMatrix4x4toglmMat4(curr_child->mTransformation), this, current);
-        //~ DEBUG(Debug::Info, "Node '%s' has %d meshes\n", curr_child->mName.data, curr_child->mNumMeshes);
         for (int v = 0; v < curr_child->mNumMeshes; v++){
-            //~ DEBUG(Debug::Info, "Node '%s' contains Mesh#%d\n", curr_child->mName.data, curr_child->mMeshes[v]);
             n->addChild("", getMesh(curr_child->mMeshes[v]));
         }
         _parseNode(n, curr_child->mChildren, curr_child->mNumChildren);   
