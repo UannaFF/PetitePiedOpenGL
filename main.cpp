@@ -141,7 +141,7 @@ int main(int argc, char** argv){
                 window.postDrawingEvent();
                 
                 if (show_fps)
-                    DEBUG(Debug::Info, "\rFPS: %f", 1.f / (glfwGetTime() - time_last_frame));
+                    DEBUG(Debug::Error, "\rFPS: %f", 1.f / (glfwGetTime() - time_last_frame));
                     
                 time_last_frame = glfwGetTime();
             }
