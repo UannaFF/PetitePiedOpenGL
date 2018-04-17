@@ -14,10 +14,10 @@
 
 #define TOP_TEX "top.bmp"
 #define BOTTOM_TEX "bottom.bmp"
-#define LEFT_TEX "left.bmp"
-#define RIGHT_TEX "right.bmp"
-#define FRONT_TEX "front.bmp"
-#define BACK_TEX "back.bmp"
+#define LEFT_TEX "front.bmp"
+#define RIGHT_TEX "back.bmp"
+#define FRONT_TEX "right.bmp"
+#define BACK_TEX "left.bmp"
 
 
 class Texture {
