@@ -4,3 +4,4 @@ In order to compile and run the engine you need to install the next Debian packe
 - libglew-dev
 - libglfw3-dev
 - libglm-dev
+- libassimp-dev
