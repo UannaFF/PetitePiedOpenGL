@@ -97,44 +97,24 @@ void ControlableCamera::updateFromMouse(){
 		_position -= right * deltaTime * speed;
 	}
     
-    if(_position.x <= 3.6) {
+    if (_restricted_box){
+        if(_position.x <= 3.6)
             _position.x = 3.6;
+        if(_position.x >= 3.65)
+            _position.x = 3.65;
+        if(_position.y <= 3.0)
+            _position.y = 3.0;
+        if(_position.y >= 3.8)
+            _position.y = 3.8;
+        if(_position.z >= 0.25)
+            _position.z = 0.25;
+        if(_position.z <= 0.15)
+            _position.z = 0.15;
     }
     
-    if(_position.x >= 3.67) {
-            _position.x = 3.67;
-    }
-    
-    /*if(_position.x >= -3.5) {
-            _position.x = -3.5;
-    }*/
-    
-    if(_position.y <= 3.0) {
-        _position.y = 3.0;
-    }
-    
-    if(_position.y >= 3.8) {
-        _position.y = 3.8;
-    }
-    
-   /* if(_position.y >= 0.2) {
-        _position.y = 0.2;
-    }*/
-
-    if(_position.z >= 0.25) {
-        _position.z = 0.25;
-    }
-    if(_position.z <= 0.15) {
-        _position.z = 0.15;
-    }
-
-    
-    /*if(_position.z >= 1) {
-        _position.z = 1;
-    }*/
 	float FoV = _initialFoV;// - 5 * glfwGetMouseWheel(); 
     
-    //~ DEBUG(Debug::Info, "pos: %f %f %f, ha: %f, va: %f\n", _position.x, _position.y, _position.z, _horizontalAngle, _verticalAngle);
+    DEBUG(Debug::Info, "pos: %f %f %f, ha: %f, va: %f\n", _position.x, _position.y, _position.z, _horizontalAngle, _verticalAngle);
 
 	// Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
 	setProjectionMatrix(glm::perspective(glm::radians(FoV), 4.0f / 3.0f, 0.1f, 100.0f));
