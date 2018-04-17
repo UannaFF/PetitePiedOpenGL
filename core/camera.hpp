@@ -43,7 +43,7 @@ class Camera {
 
 class ControlableCamera: public Camera {
     public:
-        ControlableCamera(Window*p = nullptr);
+        ControlableCamera(Window*p = nullptr, bool restricted = false);
         void updateFromMouse();
         
         inline void setPosition(glm::vec3 p){ _position = p; }
@@ -75,6 +75,8 @@ class ControlableCamera: public Camera {
 
         float _speed; // 3 units / second
         float _mouseSpeed;
+        
+        bool _restricted_box;
 };
 
 #endif

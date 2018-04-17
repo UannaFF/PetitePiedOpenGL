@@ -18,7 +18,8 @@ uint Texture::LAST_ID = 0;
 Texture::Texture(Type t):
     _type(t), _id(LAST_ID++)
 {   
-    (_type == Cube ? _id = 0:printf(""));
+    if (_type == Cube)
+        _id = 0;
     activate();
 	glGenTextures(1, &_texture_id);     
 }
@@ -70,7 +71,7 @@ void Texture::deapply(GLuint framgment_id) {
 
 unsigned char* Texture::getDataFromFile(std::string path, GLenum*format, int *width, int *height) {
 	int nrComponents;
-	printf("String for file: %s\n", path.c_str());
+	DEBUG(Debug::Verbose, "String for file: %s\n", path.c_str());
     unsigned char* data = stbi_load(path.c_str(), width, height, &nrComponents, 0);
     
     if (data){

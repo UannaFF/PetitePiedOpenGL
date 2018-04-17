@@ -9,10 +9,6 @@
 #include <GL/glew.h>
 #include <GL/glew.h>
 
-#define DEBUG(priority,format,args...)                                 \
-                 if (priority > Info)                                  \
-                    fprintf(stderr, format, ## args);                  \
-
 class OpenGLException: public std::exception {
     public:
         OpenGLException(std::string error_msg, GLenum err): _msg(error_msg) {
@@ -36,7 +32,7 @@ std::ostream& operator<<(std::ostream& cout, const glm::mat4& m);
 std::ostream& operator<<(std::ostream& cout, const glm::mat4& m);
 
 namespace Debug {
-    enum Level {VERBOSE, INFO, WARNING, ERROR};
+    enum Level {Verbose, Info, Warning, Error};
     
     inline void CheckOpenGLError(std::string label){   
         GLenum err;     
@@ -44,5 +40,9 @@ namespace Debug {
             throw new OpenGLException(label, err);
     }
 }
+
+#define DEBUG(priority,format,args...)                                 \
+                 if (priority > Debug::Info)                           \
+                    fprintf(stderr, format, ## args);                  \
 
 #endif

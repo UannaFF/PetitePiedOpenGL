@@ -35,7 +35,7 @@ Scene* Scene::import(std::string path, Shader* shader){
     //~ const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_LimitBoneWeights);
     const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_FlipUVs);
     if( !scene) {
-        DEBUG(Level::ERROR, "[Assimp] Errror while reading: %s\n", importer.GetErrorString());
+        DEBUG(Debug::Error, "[Assimp] Errror while reading: %s\n", importer.GetErrorString());
         return nullptr;
     }
     
@@ -112,7 +112,6 @@ Scene* Scene::import(std::string path, Shader* shader){
         // Fill vertices texture coordinates
         std::vector<GLfloat> uvsd;
         for (int channel = 0; channel < mesh->GetNumUVChannels(); channel++) {
-            DEBUG(Debug::Info, "Nb channel: %d, %d\n", mesh->GetNumUVChannels(), mesh->mNumUVComponents);
             std::vector<GLfloat> uvs;
             uvs.reserve(mesh->mNumVertices * 3);
             for(unsigned int i=0; i<mesh->mNumVertices; i++){
@@ -311,7 +310,7 @@ void Scene::render(){
 
 void Scene::playAnimation( int anim){
     if (_animations.size() <= anim){
-        DEBUG(Debug::WARNING, "No animation found. Skipping\n");
+        DEBUG(Debug::Warning, "No animation found. Skipping\n");
         return;
     }
     

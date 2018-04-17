@@ -29,13 +29,6 @@ int main(int argc, char** argv){
     bool show_fps = false, disable_skybox = false, free_camera = false, display_tree = false;
     char* marker_attach = NULL;
     
-	// Initialise GLFW
-	if( !glfwInit() )
-	{
-	    std::cerr << "Failed to initialize GLFW\n";
-	    return -1;
-	}
-    
     int argCount;
     for (argc--, argv++; argc > 0; argc -= argCount, argv += argCount){
         argCount = 1;
@@ -55,8 +48,16 @@ int main(int argc, char** argv){
             free_camera = true;
         } else {
             fprintf(stderr, "petit_pied [--attach-marker <node_name> | --free-camera | --show-fps | --display-tree | --disable-skybox]\n\n");
+            return EXIT_SUCCESS;
         }
     }
+    
+	// Initialise GLFW
+	if( !glfwInit() )
+	{
+	    std::cerr << "Failed to initialize GLFW\n";
+	    return -1;
+	}
     
 	glfwWindowHint(GLFW_SAMPLES, 16); // 16x antialiasing
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3); // We want OpenGL 3.3
@@ -74,7 +75,7 @@ int main(int argc, char** argv){
             Window window(1024, 768, "Petit Pied");
             window.initialise();
             
-            ControlableCamera mainCamera(&window);
+            ControlableCamera mainCamera(&window, !free_camera);
             
             glClearColor(0.7f, 0.7f, 0.7f, 0.0f);
 
