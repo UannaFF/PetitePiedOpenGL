@@ -105,11 +105,18 @@ int main(int argc, char** argv){
             c->addKey(80, new RotationKey(glm::quat(glm::vec3(0, glm::radians(0.), 0))));
             c->addKey(0, new PositionKey(glm::vec3(-0.90, -0.01, 0)));
             c->addKey(80, new PositionKey(glm::vec3(-0.90, -0.01, 0)));
+
+            c = new Channel(scene->rootNode()->find("Base_low_001"));
+            c->addKey(0, new RotationKey(glm::quat(glm::vec3(0, glm::radians(0.), 0))));
+            c->addKey(40, new RotationKey(glm::quat(glm::vec3(0, glm::radians(0.), 0))));
+            c->addKey(80, new RotationKey(glm::quat(glm::vec3(0, glm::radians(0.), 0))));
+            c->addKey(0, new PositionKey(glm::vec3(0., 0., -2)));
+            c->addKey(40, new PositionKey(glm::vec3(0., 0., 2)));
+            c->addKey(80, new PositionKey(glm::vec3(0., 0., -2)));
             opening_hand->addChannel(c);
             
             scene->addAnimation(opening_hand);
-            
-            
+
             glm::mat4 trans = translation(5.7, 1.8, 0);
             
             //~ Camera mainCamera;
