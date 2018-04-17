@@ -48,7 +48,7 @@ Scene* DinoWorld::buildScene(){
 
     glm::mat4 boat_rotate_scale = glm::rotate(glm::rotate(glm::scale(boat_scene->rootNode()->transformation(), glm::vec3(0.1f)), glm::radians(-90.f), glm::vec3(1.0f, 0.0f, 0.0f)), glm::radians(90.f), glm::vec3(0.0f, 0.0f, 1.0f));
     
-    boat_scene->rootNode()->find("boat")->setTransformation(boat_rotate_scale * translation(4, -0.3, 0.05));
+    boat_scene->rootNode()->find("boat")->setTransformation(boat_rotate_scale * translation(4, -0.2, 0.05));
     boat_scene->rootNode()->find("boat")->parent(main_scene->rootNode());
     main_scene->rootNode()->addChild("boat", boat_scene->rootNode()->find("boat"));
     
